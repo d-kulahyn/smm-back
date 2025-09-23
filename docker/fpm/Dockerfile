@@ -21,11 +21,12 @@ RUN apt update && apt install -y \
     libpng16-16 \
     libpng-dev \
     libzip-dev \
-    libpcre3-dev \
+    libpcre2-dev \
     libjpeg62-turbo-dev \
     libwebp-dev \
     libxpm-dev \
-    libpq-dev
+    libpq-dev \
+    libicu-dev
 
 RUN apt-get update
 

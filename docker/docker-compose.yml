@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 
   split_trip_web:
