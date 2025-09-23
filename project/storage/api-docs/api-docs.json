@@ -1,0 +1,3095 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SMM Project API",
+        "description": "API for SMM project management system",
+        "contact": {
+            "email": "admin@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost/v1",
+            "description": "Development server"
+        }
+    ],
+    "paths": {
+        "/activities": {
+            "get": {
+                "tags": [
+                    "Activities"
+                ],
+                "summary": "Get pending activities",
+                "description": "Retrieve list of pending activities for authenticated user",
+                "operationId": "0912b46e1df7261b928de0779141465d",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Activity"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/activities/status-batch": {
+            "patch": {
+                "tags": [
+                    "Activities"
+                ],
+                "summary": "Update multiple activity statuses",
+                "description": "Update status for multiple activities in a single request",
+                "operationId": "cedea0d96c868966b074b66fde1a3f51",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "description": "Array of activity IDs to update",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    },
+                                    "status": {
+                                        "description": "New status for activities",
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "paid",
+                                            "read",
+                                            "declined"
+                                        ],
+                                        "example": "read"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statuses updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statuses updated successfully"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "read"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "description": "Create a new user account",
+                "operationId": "2bf9b5e4a52993b34352351923ab529c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe",
+                                        "nullable": true
+                                    },
+                                    "firebase_cloud_messaging_token": {
+                                        "type": "string",
+                                        "example": "dGhpcyBpcyBhIGZha2UgRkNNIHRva2Vu",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "1|abc123..."
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login user",
+                "description": "Authenticate user and return access token",
+                "operationId": "c08bb2d64642ccfa7f6c035e500f048d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "1|abc123..."
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad login or password"
+                    }
+                }
+            }
+        },
+        "/auth/email/verification-code": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Send email verification code",
+                "description": "Send verification code to user's email",
+                "operationId": "ab3572d07fa3a7dbbf0a5e446276e09f",
+                "responses": {
+                    "200": {
+                        "description": "Verification code sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Confirmation code has been sent"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout user",
+                "description": "Revoke user's access token",
+                "operationId": "b3d01bbdebb51247a9948108947ad849",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token has been deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset password",
+                "description": "Send password reset email to user",
+                "operationId": "f84df54eeed88f7dfa6bc8d8abc92722",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reset email sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email has been sent"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/auth/email/confirm": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Confirm email",
+                "description": "Confirm user's email address with verification code",
+                "operationId": "a2bf89c04eed66689b4fde6b71cdf2b9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "description": "6-digit verification code",
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email has been verified"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid verification code"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/social/{provider}": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Social authentication",
+                "description": "Authenticate user via social provider (Google, Facebook, etc.)",
+                "operationId": "70f3bef5aee22b2f40e998ab51bcec28",
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "description": "Social provider name",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "google",
+                                "facebook",
+                                "apple"
+                            ],
+                            "example": "google"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "access_token"
+                                ],
+                                "properties": {
+                                    "access_token": {
+                                        "description": "Social provider access token",
+                                        "type": "string",
+                                        "example": "eyJhbGciOiJSUzI1NiIs..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Social authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "1|abc123..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid social token"
+                    }
+                }
+            }
+        },
+        "/auth/user/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get current user",
+                "description": "Get authenticated user information",
+                "operationId": "975602e4a80edf545b207200a60f403d",
+                "responses": {
+                    "200": {
+                        "description": "User information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats": {
+            "get": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Get project chat messages",
+                "description": "Retrieve paginated list of chat messages for a specific project",
+                "operationId": "0ee027cfeba506553c064209ae61b5ec",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Chat"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/chats": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Send a text message",
+                "description": "Send a text message to project chat",
+                "operationId": "360e1f861f8ebecb9c4ed0f203218351",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "project_id",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "project_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Hello, this is a test message"
+                                    },
+                                    "message_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "text",
+                                            "voice",
+                                            "file",
+                                            "image"
+                                        ],
+                                        "example": "text"
+                                    },
+                                    "sender_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "customer",
+                                            "admin"
+                                        ],
+                                        "example": "customer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chat"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/voice": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Send a voice message",
+                "description": "Send a voice message to project chat",
+                "operationId": "42d984809dabd9aa202992956c00eea8",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "voice_file"
+                                ],
+                                "properties": {
+                                    "voice_file": {
+                                        "description": "Voice file (mp3, wav, ogg, m4a, max 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Voice message sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chat"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/chats/{chatId}/mark-as-read": {
+            "patch": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Mark message as read",
+                "description": "Mark a chat message as read",
+                "operationId": "5f28ebdd74ce66cad7d3620bbfd44b93",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "description": "Chat message ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message marked as read successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chat"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chat message not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/media-files": {
+            "get": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Get list of media files",
+                "description": "Retrieve paginated list of media files with filtering options",
+                "operationId": "8055de4cb2233a44801d9b14afcc8c02",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "file_type",
+                        "in": "query",
+                        "description": "Filter by file type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "image",
+                                "audio",
+                                "video",
+                                "document",
+                                "file"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MediaFile"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Upload a media file",
+                "description": "Upload a new media file to the system",
+                "operationId": "e9eeb58eb53b6e9aba68b7251a33f318",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file",
+                                    "fileable_type",
+                                    "fileable_id"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "File to upload (max 10MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "fileable_type": {
+                                        "type": "string",
+                                        "example": "App\\\\Models\\\\Project"
+                                    },
+                                    "fileable_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Project logo"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "File uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MediaFile"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/media-files": {
+            "get": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Get media files for a project",
+                "description": "Retrieve paginated list of media files for a specific project",
+                "operationId": "ba7802ecb16dbb583c2dab3830a3eb29",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "file_type",
+                        "in": "query",
+                        "description": "Filter by file type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "image",
+                                "audio",
+                                "video",
+                                "document",
+                                "file"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MediaFile"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/media-files/{id}": {
+            "get": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Get media file details",
+                "description": "Retrieve detailed information about a specific media file",
+                "operationId": "3a70f53c4a895dc7ab93d9dc8d97f985",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Media file ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MediaFile"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Media file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Delete media file",
+                "description": "Delete a media file from the system",
+                "operationId": "f39760828e5a91da98d9b23ec9c8860a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Media file ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File deleted successfully"
+                    },
+                    "404": {
+                        "description": "Media file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/media-files/{id}/download": {
+            "get": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Download media file",
+                "description": "Download a media file",
+                "operationId": "f0c8bbc78417d6b897a332c48b9cfba4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Media file ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File download"
+                    },
+                    "404": {
+                        "description": "Media file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/media-files/chunk/init": {
+            "post": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Initialize chunked file upload",
+                "description": "Initialize a new chunked file upload session",
+                "operationId": "3050803c46600eb14ca71ca77a1262ea",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "filename",
+                                    "file_size",
+                                    "fileable_type",
+                                    "fileable_id"
+                                ],
+                                "properties": {
+                                    "filename": {
+                                        "type": "string",
+                                        "example": "large_video.mp4"
+                                    },
+                                    "file_size": {
+                                        "type": "integer",
+                                        "example": 104857600
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "example": 1048576
+                                    },
+                                    "fileable_type": {
+                                        "type": "string",
+                                        "example": "App\\\\Models\\\\Project"
+                                    },
+                                    "fileable_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Large video file"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Upload session initialized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "upload_id": {
+                                            "type": "string",
+                                            "example": "uuid-string"
+                                        },
+                                        "total_chunks": {
+                                            "type": "integer",
+                                            "example": 100
+                                        },
+                                        "chunk_size": {
+                                            "type": "integer",
+                                            "example": 1048576
+                                        },
+                                        "file_path": {
+                                            "type": "string",
+                                            "example": "media/uuid.mp4"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/media-files/chunk/upload": {
+            "post": {
+                "tags": [
+                    "Media Files"
+                ],
+                "summary": "Upload file chunk",
+                "description": "Upload a chunk of the file",
+                "operationId": "7ca6f5f76e92d0f16d9d41740bb4a68f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "upload_id",
+                                    "chunk_number",
+                                    "chunk"
+                                ],
+                                "properties": {
+                                    "upload_id": {
+                                        "type": "string",
+                                        "example": "uuid-string"
+                                    },
+                                    "chunk_number": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "chunk": {
+                                        "description": "File chunk data",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Chunk uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Chunk uploaded successfully"
+                                        },
+                                        "uploaded_chunks": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "total_chunks": {
+                                            "type": "integer",
+                                            "example": 100
+                                        },
+                                        "current_size": {
+                                            "type": "integer",
+                                            "example": 5242880
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/profile": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update user profile",
+                "description": "Update authenticated user's profile information",
+                "operationId": "e6ad6bf978729d1f45c4bba5f2e58483",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+1234567890"
+                                    },
+                                    "avatar": {
+                                        "type": "string",
+                                        "example": "https://example.com/avatar.jpg"
+                                    },
+                                    "bio": {
+                                        "type": "string",
+                                        "example": "Software developer"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "New York, USA"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/profile/password": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update user password",
+                "description": "Change authenticated user's password",
+                "operationId": "57fea8c816ed11207d063b4ce73c80f6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "current123"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password has been updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Current password is incorrect"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/profile/email": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update user email",
+                "description": "Change authenticated user's email address",
+                "operationId": "3a2b5b5d5ba19a4887943186d05b5337",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "newemail@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "currentpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email has been updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Password is incorrect or email already exists"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/profile/fcm-token": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Set Firebase Cloud Messaging token",
+                "description": "Update user's Firebase Cloud Messaging token for push notifications",
+                "operationId": "84b476512b8403e4b030f15db446a7e4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "Firebase Cloud Messaging token",
+                                        "type": "string",
+                                        "example": "dGhpcyBpcyBhIGZha2UgRkNNIHRva2Vu"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "FCM token updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token has been updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects": {
+            "get": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Get list of projects",
+                "description": "Retrieve paginated list of projects with tasks, members, invitations and chats",
+                "operationId": "9d1f91c9d91de620a0d5f11b734d7bef",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Project"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Create a new project",
+                "description": "Create a new project with the provided data",
+                "operationId": "4d679b7e3456e4d811314aaebb5ae51d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "New Marketing Campaign"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Social media marketing campaign for Q4"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "completed",
+                                            "on_hold"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-21"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-12-31"
+                                    },
+                                    "budget": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15000.5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Project created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{id}": {
+            "get": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Get project details",
+                "description": "Retrieve detailed information about a specific project including tasks, members, invitations and chats",
+                "operationId": "a3902ae34b85515b32e4108296c3d4e5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Update project",
+                "description": "Update an existing project",
+                "operationId": "9abcb3f9742b94aa18e5c4d0ca106f3f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Updated Marketing Campaign"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "completed",
+                                            "on_hold"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "budget": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Project updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Delete project",
+                "description": "Delete an existing project",
+                "operationId": "5dd94942bc2f64f2d041f40ac39dce87",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Project deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project deleted"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{id}/complete": {
+            "patch": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Mark project as completed",
+                "description": "Change project status to completed",
+                "operationId": "45d08a5df8dc6cab2c5ab627cdaa311f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Project marked as completed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/invitations": {
+            "get": {
+                "tags": [
+                    "Project Invitations"
+                ],
+                "summary": "Get project invitations",
+                "description": "Retrieve paginated list of invitations for a specific project",
+                "operationId": "569fee9e5e8d61bf62310cbd40a25ee0",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProjectInvitation"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Project Invitations"
+                ],
+                "summary": "Send project invitation",
+                "description": "Send an invitation to join a project",
+                "operationId": "78db79c3cb3fa34e8e1700b3ab317779",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "member",
+                                            "viewer"
+                                        ],
+                                        "example": "member"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "read",
+                                            "write"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitation sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProjectInvitation"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/invitations/{token}/accept": {
+            "post": {
+                "tags": [
+                    "Project Invitations"
+                ],
+                "summary": "Accept project invitation",
+                "description": "Accept a project invitation using the invitation token",
+                "operationId": "0d235ddd1a3f0b30c0b0bbc33edc0e04",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Invitation token",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "abc123def456"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation accepted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitation accepted successfully"
+                                        },
+                                        "member": {
+                                            "$ref": "#/components/schemas/ProjectMember"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/invitations/{token}/decline": {
+            "post": {
+                "tags": [
+                    "Project Invitations"
+                ],
+                "summary": "Decline project invitation",
+                "description": "Decline a project invitation using the invitation token",
+                "operationId": "5d70a3becf1576104bf87be73591d5f4",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Invitation token",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "abc123def456"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation declined successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitation declined successfully"
+                                        },
+                                        "invitation": {
+                                            "$ref": "#/components/schemas/ProjectInvitation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/my-invitations": {
+            "get": {
+                "tags": [
+                    "Project Invitations"
+                ],
+                "summary": "Get my invitations",
+                "description": "Retrieve paginated list of invitations for the authenticated user",
+                "operationId": "d8a31c707e259f2410d4ed8036b5dbed",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProjectInvitation"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tasks": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Get list of tasks",
+                "description": "Retrieve paginated list of tasks with filtering options",
+                "operationId": "47046087804036be9daea56f483a571c",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "description": "Filter by project ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "description": "Filter by priority",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Task"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Create a new task",
+                "description": "Create a new task with the provided data",
+                "operationId": "687c974a92a9cdc4d3e5252f2ae4c4c0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "project_id"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Create social media post"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Design and create Instagram post for new product launch"
+                                    },
+                                    "project_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "assigned_to": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ],
+                                        "example": "high"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "in_progress",
+                                            "completed",
+                                            "cancelled"
+                                        ],
+                                        "example": "pending"
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-09-30"
+                                    },
+                                    "reminder_before_hours": {
+                                        "type": "integer",
+                                        "example": 24
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Task created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Task created successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Task"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tasks/{id}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Get task details",
+                "description": "Retrieve detailed information about a specific task",
+                "operationId": "78d74b58ae6dbebf5c4f710fd845eff7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Task ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Task"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Update task",
+                "description": "Update an existing task",
+                "operationId": "a1bcf6e09e09e4f9451934d882f40cbe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Task ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated task title"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "in_progress",
+                                            "completed",
+                                            "cancelled"
+                                        ],
+                                        "example": "in_progress"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ],
+                                        "example": "high"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Task updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Task updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Task"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tasks/{id}/complete": {
+            "post": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Mark task as completed",
+                "description": "Change task status to completed",
+                "operationId": "9859020febe038ce824748a36be5e37d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Task ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task marked as completed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Task completed"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Task"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "MediaFile": {
+                "title": "Media File",
+                "description": "Media file resource representation",
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "Generated file name",
+                        "type": "string",
+                        "example": "1640995200_document.pdf"
+                    },
+                    "original_name": {
+                        "description": "Original file name",
+                        "type": "string",
+                        "example": "document.pdf"
+                    },
+                    "file_path": {
+                        "description": "Public file URL",
+                        "type": "string",
+                        "example": "/storage/media/1640995200_document.pdf"
+                    },
+                    "file_type": {
+                        "description": "File type category",
+                        "type": "string",
+                        "enum": [
+                            "image",
+                            "audio",
+                            "video",
+                            "document",
+                            "file"
+                        ],
+                        "example": "document"
+                    },
+                    "mime_type": {
+                        "description": "MIME type",
+                        "type": "string",
+                        "example": "application/pdf"
+                    },
+                    "file_size": {
+                        "description": "File size in bytes",
+                        "type": "integer",
+                        "example": 1024000
+                    },
+                    "formatted_size": {
+                        "description": "Human readable file size",
+                        "type": "string",
+                        "example": "1.00 MB"
+                    },
+                    "fileable_id": {
+                        "description": "Related entity ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "fileable_type": {
+                        "description": "Related entity type",
+                        "type": "string",
+                        "example": "App\\\\Models\\\\Project"
+                    },
+                    "uploaded_by": {
+                        "description": "User who uploaded the file",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "description": {
+                        "description": "File description",
+                        "type": "string",
+                        "example": "Project logo",
+                        "nullable": true
+                    },
+                    "is_image": {
+                        "description": "Whether file is an image",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "is_audio": {
+                        "description": "Whether file is audio",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "metadata": {
+                        "description": "Additional file metadata",
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "description": "Creation timestamp",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-31T23:59:59Z"
+                    },
+                    "updated_at": {
+                        "description": "Last update timestamp",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-31T23:59:59Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Project": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Marketing Campaign Q4"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Social media marketing campaign for Q4 2025"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "completed",
+                            "on_hold"
+                        ],
+                        "example": "active"
+                    },
+                    "customer_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-21"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31"
+                    },
+                    "budget": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 15000.5
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_completed": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "tasks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Task"
+                        }
+                    },
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProjectMember"
+                        }
+                    },
+                    "invitations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProjectInvitation"
+                        }
+                    },
+                    "chats": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Chat"
+                        }
+                    },
+                    "stats": {
+                        "$ref": "#/components/schemas/ProjectStats"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Task": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Create social media posts"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Design and create posts for Instagram and Facebook"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ],
+                        "example": "pending"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "urgent"
+                        ],
+                        "example": "high"
+                    },
+                    "assigned_to": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-30"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectMember": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "owner",
+                            "manager",
+                            "member",
+                            "viewer"
+                        ],
+                        "example": "manager"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "read",
+                            "write",
+                            "manage_members"
+                        ]
+                    },
+                    "joined_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectInvitation": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "manager",
+                            "member",
+                            "viewer"
+                        ],
+                        "example": "member"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "declined",
+                            "expired"
+                        ],
+                        "example": "pending"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "abc123..."
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-28T10:00:00Z"
+                    },
+                    "invited_by_user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "Chat": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "customer_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Hello team! Let's discuss the project requirements."
+                    },
+                    "message_type": {
+                        "type": "string",
+                        "enum": [
+                            "text",
+                            "voice",
+                            "file"
+                        ],
+                        "example": "text"
+                    },
+                    "sender_type": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "admin"
+                        ],
+                        "example": "customer"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "example": "http://localhost/storage/files/document.pdf"
+                    },
+                    "is_read": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "is_voice_message": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "customer": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "example": "http://localhost/storage/avatars/avatar.jpg"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "project_manager"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectStats": {
+                "properties": {
+                    "total_tasks": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "completed_tasks": {
+                        "type": "integer",
+                        "example": 8
+                    },
+                    "pending_tasks": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "overdue_tasks": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "completion_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 53.33
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 50
+                    },
+                    "from": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "has_more_pages": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "Activity": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "task_created"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "New task was created"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "read",
+                            "archived"
+                        ],
+                        "example": "pending"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-21T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Activities",
+            "description": "Activity log and tracking endpoints"
+        },
+        {
+            "name": "Authentication",
+            "description": "User authentication and account management endpoints"
+        },
+        {
+            "name": "Chats",
+            "description": "Project chat and messaging endpoints"
+        },
+        {
+            "name": "Media Files",
+            "description": "File upload and management endpoints"
+        },
+        {
+            "name": "Profile",
+            "description": "User profile management endpoints"
+        },
+        {
+            "name": "Projects",
+            "description": "Project management endpoints"
+        },
+        {
+            "name": "Project Invitations",
+            "description": "Project invitation management endpoints"
+        },
+        {
+            "name": "Tasks",
+            "description": "Task management endpoints"
+        }
+    ]
+}
