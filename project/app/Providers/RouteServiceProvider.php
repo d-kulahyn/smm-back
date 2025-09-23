@@ -39,7 +39,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->routes(function () {
             Route::prefix('v1/')->group(function () {
-                Route::middleware(['api', 'cors'])->group(function () {
+                Route::middleware(['api'])->group(function () {
                     $this->mapFrontendRoutes();
                 });
             });
