@@ -17,6 +17,7 @@ use App\Infrastructure\API\DTO\LoginDTO;
 use App\Infrastructure\API\DTO\ResetPasswordDTO;
 use App\Infrastructure\API\DTO\SocialAuthDTO;
 use App\Infrastructure\API\Resource\CustomerResource;
+use Illuminate\Auth\AuthenticationException;
 use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Illuminate\Http\JsonResponse;
@@ -85,12 +86,13 @@ readonly class AuthController
      */
     public function register(CreateUserDTO $createUserDTO): JsonResponse
     {
-        $token = $this->createUserUseCase->execute($createUserDTO);
+        [$token, $code] = $this->createUserUseCase->execute($createUserDTO);
 
         $customer = $this->customerReadRepository->findByEmail($createUserDTO->email);
 
         return response()->json([
             'access_token' => $token,
+            'code'         => $code,
             'user'         => $this->customerAuthMeUseCase->execute($customer->id),
         ], ResponseAlias::HTTP_CREATED);
     }
@@ -122,13 +124,14 @@ readonly class AuthController
      *         description="Bad login or password"
      *     )
      * )
+     * @throws AuthenticationException
      */
     public function login(LoginDTO $loginDTO): JsonResponse
     {
         $token = $this->loginUserUseCase->execute($loginDTO);
 
         if (is_null($token)) {
-            return response()->json(['message' => 'Bad login or password.'], ResponseAlias::HTTP_BAD_REQUEST);
+            throw new AuthenticationException('Bad login or password');
         }
 
         return response()->json([

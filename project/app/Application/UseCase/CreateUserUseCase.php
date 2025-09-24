@@ -37,9 +37,9 @@ readonly class CreateUserUseCase
 
             $customerId = $this->customerWriteRepository->save(CreateCustomerDTOToDomainEntity::toEntity($createUserDTO));
 
-            $this->sendConfirmationCodeToCustomerUseCase->execute($createUserDTO->email);
+            $code = $this->sendConfirmationCodeToCustomerUseCase->execute($createUserDTO->email);
 
-            return $this->customerWriteRepository->createToken($customerId);
+            return [$this->customerWriteRepository->createToken($customerId), $code];
         });
     }
 }

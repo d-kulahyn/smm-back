@@ -23,14 +23,16 @@ readonly class SendConfirmationCodeToCustomerUseCase
     /**
      * @param string $email
      *
-     * @return void
+     * @return string
      */
-    public function execute(string $email): void
+    public function execute(string $email): string
     {
         $customer = $this->customerReadRepository->findByEmail($email);
 
         $code = $this->securityCodeGenerator->set($customer->id);
 
         Mail::to($email)->queue(new VerifyEmail($code));
+
+        return $code;
     }
 }
