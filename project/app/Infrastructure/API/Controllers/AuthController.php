@@ -321,6 +321,6 @@ readonly class AuthController
      */
     public function me(): CustomerResource
     {
-        return new CustomerResource($this->customerReadRepository->findById(request()->user()->id));
+        return new CustomerResource($this->customerReadRepository->findById([request()->user()->id])->first());
     }
 }
