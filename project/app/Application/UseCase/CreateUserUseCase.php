@@ -26,9 +26,9 @@ readonly class CreateUserUseCase
     /**
      * @param CreateUserDTO $createUserDTO
      *
-     * @return string
+     * @return array
      */
-    public function execute(CreateUserDTO $createUserDTO): string
+    public function execute(CreateUserDTO $createUserDTO): array
     {
         return DB::transaction(function () use ($createUserDTO) {
             $createUserDTO->password = $this->passwordEncoder->hash($createUserDTO->password);
