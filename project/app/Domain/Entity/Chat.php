@@ -12,27 +12,23 @@ class Chat extends Data
         public readonly ?int $id,
         public readonly int $project_id,
         public readonly int $customer_id,
-        public readonly string $message,
-        public readonly string $message_type,
-        public readonly string $sender_type,
-        public readonly ?string $file_path,
-        public readonly ?string $file_name,
-        public readonly ?string $file_size,
-        public readonly bool $is_read,
-        public readonly ?string $read_at,
-        public readonly ?array $metadata,
+        public readonly string $title,
+        public readonly ?string $description,
+        public readonly string $status,
         public readonly ?string $created_at,
         public readonly ?string $updated_at,
-        public ?Customer $customer = null
+        public readonly ?int $unread_messages_count = null,
+        public ?Customer $customer = null,
+        public ?Project $project = null
     ) {}
 
-    public function isVoiceMessage(): bool
+    public function isActive(): bool
     {
-        return $this->message_type === 'voice';
+        return $this->status === 'active';
     }
 
-    public function isFromCustomer(): bool
+    public function isArchived(): bool
     {
-        return $this->sender_type === 'customer';
+        return $this->status === 'archived';
     }
 }

@@ -4,38 +4,23 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
-use App\Domain\Entity\Chat;
-use App\Domain\Event\ChatMessageSentEvent;
-use App\Domain\Event\VoiceMessageSentEvent;
-use App\Domain\Exception\ProjectNotFoundException;
+use App\Domain\Entity\ChatMessage;
 use App\Domain\Repository\ChatWriteRepositoryInterface;
-use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Infrastructure\API\DTO\TextMessageUseCaseDto;
 use App\Infrastructure\API\DTO\VoiceMessageUseCaseDto;
 
-class SendChatMessageUseCase
+readonly class SendChatMessageUseCase
 {
     public function __construct(
         private ChatWriteRepositoryInterface $chatWriteRepository,
-        private ProjectReadRepositoryInterface $projectReadRepository
     ) {}
 
-    public function execute(VoiceMessageUseCaseDto|TextMessageUseCaseDto $data): Chat
+    public function execute(VoiceMessageUseCaseDto|TextMessageUseCaseDto $data): ChatMessage
     {
-        if (!$this->projectReadRepository->exists($data['project_id'])) {
-            throw new ProjectNotFoundException();
+        if ($data instanceof VoiceMessageUseCaseDto) {
+            return $this->chatWriteRepository->createVoiceMessage($data);
         }
 
-        $chat = $this->chatWriteRepository->create($data);
-
-        if ($data->isVoiceMessage()) {
-            event(new VoiceMessageSentEvent($data->project_id, $chat));
-
-            return $chat;
-        }
-
-        event(new ChatMessageSentEvent($data->project_id, $chat));
-
-        return $chat;
+        return $this->chatWriteRepository->createTextMessage($data);
     }
 }

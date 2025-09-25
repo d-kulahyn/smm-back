@@ -68,7 +68,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'VALIDATION_FAILED',
-                'message' => 'Ошибка валидации данных',
+                'message' => 'Data validation error',
                 'details' => [
                     'validation_errors' => $exception->errors()
                 ]
@@ -82,7 +82,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'UNAUTHENTICATED',
-                'message' => 'Пользователь не аутентифицирован',
+                'message' => $exception->getMessage(),
                 'details' => []
             ]
         ], 401);
@@ -94,7 +94,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'UNAUTHORIZED',
-                'message' => 'Недостаточно прав для выполнения операции',
+                'message' => 'Insufficient rights to perform the operation',
                 'details' => []
             ]
         ], 403);
@@ -108,7 +108,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'RESOURCE_NOT_FOUND',
-                'message' => "Ресурс {$model} не найден",
+                'message' => "Resource {$model} not found",
                 'details' => []
             ]
         ], 404);
@@ -120,7 +120,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'ROUTE_NOT_FOUND',
-                'message' => 'Маршрут не найден',
+                'message' => 'Route not found',
                 'details' => []
             ]
         ], 404);
@@ -132,7 +132,7 @@ class ApiExceptionHandler
             'success' => false,
             'error' => [
                 'code' => 'HTTP_ERROR',
-                'message' => $exception->getMessage() ?: 'HTTP ошибка',
+                'message' => $exception->getMessage() ?: 'HTTP error',
                 'details' => []
             ]
         ], $exception->getStatusCode());
@@ -140,19 +140,17 @@ class ApiExceptionHandler
 
     private function handleGenericException(Throwable $exception): JsonResponse
     {
-        // В продакшне не показываем детали ошибки
         if (app()->environment('production')) {
             return response()->json([
                 'success' => false,
                 'error' => [
                     'code' => 'INTERNAL_SERVER_ERROR',
-                    'message' => 'Внутренняя ошибка сервера',
+                    'message' => 'Internal Server Error',
                     'details' => []
                 ]
             ], 500);
         }
 
-        // В режиме разработки показываем детали
         return response()->json([
             'success' => false,
             'error' => [

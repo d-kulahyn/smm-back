@@ -32,14 +32,14 @@ readonly class UploadChunkUseCase
         $currentSize = $this->fileStorageService->getFileSize($uploadData['file_path']);
 
         if ($this->metadata->areAllChunksUploaded($dto->uploadId)) {
-            event(new MediaFileUploadedEvent($this->fileReadRepository->findById()));
+            event(new MediaFileUploadedEvent($this->fileReadRepository->findById((int)$dto->uploadId)));
         }
 
         return [
-            'message' => 'Chunk uploaded successfully',
+            'message'         => 'Chunk uploaded successfully',
             'uploaded_chunks' => count($uploadData['uploaded_chunks']) + 1,
-            'total_chunks' => $uploadData['total_chunks'],
-            'current_size' => $currentSize
+            'total_chunks'    => $uploadData['total_chunks'],
+            'current_size'    => $currentSize,
         ];
     }
 }

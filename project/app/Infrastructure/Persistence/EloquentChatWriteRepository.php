@@ -5,43 +5,107 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Chat;
+use App\Domain\Entity\ChatMessage;
 use App\Domain\Repository\ChatWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\VoiceMessageUseCaseDto;
+use App\Infrastructure\API\DTO\CreateChatDto;
+use App\Infrastructure\API\DTO\TextMessageUseCaseDto;
+use App\Infrastructure\Mapper\ChatMapper;
+use App\Infrastructure\Mapper\ChatMessageMapper;
 use App\Models\Chat as ChatModel;
+use App\Models\ChatMessage as ChatMessageModel;
+use App\Models\ChatMessageRead;
 
-class EloquentChatWriteRepository implements ChatWriteRepositoryInterface
+readonly class EloquentChatWriteRepository implements ChatWriteRepositoryInterface
 {
-    public function create(VoiceMessageUseCaseDto $data): Chat
-    {
-        $model = ChatModel::create($data->toArray());
+    public function __construct(
+        private ChatMapper $chatMapper,
+        private ChatMessageMapper $chatMessageMapper
+    ) {}
 
-        return Chat::from($model->toArray());
+    public function createVoiceMessage(VoiceMessageUseCaseDto $data): ChatMessage
+    {
+        $model = ChatMessageModel::create($data->toArray());
+
+        return $this->chatMessageMapper->toDomain($model);
     }
 
-    public function markAsRead(int $id): Chat
+    public function createTextMessage(TextMessageUseCaseDto $data): ChatMessage
     {
-        $model = ChatModel::findOrFail($id);
-        $model->update([
-            'is_read' => true,
-            'read_at' => now(),
+        $model = ChatMessageModel::create($data->toArray());
+
+        return $this->chatMessageMapper->toDomain($model);
+    }
+
+    public function createChat(CreateChatDto $data): Chat
+    {
+        $model = ChatModel::create([
+            'project_id'  => $data->project_id,
+            'customer_id' => $data->customer_id,
+            'title'       => $data->title,
+            'description' => $data->description,
+            'status'      => $data->status ?? 'active',
         ]);
 
-        return Chat::from($model->fresh()->toArray());
+        return $this->chatMapper->toDomain($model);
     }
 
-    public function markAllAsReadForProject(int $projectId, int $excludeCustomerId): int
+    public function updateChat(int $chatId, array $data): Chat
     {
-        return ChatModel::where('project_id', $projectId)
+        $model = ChatModel::findOrFail($chatId);
+        $model->update($data);
+
+        return $this->chatMapper->toDomain($model->fresh());
+    }
+
+    public function markAsRead(int $chatId): Chat
+    {
+        $model = ChatModel::findOrFail($chatId);
+
+        return $this->chatMapper->toDomain($model);
+    }
+
+    public function markMessageAsRead(int $messageId, int $customerId): void
+    {
+        ChatMessageRead::firstOrCreate([
+            'chat_message_id' => $messageId,
+            'customer_id'     => $customerId,
+        ], [
+            'read_at' => now(),
+        ]);
+    }
+
+    public function markAllMessagesAsReadForProject(int $projectId, int $excludeCustomerId): int
+    {
+        $messageIds = ChatMessageModel::where('project_id', $projectId)
             ->where('customer_id', '!=', $excludeCustomerId)
-            ->where('is_read', false)
-            ->update([
-                'is_read' => true,
-                'read_at' => now(),
-            ]);
+            ->whereDoesntHave('reads', function ($query) use ($excludeCustomerId) {
+                $query->where('customer_id', $excludeCustomerId);
+            })
+            ->pluck('id');
+
+        $reads = [];
+        $now = now();
+
+        foreach ($messageIds as $messageId) {
+            $reads[] = [
+                'chat_message_id' => $messageId,
+                'customer_id'     => $excludeCustomerId,
+                'read_at'         => $now,
+                'created_at'      => $now,
+                'updated_at'      => $now,
+            ];
+        }
+
+        if (!empty($reads)) {
+            ChatMessageRead::insert($reads);
+        }
+
+        return count($reads);
     }
 
-    public function delete(int $id): bool
+    public function deleteChat(int $chatId): bool
     {
-        return ChatModel::destroy($id) > 0;
+        return ChatModel::destroy($chatId) > 0;
     }
 }

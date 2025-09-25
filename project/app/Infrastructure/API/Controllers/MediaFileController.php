@@ -8,20 +8,20 @@ use App\Application\UseCase\UploadChunkUseCase;
 use App\Domain\Exception\MediaFileNotFoundException;
 use App\Domain\Repository\MediaFileReadRepositoryInterface;
 use App\Domain\Repository\MediaFileWriteRepositoryInterface;
-use App\Infrastructure\API\DTO\UploadMediaFileDto;
 use App\Infrastructure\API\DTO\InitChunkedUploadDto;
 use App\Infrastructure\API\DTO\UploadChunkDto;
 use App\Infrastructure\API\Resource\MediaFileResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
 use App\Infrastructure\Services\FileStorageService;
 use App\Models\MediaFile;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Storage;
 use OpenApi\Annotations as OA;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -84,6 +84,7 @@ class MediaFileController extends Controller
      *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -147,6 +148,7 @@ class MediaFileController extends Controller
      *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function getProjectMedia(Request $request, int $projectId): AnonymousResourceCollection
     {
@@ -161,58 +163,6 @@ class MediaFileController extends Controller
                 $params->perPage
             )
         );
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/media-files",
-     *     tags={"Media Files"},
-     *     summary="Upload a media file",
-     *     description="Upload a new media file to the system",
-     *     security={{"sanctum": {}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"file", "fileable_type", "fileable_id"},
-     *                 @OA\Property(
-     *                     property="file",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="File to upload (max 10MB)"
-     *                 ),
-     *                 @OA\Property(property="fileable_type", type="string", example="App\\Models\\Project"),
-     *                 @OA\Property(property="fileable_id", type="integer", example=1),
-     *                 @OA\Property(property="description", type="string", example="Project logo")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="File uploaded successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/MediaFile")
-     *     )
-     * )
-     */
-    public function store(UploadMediaFileDto $dto, Request $request): JsonResponse
-    {
-        $this->authorize('create', MediaFile::class);
-
-        $file = $request->file('file');
-
-        // Use FileStorageService to create DTO for use case
-        $uploadDto = $this->fileStorageService->createUploadDto(
-            $file,
-            $request->user()->id,
-            $dto->fileable_type,
-            $dto->fileable_id,
-            $dto->description
-        );
-
-        $mediaFile = $this->uploadMediaFileUseCase->execute($uploadDto);
-
-        return response()->json(new MediaFileResource($mediaFile), Response::HTTP_CREATED);
     }
 
     /**
@@ -239,6 +189,7 @@ class MediaFileController extends Controller
      *         description="Media file not found"
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function show(MediaFile $mediaFile): JsonResponse
     {
@@ -270,15 +221,14 @@ class MediaFileController extends Controller
      *         description="Media file not found"
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function destroy(MediaFile $mediaFile): JsonResponse
     {
         $this->authorize('delete', $mediaFile);
 
         // Delete physical file
-        if (Storage::disk('public')->exists($mediaFile->file_path)) {
-            Storage::disk('public')->delete($mediaFile->file_path);
-        }
+        $this->fileStorageService->delete($mediaFile->file_path);
 
         // Delete database record
         $this->mediaFileWriteRepository->delete($mediaFile->id);
@@ -309,8 +259,10 @@ class MediaFileController extends Controller
      *         description="Media file not found"
      *     )
      * )
+     * @throws MediaFileNotFoundException
+     * @throws AuthorizationException
      */
-    public function download(MediaFile $mediaFile)
+    public function download(MediaFile $mediaFile): BinaryFileResponse
     {
         $this->authorize('view', $mediaFile);
 
@@ -320,7 +272,7 @@ class MediaFileController extends Controller
             throw new MediaFileNotFoundException();
         }
 
-        return response()->download($mediaEntity->file_path, $mediaFile->original_name);
+        return response()->download($mediaEntity->file_path, $mediaEntity->original_name);
     }
 
     /**
@@ -353,6 +305,7 @@ class MediaFileController extends Controller
      *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function initChunkedUpload(InitChunkedUploadDto $dto): JsonResponse
     {
@@ -393,12 +346,14 @@ class MediaFileController extends Controller
      *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function uploadChunk(Request $request): JsonResponse
     {
         $this->authorize('create', MediaFile::class);
 
         $dto = UploadChunkDto::fromRequest($request);
+
         $result = $this->uploadChunkUseCase->execute($dto);
 
         return response()->json($result);

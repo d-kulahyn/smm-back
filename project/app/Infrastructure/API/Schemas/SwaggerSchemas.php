@@ -74,7 +74,6 @@ namespace App\Infrastructure\API\Schemas;
  *     @OA\Property(property="message_type", type="string", enum={"text", "voice", "file"}, example="text"),
  *     @OA\Property(property="sender_type", type="string", enum={"customer", "admin"}, example="customer"),
  *     @OA\Property(property="file_path", type="string", example="http://localhost/storage/files/document.pdf"),
- *     @OA\Property(property="is_read", type="boolean", example=false),
  *     @OA\Property(property="is_voice_message", type="boolean", example=false),
  *     @OA\Property(property="customer", ref="#/components/schemas/User"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-21T10:00:00Z")

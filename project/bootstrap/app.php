@@ -19,20 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Add CORS middleware for API routes
-        $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
-        ]);
-
-        // Register custom CORS middleware
-        $middleware->alias([
-            'cors' => \App\Infrastructure\API\Middleware\Cors::class,
-        ]);
-
-        // Configure CORS
-        $middleware->validateCsrfTokens(except: [
-            'api/*',
-        ]);
+        //
     })
     ->withEvents(discover: [
         __DIR__.'/../app/Application/Listener'

@@ -1,5 +1,6 @@
 <?php
 
+use App\Infrastructure\API\Controllers\ChatController;
 use App\Infrastructure\API\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 

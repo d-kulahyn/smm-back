@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence;
 
+use App\Domain\Entity\Customer;
 use App\Domain\Entity\Project;
+use App\Domain\Entity\ProjectInvitation;
+use App\Domain\Entity\ProjectMember;
 use App\Domain\Entity\Task;
 use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Infrastructure\API\DTO\TasksStatsDto;
+use App\Infrastructure\Mapper\ChatMapper;
 use App\Models\Project as ProjectModel;
 use App\Models\Task as TaskModel;
 use Illuminate\Support\Collection;
@@ -16,9 +20,18 @@ use Illuminate\Pagination\LengthAwarePaginator as Pagination;
 
 class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
 {
+    public function __construct(
+        private readonly ChatMapper $chatMapper,
+    ) {}
+
     public function findById(int $id, int $taskCount = 5): ?Project
     {
-        $model = ProjectModel::with(['members.user', 'invitations.invitedBy', 'invitations.invitedUser', 'chats.customer'])->find($id);
+        $model = ProjectModel::with([
+            'members.user',
+            'invitations.invitedBy',
+            'invitations.invitedUser',
+            'chats.customer',
+        ])->find($id);
 
         $tasksStats = $this->getMultipleProjectsTasksCount([$id]);
         $tasksData = $this->getMultipleProjectsTasks([$id], $taskCount);
@@ -28,10 +41,10 @@ class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
 
         $projectEntity = $model ? Project::from($model->toArray()) : null;
         $projectEntity?->setTasks($tasksData[$id] ?? [])
-                     ->setStats($tasksStats[$id] ?? [])
-                     ->setMembers($membersData[$id] ?? [])
-                     ->setInvitations($invitationsData[$id] ?? [])
-                     ->setChats($chatsData[$id] ?? []);
+            ->setStats($tasksStats[$id] ?? [])
+            ->setMembers($membersData[$id] ?? [])
+            ->setInvitations($invitationsData[$id] ?? [])
+            ->setChats($chatsData[$id] ?? []);
 
         return $projectEntity;
     }
@@ -203,7 +216,7 @@ class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
         $tasksStats = $this->getMultipleProjectsTasksCount($projectIds);
         $tasksData = $this->getMultipleProjectsTasks($projectIds, $perPage);
         $invitationsData = $this->getProjectInvitations($projectIds);
-        $chatsData = $this->getProjectChats($projectIds, 5); // Ограничиваем 5 последними сообщениями
+        $chatsData = $this->getProjectChats($projectIds, $perPage);
 
         $result = array_map(function ($project) use ($tasksStats, $tasksData, $invitationsData, $chatsData) {
             return Project::from($project->toArray())
@@ -231,16 +244,16 @@ class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
         foreach ($projectIds as $projectId) {
             $projectMembers = $members->get($projectId, collect());
             $result[$projectId] = $projectMembers->map(function ($member) {
-                return \App\Domain\Entity\ProjectMember::from([
-                    'id' => $member->id,
-                    'project_id' => $member->project_id,
-                    'user_id' => $member->user_id,
-                    'role' => $member->role,
+                return ProjectMember::from([
+                    'id'          => $member->id,
+                    'project_id'  => $member->project_id,
+                    'user_id'     => $member->user_id,
+                    'role'        => $member->role,
                     'permissions' => $member->permissions ?? [],
-                    'joined_at' => $member->joined_at?->toISOString(),
-                    'created_at' => $member->created_at?->toISOString(),
-                    'updated_at' => $member->updated_at?->toISOString(),
-                    'user' => $member->user ? \App\Domain\Entity\Customer::from($member->user->toArray()) : null
+                    'joined_at'   => $member->joined_at?->toISOString(),
+                    'created_at'  => $member->created_at?->toISOString(),
+                    'updated_at'  => $member->updated_at?->toISOString(),
+                    'user'        => $member->user ? Customer::from($member->user->toArray()) : null,
                 ]);
             })->toArray();
         }
@@ -264,26 +277,26 @@ class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
         foreach ($projectIds as $projectId) {
             $projectInvitations = $invitations->get($projectId, collect());
             $result[$projectId] = $projectInvitations->map(function ($invitation) {
-                return \App\Domain\Entity\ProjectInvitation::from([
-                    'id' => $invitation->id,
-                    'project_id' => $invitation->project_id,
-                    'invited_by' => $invitation->invited_by,
+                return ProjectInvitation::from([
+                    'id'              => $invitation->id,
+                    'project_id'      => $invitation->project_id,
+                    'invited_by'      => $invitation->invited_by,
                     'invited_user_id' => $invitation->invited_user_id,
-                    'email' => $invitation->email,
-                    'role' => $invitation->role,
-                    'permissions' => $invitation->permissions ?? [],
-                    'status' => $invitation->status,
-                    'token' => $invitation->token,
-                    'expires_at' => $invitation->expires_at?->toISOString(),
-                    'accepted_at' => $invitation->accepted_at?->toISOString(),
-                    'declined_at' => $invitation->declined_at?->toISOString(),
-                    'created_at' => $invitation->created_at?->toISOString(),
-                    'updated_at' => $invitation->updated_at?->toISOString(),
-                    'project' => null, // Избегаем циклической зависимости
-                    'invitedBy' => $invitation->invitedBy ? \App\Domain\Entity\Customer::from($invitation->invitedBy->toArray()) : null,
-                    'invitedUser' => $invitation->invitedUser ? \App\Domain\Entity\Customer::from($invitation->invitedUser->toArray()) : null
+                    'email'           => $invitation->email,
+                    'role'            => $invitation->role,
+                    'permissions'     => $invitation->permissions ?? [],
+                    'status'          => $invitation->status,
+                    'token'           => $invitation->token,
+                    'expires_at'      => $invitation->expires_at?->toISOString(),
+                    'accepted_at'     => $invitation->accepted_at?->toISOString(),
+                    'declined_at'     => $invitation->declined_at?->toISOString(),
+                    'created_at'      => $invitation->created_at?->toISOString(),
+                    'updated_at'      => $invitation->updated_at?->toISOString(),
+                    'project'         => null,
+                    'invitedBy'       => $invitation->invitedBy ? Customer::from($invitation->invitedBy->toArray()) : null,
+                    'invitedUser'     => $invitation->invitedUser ? Customer::from($invitation->invitedUser->toArray()) : null,
                 ]);
-            })->toArray();
+            })->all();
         }
 
         return $result;
@@ -305,24 +318,8 @@ class EloquentProjectReadRepository implements ProjectReadRepositoryInterface
         foreach ($projectIds as $projectId) {
             $projectChats = $chats->get($projectId, collect());
             $result[$projectId] = $projectChats->take($limit)->map(function ($chat) {
-                return \App\Domain\Entity\Chat::from([
-                    'id' => $chat->id,
-                    'project_id' => $chat->project_id,
-                    'customer_id' => $chat->customer_id,
-                    'message' => $chat->message,
-                    'message_type' => $chat->message_type,
-                    'sender_type' => $chat->sender_type,
-                    'file_path' => $chat->file_path,
-                    'file_name' => $chat->file_name,
-                    'file_size' => $chat->file_size,
-                    'is_read' => $chat->is_read,
-                    'read_at' => $chat->read_at?->toISOString(),
-                    'metadata' => $chat->metadata,
-                    'created_at' => $chat->created_at?->toISOString(),
-                    'updated_at' => $chat->updated_at?->toISOString(),
-                    'customer' => $chat->customer ? \App\Domain\Entity\Customer::from($chat->customer->toArray()) : null
-                ]);
-            })->toArray();
+                return $this->chatMapper->toDomain($chat);
+            })->all();
         }
 
         return $result;

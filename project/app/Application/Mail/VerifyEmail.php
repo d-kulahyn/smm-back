@@ -28,7 +28,7 @@ class VerifyEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.verify',
+            markdown: 'mail.verification',
             with    : [
                 'code' => $this->code,
             ]

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Chat extends Model
@@ -14,21 +14,9 @@ class Chat extends Model
     protected $fillable = [
         'project_id',
         'customer_id',
-        'message',
-        'message_type',
-        'sender_type',
-        'file_path',
-        'file_name',
-        'file_size',
-        'is_read',
-        'read_at',
-        'metadata',
-    ];
-
-    protected $casts = [
-        'metadata' => 'array',
-        'is_read' => 'boolean',
-        'read_at' => 'datetime',
+        'title',
+        'description',
+        'status',
     ];
 
     public function project(): BelongsTo
@@ -38,29 +26,27 @@ class Chat extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    public function mediaFiles(): MorphMany
+    public function messages(): HasMany
     {
-        return $this->morphMany(MediaFile::class, 'fileable');
+        return $this->hasMany(ChatMessage::class);
     }
 
-    public function isVoiceMessage(): bool
+    public function latestMessage(): BelongsTo
     {
-        return $this->message_type === 'voice';
+        return $this->belongsTo(ChatMessage::class, 'id', 'chat_id')
+            ->latest();
     }
 
-    public function isFromCustomer(): bool
+    public function unreadMessagesCount(int $customerId): int
     {
-        return $this->sender_type === 'customer';
-    }
-
-    public function markAsRead(): void
-    {
-        $this->update([
-            'is_read' => true,
-            'read_at' => now(),
-        ]);
+        return $this->messages()
+            ->where('customer_id', '!=', $customerId)
+            ->whereDoesntHave('reads', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId);
+            })
+            ->count();
     }
 }
