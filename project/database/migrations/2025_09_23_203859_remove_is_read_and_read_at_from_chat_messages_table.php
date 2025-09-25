@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chat_messages', function (Blueprint $table) {
-            $table->dropIndex(['project_id', 'is_read']);
             $table->dropColumn(['is_read', 'read_at']);
         });
     }
