@@ -21,6 +21,8 @@ class Project extends Model
         'end_date',
         'budget',
         'metadata',
+        'avatar',
+        'color'
     ];
 
     protected $casts = [

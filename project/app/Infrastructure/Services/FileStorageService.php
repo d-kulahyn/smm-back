@@ -12,7 +12,7 @@ class FileStorageService
 
     public function generateFileName(UploadedFile $file): string
     {
-        return time().'_' . uniqid() .$file->getClientOriginalName();
+        return time().'_'.uniqid().'_'.$file->getClientOriginalName();
     }
 
     public function storeVoiceMessage(UploadedFile $file): string
@@ -22,7 +22,7 @@ class FileStorageService
         return $file->storeAs('voice_messages', $fileName, env('DISK', 'public'));
     }
 
-    public function storeMediaFile(UploadedFile $file, string $directory = 'media'): string
+    public function store(UploadedFile $file, string $directory = 'media'): string
     {
         $fileName = $this->generateFileName($file);
 

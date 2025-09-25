@@ -22,6 +22,8 @@ class Project extends Data
         public readonly ?string $created_at,
         public readonly ?string $updated_at,
         public ?ProjectStatsDto $statsDto = null,
+        public ?string $avatar = null,
+        public ?string $color = null,
         public array $tasks = [],
         public array $members = [],
         public array $invitations = [],

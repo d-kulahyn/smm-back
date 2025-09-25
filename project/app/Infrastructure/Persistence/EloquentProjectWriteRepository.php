@@ -6,13 +6,14 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Project;
 use App\Domain\Repository\ProjectWriteRepositoryInterface;
+use App\Infrastructure\API\DTO\CreateProjectDto;
 use App\Models\Project as ProjectModel;
 
 class EloquentProjectWriteRepository implements ProjectWriteRepositoryInterface
 {
-    public function create(array $data): Project
+    public function create(CreateProjectDto $data): Project
     {
-        $model = ProjectModel::create($data);
+        $model = ProjectModel::create($data->toArray());
 
         return Project::from($model->toArray());
     }

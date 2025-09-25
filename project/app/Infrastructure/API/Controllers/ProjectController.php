@@ -7,8 +7,11 @@ use App\Application\UseCase\UpdateProjectUseCase;
 use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Domain\Repository\ProjectWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateProjectDto;
+use App\Infrastructure\API\DTO\CreateProjectRequestDto;
+use App\Infrastructure\API\DTO\UpdateProjectUseCaseDto;
 use App\Infrastructure\API\Resource\ProjectResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
+use App\Infrastructure\Services\FileStorageService;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -33,7 +36,8 @@ class ProjectController extends Controller
         private readonly ProjectReadRepositoryInterface $projectReadRepository,
         private readonly ProjectWriteRepositoryInterface $projectWriteRepository,
         private readonly CreateProjectUseCase $createProjectUseCase,
-        private readonly UpdateProjectUseCase $updateProjectUseCase
+        private readonly UpdateProjectUseCase $updateProjectUseCase,
+        private readonly FileStorageService $fileStorageService,
     ) {}
 
     /**
@@ -75,7 +79,8 @@ class ProjectController extends Controller
 
         $params = $this->getPaginationParams($request);
 
-        return ProjectResource::collection($this->projectReadRepository->findByCustomerIdPaginated($request->user()->id, $params->page, $params->perPage));
+        return ProjectResource::collection($this->projectReadRepository->findByCustomerIdPaginated($request->user()->id,
+            $params->page, $params->perPage));
     }
 
     /**
@@ -104,14 +109,30 @@ class ProjectController extends Controller
      *     )
      * )
      */
-    public function store(CreateProjectDto $dto, Request $request): JsonResponse
+    public function store(CreateProjectRequestDto $dto, Request $request): JsonResponse
     {
         $this->authorize('create', Project::class);
 
-        $projectUseCaseDto = \App\Infrastructure\API\DTO\CreateProjectUseCaseDto::fromCreateProjectDto($dto, $request->user()->id);
+        $avatarPath = null;
 
-        return response()->json(new ProjectResource($this->createProjectUseCase->execute($projectUseCaseDto->toArray())), Response::HTTP_CREATED);
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $this->fileStorageService->store($request->file('avatar'), 'avatar');
+        }
 
+        $projectUseCaseDto = new CreateProjectDto(
+            name       : $dto->name,
+            customer_id: $request->user()->id,
+            status     : $dto->status,
+            avatar     : $avatarPath,
+            description: $dto->description,
+            color      : $dto->color,
+            start_date : $dto->start_date,
+            end_date   : $dto->end_date,
+            budget     : $dto->budget,
+        );
+
+        return response()->json(new ProjectResource($this->createProjectUseCase->execute($projectUseCaseDto)),
+            Response::HTTP_CREATED);
     }
 
     /**
@@ -172,11 +193,11 @@ class ProjectController extends Controller
      *     )
      * )
      */
-    public function update(CreateProjectDto $dto, Project $project): ProjectResource
+    public function update(CreateProjectRequestDto $dto, Project $project): ProjectResource
     {
         $this->authorize('update', $project);
 
-        $updateProjectDto = \App\Infrastructure\API\DTO\UpdateProjectUseCaseDto::fromCreateProjectDto($dto);
+        $updateProjectDto = UpdateProjectUseCaseDto::fromCreateProjectDto($dto);
 
         $project = $this->updateProjectUseCase->execute($project->id, $updateProjectDto->toArray());
 
@@ -206,7 +227,6 @@ class ProjectController extends Controller
      */
     public function complete(Project $project): ProjectResource
     {
-
         $this->authorize('update', $project);
 
         $project = $this->projectWriteRepository->updateStatus($project->id, 'completed');

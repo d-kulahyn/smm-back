@@ -17,7 +17,7 @@ class UpdateProjectUseCaseDto extends Data
         public ?float $budget = null,
     ) {}
 
-    public static function fromCreateProjectDto(CreateProjectDto $dto): self
+    public static function fromCreateProjectDto(CreateProjectRequestDto $dto): self
     {
         return new self(
             name       : $dto->name,

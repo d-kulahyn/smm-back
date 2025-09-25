@@ -5,6 +5,8 @@ namespace App\Infrastructure\API\Resource;
 use App\Domain\Entity\Project;
 use App\Infrastructure\API\Resource\Traits\FormatsDatesTrait;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class ProjectResource extends JsonResource
 {
@@ -28,6 +30,8 @@ class ProjectResource extends JsonResource
             'is_active'    => $resource->isActive(),
             'is_completed' => $resource->isCompleted(),
             'stats'        => $resource->statsDto,
+            'avatar'       => $resource->avatar ? Storage::url($resource->avatar) : null,
+            'color'        => $resource->color,
             'created_at'   => $this->formatCreatedAt($resource->created_at),
             'updated_at'   => $this->formatUpdatedAt($resource->updated_at),
             'tasks'        => TaskResource::collection($resource->tasks),
