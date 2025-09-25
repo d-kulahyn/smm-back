@@ -37,13 +37,10 @@ class UploadChunkDto extends Data
         return [
             'upload_id'    => 'required|string|uuid',
             'chunk_number' => 'required|integer|min:1',
-            'chunk'        => 'required|file|max:10240', // Max 10MB chunk
+            'chunk'        => 'required|file',
         ];
     }
 
-    /**
-     * Validate upload session and user permissions
-     */
     public function validateUploadSession(ChunkedUploadMetadata $metadata): array
     {
         $uploadData = $metadata->get($this->uploadId);
@@ -51,17 +48,14 @@ class UploadChunkDto extends Data
             throw new RuntimeException('Upload session not found or expired');
         }
 
-        // Verify user permissions
         if ($uploadData['user_id'] !== $this->userId) {
             throw new RuntimeException('Unauthorized');
         }
 
-        // Validate chunk number
         if ($this->chunkNumber > $uploadData['total_chunks']) {
             throw new InvalidArgumentException('Invalid chunk number');
         }
 
-        // Check if chunk already uploaded
         if ($metadata->isChunkUploaded($this->uploadId, $this->chunkNumber)) {
             throw new InvalidArgumentException('Chunk already uploaded');
         }

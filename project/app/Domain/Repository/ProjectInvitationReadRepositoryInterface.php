@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Repository;
 
 use App\Domain\Entity\ProjectInvitation;
+use App\Infrastructure\API\DTO\PaginationParamsDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProjectInvitationReadRepositoryInterface
@@ -15,13 +16,14 @@ interface ProjectInvitationReadRepositoryInterface
 
     public function findByProjectId(int $projectId): array;
 
-    public function findByProjectIdPaginated(int $projectId, int $page = 1, int $perPage = 15): LengthAwarePaginator;
+    public function findByProjectIdPaginated(int $projectId, PaginationParamsDto $paginationParamsDto): LengthAwarePaginator;
 
     public function findByEmail(string $email): array;
+    public function findByEmailAndProjectId(int $projectId, string $email): array;
 
     public function findByUserId(int $userId): array;
 
-    public function findByUserIdPaginated(int $userId, int $page = 1, int $perPage = 15): LengthAwarePaginator;
+    public function findByUserIdPaginated(int $userId, PaginationParamsDto $paginationParamsDto): LengthAwarePaginator;
 
     public function findPendingByProject(int $projectId): array;
 

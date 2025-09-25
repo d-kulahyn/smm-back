@@ -27,13 +27,13 @@ class ProjectResource extends JsonResource
             'metadata'     => $resource->metadata,
             'is_active'    => $resource->isActive(),
             'is_completed' => $resource->isCompleted(),
+            'stats'        => $resource->statsDto,
+            'created_at'   => $this->formatCreatedAt($resource->created_at),
+            'updated_at'   => $this->formatUpdatedAt($resource->updated_at),
             'tasks'        => TaskResource::collection($resource->tasks),
             'members'      => ProjectMemberResource::collection($resource->members),
             'invitations'  => ProjectInvitationResource::collection($resource->invitations),
             'chats'        => ChatResource::collection($resource->chats),
-            'stats'        => $resource->statsDto?->toArray(),
-            'created_at'   => $this->formatCreatedAt($resource->created_at),
-            'updated_at'   => $this->formatUpdatedAt($resource->updated_at),
         ];
     }
 }

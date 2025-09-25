@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Repository;
 
 use App\Domain\Entity\ProjectInvitation;
+use App\Infrastructure\API\DTO\CreateProjectInvitationDto;
 
 interface ProjectInvitationWriteRepositoryInterface
 {
-    public function create(array $data): ProjectInvitation;
+    public function create(CreateProjectInvitationDto $dto): ProjectInvitation;
 
     public function update(int $id, array $data): ProjectInvitation;
 

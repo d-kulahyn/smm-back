@@ -20,13 +20,10 @@ readonly class UploadChunkUseCase
 
     public function execute(UploadChunkDto $dto): array
     {
-        // Validate upload session and permissions through DTO
         $uploadData = $dto->validateUploadSession($this->metadata);
 
-        // Calculate position and append chunk
         $this->fileStorageService->appendChunk($uploadData['file_path'], $dto->chunk);
 
-        // Update metadata
         $this->metadata->addUploadedChunk($dto->uploadId, $dto->chunkNumber);
 
         $currentSize = $this->fileStorageService->getFileSize($uploadData['file_path']);

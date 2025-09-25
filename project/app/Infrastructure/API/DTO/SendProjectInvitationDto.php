@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
-use Spatie\LaravelData\Attributes\Validation\Email;
-use Spatie\LaravelData\Attributes\Validation\In;
-use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 class SendProjectInvitationDto extends Data
 {
     public function __construct(
-        #[Email]
-        public readonly ?string $email = null,
-
-        public readonly ?int $user_id = null,
-
-        #[Required]
-        #[In(['manager', 'member', 'viewer'])]
+        public readonly string $email,
         public readonly string $role,
-
         public readonly array $permissions = []
     ) {}
+
+    public static function rules(ValidationContext $context): array
+    {
+        return [
+            'email'         => 'required|email',
+            'role'          => 'required|string',
+            'permissions'   => 'array',
+            'permissions.*' => 'string',
+        ];
+    }
 }

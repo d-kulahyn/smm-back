@@ -22,7 +22,6 @@ class CustomerEloquentToDomainEntity
             $friends[] = new \App\Domain\Entity\Customer(
                 $friend->password,
                 $friend->email,
-                [],
                 $friend->email_notifications,
                 $friend->push_notifications,
                 $friend->debt_reminder_period,
@@ -33,16 +32,12 @@ class CustomerEloquentToDomainEntity
                 $friend->name,
                 $customerEloquent->avatar,
                 $friend->id,
-                $friend->currency,
-                null,
-                $friend->avatar_color,
             );
         }
 
         return new \App\Domain\Entity\Customer(
             $customerEloquent->password,
             $customerEloquent->email,
-            $friends,
             $customerEloquent->email_notifications,
             $customerEloquent->push_notifications,
             $customerEloquent->debt_reminder_period,
@@ -53,9 +48,6 @@ class CustomerEloquentToDomainEntity
             $customerEloquent->name,
             $customerEloquent->avatar,
             $customerEloquent->id,
-            $customerEloquent->currency,
-            null,
-            $customerEloquent->avatar_color,
         );
     }
 }

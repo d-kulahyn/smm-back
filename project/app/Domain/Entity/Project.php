@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
-use App\Infrastructure\API\DTO\TasksStatsDto;
+use App\Infrastructure\API\DTO\ProjectStatsDto;
 use Spatie\LaravelData\Data;
 
 class Project extends Data
@@ -21,7 +21,7 @@ class Project extends Data
         public readonly ?array $metadata,
         public readonly ?string $created_at,
         public readonly ?string $updated_at,
-        public ?TasksStatsDto $statsDto = null,
+        public ?ProjectStatsDto $statsDto = null,
         public array $tasks = [],
         public array $members = [],
         public array $invitations = [],
@@ -48,7 +48,7 @@ class Project extends Data
         return $this;
     }
 
-    public function setStats(TasksStatsDto $statsDto): self
+    public function setStats(ProjectStatsDto $statsDto): self
     {
         $this->statsDto = $statsDto;
 

@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\ProjectInvitation;
 use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
+use App\Infrastructure\API\DTO\CreateProjectInvitationDto;
 use App\Infrastructure\Mapper\ProjectInvitationMapper;
 use App\Models\ProjectInvitation as EloquentProjectInvitation;
 
@@ -15,9 +16,9 @@ readonly class EloquentProjectInvitationWriteRepository implements ProjectInvita
         private ProjectInvitationMapper $mapper
     ) {}
 
-    public function create(array $data): ProjectInvitation
+    public function create(CreateProjectInvitationDto $dto): ProjectInvitation
     {
-        $eloquentInvitation = EloquentProjectInvitation::create($data);
+        $eloquentInvitation = EloquentProjectInvitation::create($dto->toArray());
         $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);
 
         return $this->mapper->toDomain($eloquentInvitation);
@@ -44,9 +45,9 @@ readonly class EloquentProjectInvitationWriteRepository implements ProjectInvita
             ->firstOrFail();
 
         $eloquentInvitation->update([
-            'status' => 'accepted',
-            'accepted_at' => now(),
-            'invited_user_id' => $userId
+            'status'          => 'accepted',
+            'accepted_at'     => now(),
+            'invited_user_id' => $userId,
         ]);
 
         $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);
@@ -61,8 +62,8 @@ readonly class EloquentProjectInvitationWriteRepository implements ProjectInvita
             ->firstOrFail();
 
         $eloquentInvitation->update([
-            'status' => 'declined',
-            'declined_at' => now()
+            'status'      => 'declined',
+            'declined_at' => now(),
         ]);
 
         $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);

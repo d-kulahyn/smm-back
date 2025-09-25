@@ -45,6 +45,6 @@ class MediaFileUploadedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        return ["project.{$this->projectId}"];
+        return ["projects.{$this->mediaFile->uploaded_by}"];
     }
 }

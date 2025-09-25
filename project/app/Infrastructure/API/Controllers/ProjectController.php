@@ -75,7 +75,7 @@ class ProjectController extends Controller
 
         $params = $this->getPaginationParams($request);
 
-        return ProjectResource::collection($this->projectReadRepository->findByCustomerIdPaginatedWithStats($request->user()->id, $params->page, $params->perPage));
+        return ProjectResource::collection($this->projectReadRepository->findByCustomerIdPaginated($request->user()->id, $params->page, $params->perPage));
     }
 
     /**

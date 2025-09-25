@@ -12,13 +12,13 @@ use App\Domain\Repository\CustomerReadRepositoryInterface;
 use App\Domain\Exception\ProjectInvitationNotFoundException;
 use App\Infrastructure\API\DTO\AcceptProjectInvitationUseCaseDto;
 
-class AcceptProjectInvitationUseCase
+readonly class AcceptProjectInvitationUseCase
 {
     public function __construct(
-        private readonly ProjectInvitationWriteRepositoryInterface $invitationWriteRepository,
-        private readonly ProjectInvitationReadRepositoryInterface $invitationReadRepository,
-        private readonly ProjectMemberWriteRepositoryInterface $memberWriteRepository,
-        private readonly CustomerReadRepositoryInterface $customerReadRepository
+        private ProjectInvitationWriteRepositoryInterface $invitationWriteRepository,
+        private ProjectInvitationReadRepositoryInterface $invitationReadRepository,
+        private ProjectMemberWriteRepositoryInterface $memberWriteRepository,
+        private CustomerReadRepositoryInterface $customerReadRepository
     ) {}
 
     public function execute(AcceptProjectInvitationUseCaseDto $dto): Customer
@@ -41,7 +41,7 @@ class AcceptProjectInvitationUseCase
             'joined_at' => now()
         ];
 
-        $member = $this->memberWriteRepository->create($memberData);
+        $this->memberWriteRepository->create($memberData);
 
         $this->invitationWriteRepository->update($invitation->id, ['status' => 'accepted']);
 

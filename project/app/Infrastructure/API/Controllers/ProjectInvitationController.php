@@ -85,10 +85,8 @@ class ProjectInvitationController extends Controller
     {
         $this->authorize('manageMembers', $project);
 
-        $params = $this->getPaginationParams($request);
-
         return ProjectInvitationResource::collection(
-            $this->invitationReadRepository->findByProjectIdPaginated($project->id, $params->page, $params->perPage)
+            $this->invitationReadRepository->findByProjectIdPaginated($project->id, $this->getPaginationParams($request))
         );
     }
 
@@ -247,10 +245,8 @@ class ProjectInvitationController extends Controller
      */
     public function myInvitations(Request $request): AnonymousResourceCollection
     {
-        $params = $this->getPaginationParams($request);
-
         return ProjectInvitationResource::collection(
-            $this->invitationReadRepository->findByUserIdPaginated($request->user()->id, $params->page, $params->perPage)
+            $this->invitationReadRepository->findByUserIdPaginated($request->user()->id, $this->getPaginationParams($request))
         );
     }
 }
