@@ -92,14 +92,24 @@ class ProjectController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "status"},
-     *             @OA\Property(property="name", type="string", example="New Marketing Campaign"),
-     *             @OA\Property(property="description", type="string", example="Social media marketing campaign for Q4"),
-     *             @OA\Property(property="status", type="string", enum={"active", "completed", "on_hold"}, example="active"),
-     *             @OA\Property(property="start_date", type="string", format="date", example="2025-09-21"),
-     *             @OA\Property(property="end_date", type="string", format="date", example="2025-12-31"),
-     *             @OA\Property(property="budget", type="number", format="float", example=15000.50)
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"name", "status"},
+     *                 @OA\Property(property="name", type="string", example="New Marketing Campaign"),
+     *                 @OA\Property(property="description", type="string", example="Social media marketing campaign for Q4"),
+     *                 @OA\Property(property="status", type="string", enum={"active", "completed", "on_hold", "cancelled"}, example="active"),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2025-09-21"),
+     *                 @OA\Property(property="end_date", type="string", format="date", example="2025-12-31"),
+     *                 @OA\Property(property="budget", type="number", format="float", example=15000.50),
+     *                 @OA\Property(
+     *                     property="avatar",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Project avatar image file (optional, max 5MB, formats: jpeg, png, jpg, gif)"
+     *                 ),
+     *                 @OA\Property(property="color", type="string", example="#FF5733", description="Project color in hex format (optional)")
+     *             )
      *         )
      *     ),
      *     @OA\Response(

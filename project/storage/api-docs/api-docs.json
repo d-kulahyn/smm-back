@@ -532,8 +532,8 @@
                 "tags": [
                     "Chats"
                 ],
-                "summary": "Get project chat messages",
-                "description": "Retrieve paginated list of chat messages for a specific project",
+                "summary": "Get project chats",
+                "description": "Retrieve paginated list of chats for a specific project",
                 "operationId": "0ee027cfeba506553c064209ae61b5ec",
                 "parameters": [
                     {
@@ -563,7 +563,7 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "example": 50
+                            "example": 10
                         }
                     }
                 ],
@@ -579,9 +579,6 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Chat"
                                             }
-                                        },
-                                        "pagination": {
-                                            "$ref": "#/components/schemas/PaginationMeta"
                                         }
                                     },
                                     "type": "object"
@@ -595,51 +592,40 @@
                         "sanctum": []
                     }
                 ]
-            }
-        },
-        "/chats": {
+            },
             "post": {
                 "tags": [
                     "Chats"
                 ],
-                "summary": "Send a text message",
-                "description": "Send a text message to project chat",
-                "operationId": "360e1f861f8ebecb9c4ed0f203218351",
+                "summary": "Create a new chat",
+                "description": "Create a new chat for a specific project",
+                "operationId": "f7c11e710c7a1af9fb6f2ee83f51af06",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "project_id",
-                                    "message"
+                                    "title"
                                 ],
                                 "properties": {
-                                    "project_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "message": {
+                                    "title": {
                                         "type": "string",
-                                        "example": "Hello, this is a test message"
+                                        "example": "Project Discussion"
                                     },
-                                    "message_type": {
+                                    "description": {
                                         "type": "string",
-                                        "enum": [
-                                            "text",
-                                            "voice",
-                                            "file",
-                                            "image"
-                                        ],
-                                        "example": "text"
+                                        "example": "Chat for discussing project details",
+                                        "nullable": true
                                     },
-                                    "sender_type": {
+                                    "status": {
                                         "type": "string",
                                         "enum": [
-                                            "customer",
-                                            "admin"
+                                            "active",
+                                            "inactive",
+                                            "archived"
                                         ],
-                                        "example": "customer"
+                                        "example": "active"
                                     }
                                 },
                                 "type": "object"
@@ -649,105 +635,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Message sent successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Chat"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/projects/{projectId}/chats/voice": {
-            "post": {
-                "tags": [
-                    "Chats"
-                ],
-                "summary": "Send a voice message",
-                "description": "Send a voice message to project chat",
-                "operationId": "42d984809dabd9aa202992956c00eea8",
-                "parameters": [
-                    {
-                        "name": "projectId",
-                        "in": "path",
-                        "description": "Project ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "voice_file"
-                                ],
-                                "properties": {
-                                    "voice_file": {
-                                        "description": "Voice file (mp3, wav, ogg, m4a, max 5MB)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Voice message sent successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Chat"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/chats/{chatId}/mark-as-read": {
-            "patch": {
-                "tags": [
-                    "Chats"
-                ],
-                "summary": "Mark message as read",
-                "description": "Mark a chat message as read",
-                "operationId": "5f28ebdd74ce66cad7d3620bbfd44b93",
-                "parameters": [
-                    {
-                        "name": "chatId",
-                        "in": "path",
-                        "description": "Chat message ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Message marked as read successfully",
+                        "description": "Chat created successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -756,8 +644,172 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Access denied to project"
+                    },
                     "404": {
-                        "description": "Chat message not found"
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/{chatId}": {
+            "get": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Get specific chat",
+                "description": "Retrieve details of a specific chat",
+                "operationId": "f76f55116ecb64fd86fcc51527a0db8c",
+                "responses": {
+                    "200": {
+                        "description": "Chat details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chat"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Update chat",
+                "description": "Update chat details",
+                "operationId": "7345caa75b1361644f5ed60df4d369f0",
+                "responses": {
+                    "200": {
+                        "description": "Chat updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Delete chat",
+                "description": "Delete a chat and all its messages",
+                "operationId": "dda40bb9c041f986380c9dbe0545f3bd",
+                "responses": {
+                    "204": {
+                        "description": "Chat deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/{chatId}/messages": {
+            "get": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Get chat messages",
+                "description": "Retrieve paginated list of messages for a specific chat",
+                "operationId": "44c3deed0801a02547f5e4f6f4d3272f",
+                "responses": {
+                    "200": {
+                        "description": "Chat messages"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Send message to chat",
+                "description": "Send a text message to specific chat",
+                "operationId": "a151322785969e918b6bbe7d5e6bc28e",
+                "responses": {
+                    "201": {
+                        "description": "Message sent successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/{chatId}/messages/voice": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Send voice message to chat",
+                "description": "Send a voice message to specific chat",
+                "operationId": "ba309f606ebb62646c7c08a0f7cd6b69",
+                "responses": {
+                    "201": {
+                        "description": "Voice message sent successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/{chatId}/messages/mark-all-read": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Mark all messages as read",
+                "description": "Mark all messages in chat as read for current user",
+                "operationId": "44c1109fe4c950d162ffb531ed4764ef",
+                "responses": {
+                    "200": {
+                        "description": "Messages marked as read"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{projectId}/chats/{chatId}/messages/{messageId}/mark-read": {
+            "post": {
+                "tags": [
+                    "Chats"
+                ],
+                "summary": "Mark specific message as read",
+                "description": "Mark a specific message as read",
+                "operationId": "d8b58f519dffcebce5f47b62603219d6",
+                "responses": {
+                    "200": {
+                        "description": "Message marked as read"
                     }
                 },
                 "security": [
@@ -831,65 +883,6 @@
                                         }
                                     },
                                     "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Media Files"
-                ],
-                "summary": "Upload a media file",
-                "description": "Upload a new media file to the system",
-                "operationId": "e9eeb58eb53b6e9aba68b7251a33f318",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "file",
-                                    "fileable_type",
-                                    "fileable_id"
-                                ],
-                                "properties": {
-                                    "file": {
-                                        "description": "File to upload (max 10MB)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "fileable_type": {
-                                        "type": "string",
-                                        "example": "App\\\\Models\\\\Project"
-                                    },
-                                    "fileable_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Project logo"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "File uploaded successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/MediaFile"
                                 }
                             }
                         }
@@ -1580,7 +1573,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name",
@@ -1600,7 +1593,8 @@
                                         "enum": [
                                             "active",
                                             "completed",
-                                            "on_hold"
+                                            "on_hold",
+                                            "cancelled"
                                         ],
                                         "example": "active"
                                     },
@@ -1618,6 +1612,16 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 15000.5
+                                    },
+                                    "avatar": {
+                                        "description": "Project avatar image file (optional, max 5MB, formats: jpeg, png, jpg, gif)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "color": {
+                                        "description": "Project color in hex format (optional)",
+                                        "type": "string",
+                                        "example": "#FF5733"
                                     }
                                 },
                                 "type": "object"
@@ -2122,6 +2126,620 @@
                                         },
                                         "pagination": {
                                             "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/members": {
+            "get": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Get list of project members",
+                "description": "Retrieve paginated list of project members with their roles and permissions",
+                "operationId": "e50715f24a0bbbe810d94a4894bb453f",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter by member role",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "owner",
+                                "manager",
+                                "member",
+                                "viewer"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by member name or email",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "john"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProjectMember"
+                                            }
+                                        },
+                                        "pagination": {
+                                            "$ref": "#/components/schemas/PaginationMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User doesn't have permission to view project members",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This action is unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Add a new member to project",
+                "description": "Add a new member to the project with specified role and permissions",
+                "operationId": "9a6740d8d930344486aa66d428676ae8",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID of the user to add",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "role": {
+                                        "description": "Role to assign to the member",
+                                        "type": "string",
+                                        "enum": [
+                                            "owner",
+                                            "manager",
+                                            "member",
+                                            "viewer"
+                                        ],
+                                        "example": "member"
+                                    },
+                                    "permissions": {
+                                        "description": "Additional permissions for the member",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "view_tasks",
+                                            "create_tasks",
+                                            "edit_tasks"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Member added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProjectMember"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Member added successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User doesn't have permission to manage project members",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This action is unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - User is already a member of the project",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User is already a member of this project."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/members/{userId}": {
+            "get": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Get specific project member",
+                "description": "Retrieve detailed information about a specific project member",
+                "operationId": "5d75ca7777a8147fc832c5dc530b9ce1",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProjectMember"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This action is unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project member not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project member not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Update project member",
+                "description": "Update member's role and permissions in the project",
+                "operationId": "2ca06f3be169bb63ecd3d1320e0a68ff",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "role": {
+                                        "description": "New role for the member",
+                                        "type": "string",
+                                        "enum": [
+                                            "owner",
+                                            "manager",
+                                            "member",
+                                            "viewer"
+                                        ],
+                                        "example": "manager"
+                                    },
+                                    "permissions": {
+                                        "description": "Updated permissions for the member",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "view_tasks",
+                                            "create_tasks",
+                                            "edit_tasks",
+                                            "manage_members"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Member updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProjectMember"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Member updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User doesn't have permission to manage project members",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This action is unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project member not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project member not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Remove member from project",
+                "description": "Remove a member from the project",
+                "operationId": "cb8240c871b985c830a2c47091900f92",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Member removed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Member removed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User doesn't have permission to manage project members",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This action is unauthorized."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project member not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Project member not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Cannot remove project owner",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cannot remove project owner."
                                         }
                                     },
                                     "type": "object"
@@ -2914,10 +3532,6 @@
                         "type": "string",
                         "example": "http://localhost/storage/files/document.pdf"
                     },
-                    "is_read": {
-                        "type": "boolean",
-                        "example": false
-                    },
                     "is_voice_message": {
                         "type": "boolean",
                         "example": false
@@ -3086,6 +3700,10 @@
         {
             "name": "Project Invitations",
             "description": "Project invitation management endpoints"
+        },
+        {
+            "name": "Project Members",
+            "description": "Project member management endpoints"
         },
         {
             "name": "Tasks",
