@@ -2,6 +2,8 @@
 
 namespace App\Infrastructure\API\Schemas;
 
+use OpenApi\Annotations as OA;
+
 /**
  * @OA\Schema(
  *     schema="Project",
@@ -123,5 +125,4 @@ namespace App\Infrastructure\API\Schemas;
  */
 class SwaggerSchemas
 {
-    // Этот класс служит только для хранения Swagger схем
 }

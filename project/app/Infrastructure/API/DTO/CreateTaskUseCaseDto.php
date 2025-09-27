@@ -34,4 +34,9 @@ class CreateTaskUseCaseDto extends Data
             reminder_before_hours: $dto->reminder_before_hours
         );
     }
+
+    public function hasAssignedUser(): bool
+    {
+        return $this->assigned_to !== null;
+    }
 }

@@ -6,8 +6,8 @@ namespace App\Application\UseCase;
 
 use App\Infrastructure\API\DTO\InitChunkedUploadDto;
 use App\Infrastructure\API\DTO\UploadMediaFileUseCaseDto;
-use App\Infrastructure\Services\ChunkedUploadMetadata;
-use App\Infrastructure\Services\FileStorageService;
+use App\Infrastructure\Service\ChunkedUploadMetadata;
+use App\Infrastructure\Service\FileStorageService;
 
 readonly class InitChunkedUploadUseCase
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Mapper;
+namespace App\Infrastructure\Persistence\Mapper;
 
 use App\Domain\Entity\ChatMessage;
 use App\Domain\Entity\Chat;

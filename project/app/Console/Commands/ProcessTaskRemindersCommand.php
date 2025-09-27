@@ -2,46 +2,45 @@
 
 namespace App\Console\Commands;
 
+use App\Infrastructure\Job\NotificationJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Domain\Notification\TaskReminderPostCallback;
+use App\Domain\Repository\TaskReminderReadRepositoryInterface;
+use App\Infrastructure\Notification\Messages\TaskReminderMessage;
 
 class ProcessTaskRemindersCommand extends Command
 {
-    protected $signature = 'tasks:process-reminders';
-    protected $description = 'Обработка и отправка напоминаний о задачах';
+    protected $signature   = 'tasks:process-reminders';
+    protected $description = 'Processing task reminders and sending notifications to users.';
+
+
+    public function __construct(
+        private readonly TaskReminderReadRepositoryInterface $taskReminderReadRepository,
+    ) {
+        parent::__construct();
+    }
 
 
     public function handle(): int
     {
-        $this->info('Начинаем обработку напоминаний о задачах...');
-
-        $pendingReminders = $this->taskService->getPendingReminders();
-        $processedCount = 0;
-
-        foreach ($pendingReminders as $reminder) {
+        foreach ($this->taskReminderReadRepository->batchPendingReminders() as $reminder) {
             try {
-                $this->taskService->sendReminder($reminder);
-                $processedCount++;
-
-                $this->line("Напоминание отправлено: {$reminder->task->title} для {$reminder->customer->name}");
-
-                Log::info('Task reminder sent', [
-                    'reminder_id' => $reminder->id,
-                    'task_id' => $reminder->task_id,
-                    'customer_id' => $reminder->customer_id,
-                ]);
-
-            } catch (\Exception $e) {
-                $this->error("Ошибка при отправке напоминания ID {$reminder->id}: {$e->getMessage()}");
-
+                NotificationJob::dispatch(
+                    [$reminder->reminder_type],
+                    (new TaskReminderMessage($reminder->message ?? "You need to do your task {$reminder?->task->title}."))->create(),
+                    [
+                        'class' => TaskReminderPostCallback::class,
+                        'data'  => ['taskReminderId' => $reminder->id],
+                    ]
+                );
+            } catch (\Throwable $e) {
                 Log::error('Failed to send task reminder', [
                     'reminder_id' => $reminder->id,
-                    'error' => $e->getMessage(),
+                    'error'       => $e->getMessage(),
                 ]);
             }
         }
-
-        $this->info("Обработано напоминаний: {$processedCount} из " . $pendingReminders->count());
 
         return Command::SUCCESS;
     }

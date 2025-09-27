@@ -12,6 +12,7 @@ use App\Infrastructure\API\Resource\ProjectMemberResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -106,17 +107,15 @@ class ProjectMemberController extends Controller
      *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function index(Request $request, Project $project): AnonymousResourceCollection
     {
         $this->authorize('view', $project);
 
-        $params = $this->getPaginationParams($request);
-
         $members = $this->projectMemberReadRepository->findByProjectIdPaginated(
             $project->id,
-            $params->page,
-            $params->perPage,
+            $this->getPaginationParams($request),
         );
 
         return ProjectMemberResource::collection($members);
@@ -197,7 +196,7 @@ class ProjectMemberController extends Controller
      *     )
      * )
      */
-    public function store(AddProjectMemberDto $dto, Project $project): JsonResponse
+    public function store(AddProjectMemberDto $dto, Project $project): ProjectMemberResource
     {
         $this->authorize('manageMembers', $project);
 
@@ -208,10 +207,7 @@ class ProjectMemberController extends Controller
             $dto->permissions
         );
 
-        return response()->json([
-            'data' => new ProjectMemberResource($member),
-            'message' => 'Member added successfully'
-        ], Response::HTTP_CREATED);
+        return new ProjectMemberResource($member);
     }
 
     /**

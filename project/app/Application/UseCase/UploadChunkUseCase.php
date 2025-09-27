@@ -7,8 +7,8 @@ namespace App\Application\UseCase;
 use App\Domain\Event\MediaFileUploadedEvent;
 use App\Domain\Repository\MediaFileReadRepositoryInterface;
 use App\Infrastructure\API\DTO\UploadChunkDto;
-use App\Infrastructure\Services\ChunkedUploadMetadata;
-use App\Infrastructure\Services\FileStorageService;
+use App\Infrastructure\Service\ChunkedUploadMetadata;
+use App\Infrastructure\Service\FileStorageService;
 
 readonly class UploadChunkUseCase
 {

@@ -8,31 +8,41 @@ use App\Domain\Entity\Task;
 use App\Domain\Event\TaskCreatedEvent;
 use App\Domain\Event\TaskAssignedEvent;
 use App\Domain\Exception\ProjectNotFoundException;
+use App\Domain\Exception\TaskCannotCreateReminderException;
+use App\Domain\Exception\TaskNotFoundException;
 use App\Domain\Repository\TaskWriteRepositoryInterface;
 use App\Domain\Repository\ProjectReadRepositoryInterface;
+use App\Infrastructure\API\DTO\CreateTaskUseCaseDto;
 
-class CreateTaskUseCase
+readonly class CreateTaskUseCase
 {
     public function __construct(
+        private CreateTaskReminderUseCase $createTaskReminderUseCase,
         private TaskWriteRepositoryInterface $taskWriteRepository,
         private ProjectReadRepositoryInterface $projectReadRepository
     ) {}
 
-    public function execute(array $data): Task
+    /**
+     * @throws TaskNotFoundException
+     * @throws TaskCannotCreateReminderException
+     * @throws ProjectNotFoundException
+     */
+    public function execute(CreateTaskUseCaseDto $dto): Task
     {
-        // Проверяем существование проекта через исключение
-        if (!$this->projectReadRepository->exists($data['project_id'])) {
+        if (!$this->projectReadRepository->exists($dto->project_id)) {
             throw new ProjectNotFoundException();
         }
 
-        $task = $this->taskWriteRepository->create($data);
+        $task = $this->taskWriteRepository->create($dto);
 
-        // Отправляем событие создания задачи
-        event(new TaskCreatedEvent($data['project_id'], $task));
+        event(new TaskCreatedEvent($dto->project_id, $task));
 
-        // Если задача назначена, отправляем событие назначения
-        if (isset($data['assigned_to']) && $data['assigned_to']) {
-            event(new TaskAssignedEvent($data['assigned_to'], $task));
+        if ($dto->hasAssignedUser()) {
+            event(new TaskAssignedEvent($dto->assigned_to, $task));
+        }
+
+        if ($dto->reminder_before_hours && $dto->due_date) {
+            $this->createTaskReminderUseCase->execute($task->id, $dto->assigned_to, $dto->reminder_before_hours);
         }
 
         return $task;

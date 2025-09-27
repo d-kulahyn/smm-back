@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
-use App\Infrastructure\Services\ChunkedUploadMetadata;
+use App\Infrastructure\Service\ChunkedUploadMetadata;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;

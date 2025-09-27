@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
-readonly class CreateProjectInvitationDto
+use Spatie\LaravelData\Data;
+
+class CreateProjectInvitationDto extends Data
 {
     public function __construct(
         public int $project_id,
         public int $invited_by,
-        public string $email,
+        public int $invited_user_id,
         public string $role,
         public array $permissions,
         public string $token,
@@ -20,33 +22,19 @@ readonly class CreateProjectInvitationDto
     public static function create(
         int $projectId,
         int $invitedBy,
-        string $email,
+        int $invited_user_id,
         string $role,
         array $permissions
     ): self {
         return new self(
-            project_id: $projectId,
-            invited_by: $invitedBy,
-            email: $email,
-            role: $role,
+            project_id : $projectId,
+            invited_by : $invitedBy,
+            invited_user_id: $invited_user_id,
+            role       : $role,
             permissions: $permissions,
-            token: bin2hex(random_bytes(32)),
-            expires_at: now()->addDays(7)->toDateTimeString(),
-            status: 'pending'
+            token      : bin2hex(random_bytes(32)),
+            expires_at : now()->addDays(7)->toDateTimeString(),
+            status     : 'pending'
         );
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'project_id'  => $this->project_id,
-            'invited_by'  => $this->invited_by,
-            'email'       => $this->email,
-            'role'        => $this->role,
-            'permissions' => $this->permissions,
-            'token'       => $this->token,
-            'expires_at'  => $this->expires_at,
-            'status'      => $this->status,
-        ];
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Services;
+namespace App\Infrastructure\Service;
 
 use Illuminate\Support\Facades\Cache;
 
@@ -11,9 +11,6 @@ class ChunkedUploadMetadata
     private const CACHE_TTL_HOURS = 24;
     private const CACHE_PREFIX = 'chunk_upload_';
 
-    /**
-     * Store upload metadata
-     */
     public function store(string $uploadId, array $metadata): void
     {
         Cache::put(
@@ -23,17 +20,11 @@ class ChunkedUploadMetadata
         );
     }
 
-    /**
-     * Get upload metadata
-     */
     public function get(string $uploadId): ?array
     {
         return Cache::get(self::CACHE_PREFIX . $uploadId);
     }
 
-    /**
-     * Update uploaded chunks list
-     */
     public function addUploadedChunk(string $uploadId, int $chunkNumber): void
     {
         $metadata = $this->get($uploadId);
@@ -48,9 +39,6 @@ class ChunkedUploadMetadata
         $this->store($uploadId, $metadata);
     }
 
-    /**
-     * Check if chunk is already uploaded
-     */
     public function isChunkUploaded(string $uploadId, int $chunkNumber): bool
     {
         $metadata = $this->get($uploadId);
@@ -61,9 +49,6 @@ class ChunkedUploadMetadata
         return in_array($chunkNumber, $metadata['uploaded_chunks']);
     }
 
-    /**
-     * Get missing chunks
-     */
     public function getMissingChunks(string $uploadId): array
     {
         $metadata = $this->get($uploadId);
@@ -77,9 +62,6 @@ class ChunkedUploadMetadata
         ));
     }
 
-    /**
-     * Check if all chunks are uploaded
-     */
     public function areAllChunksUploaded(string $uploadId): bool
     {
         $metadata = $this->get($uploadId);
@@ -90,9 +72,6 @@ class ChunkedUploadMetadata
         return count($metadata['uploaded_chunks']) === $metadata['total_chunks'];
     }
 
-    /**
-     * Delete upload metadata
-     */
     public function delete(string $uploadId): void
     {
         Cache::forget(self::CACHE_PREFIX . $uploadId);

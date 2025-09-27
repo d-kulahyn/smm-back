@@ -6,13 +6,13 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\ProjectMember;
 use App\Domain\Repository\ProjectMemberWriteRepositoryInterface;
-use App\Infrastructure\Mapper\ProjectMemberMapper;
+use App\Infrastructure\Persistence\Mapper\ProjectMemberMapper;
 use App\Models\ProjectMember as EloquentProjectMember;
 
-class EloquentProjectMemberWriteRepository implements ProjectMemberWriteRepositoryInterface
+readonly class EloquentProjectMemberWriteRepository implements ProjectMemberWriteRepositoryInterface
 {
     public function __construct(
-        private readonly ProjectMemberMapper $mapper
+        private ProjectMemberMapper $mapper
     ) {}
 
     public function create(array $data): ProjectMember

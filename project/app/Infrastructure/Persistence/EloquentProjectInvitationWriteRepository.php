@@ -7,7 +7,7 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entity\ProjectInvitation;
 use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateProjectInvitationDto;
-use App\Infrastructure\Mapper\ProjectInvitationMapper;
+use App\Infrastructure\Persistence\Mapper\ProjectInvitationMapper;
 use App\Models\ProjectInvitation as EloquentProjectInvitation;
 
 readonly class EloquentProjectInvitationWriteRepository implements ProjectInvitationWriteRepositoryInterface

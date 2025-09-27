@@ -5,15 +5,17 @@ namespace App\Infrastructure\API\Controllers;
 use App\Application\UseCase\SendProjectInvitationUseCase;
 use App\Application\UseCase\AcceptProjectInvitationUseCase;
 use App\Application\UseCase\DeclineProjectInvitationUseCase;
+use App\Domain\Policies\ProjectInvitationPolicy;
 use App\Domain\Repository\ProjectInvitationReadRepositoryInterface;
 use App\Infrastructure\API\DTO\SendProjectInvitationDto;
 use App\Infrastructure\API\DTO\SendProjectInvitationUseCaseDto;
 use App\Infrastructure\API\DTO\AcceptProjectInvitationUseCaseDto;
-use App\Infrastructure\API\DTO\DeclineProjectInvitationUseCaseDto;
 use App\Infrastructure\API\Resource\ProjectInvitationResource;
-use App\Infrastructure\API\Resource\CustomerResource;
+use App\Infrastructure\API\Resource\ProjectResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
 use App\Models\Project;
+use App\Models\ProjectInvitation;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -78,15 +80,30 @@ class ProjectInvitationController extends Controller
      *             ),
      *             @OA\Property(property="pagination", ref="#/components/schemas/PaginationMeta")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Project not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Project not found")
+     *         )
      *     )
      * )
      */
     public function index(Project $project, Request $request): AnonymousResourceCollection
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('viewAny', ProjectInvitationPolicy::class);
 
         return ProjectInvitationResource::collection(
-            $this->invitationReadRepository->findByProjectIdPaginated($project->id, $this->getPaginationParams($request))
+            $this->invitationReadRepository->findByProjectIdPaginated($project->id,
+                $this->getPaginationParams($request))
         );
     }
 
@@ -107,7 +124,7 @@ class ProjectInvitationController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"email"},
+     *             required={"email", "role"},
      *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
      *             @OA\Property(property="user_id", type="integer", example=2),
      *             @OA\Property(property="role", type="string", enum={"admin", "member", "viewer"}, example="member"),
@@ -118,17 +135,34 @@ class ProjectInvitationController extends Controller
      *         response=201,
      *         description="Invitation sent successfully",
      *         @OA\JsonContent(ref="#/components/schemas/ProjectInvitation")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid input",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Invalid input")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
      *     )
      * )
+     * @throws AuthorizationException
      */
     public function store(SendProjectInvitationDto $dto, Project $project, Request $request): JsonResponse
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('create', ProjectInvitation::class);
 
-        $invitationDto = SendProjectInvitationUseCaseDto::fromSendProjectInvitationDto(
-            $dto,
-            $project->id,
-            $request->user()->id
+        $invitationDto = new SendProjectInvitationUseCaseDto(
+            project_id     : $project->id,
+            invited_by     : $request->user()->id,
+            invited_user_id: $dto->invited_user_id,
+            role           : $dto->role,
+            permissions    : $dto->permissions,
         );
 
         $invitation = $this->sendInvitationUseCase->execute($invitationDto);
@@ -156,21 +190,41 @@ class ProjectInvitationController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Invitation accepted successfully"),
-     *             @OA\Property(property="member", ref="#/components/schemas/ProjectMember")
+     *             @OA\Property(property="member", ref="#/components/schemas/Project")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invitation not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Invitation not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
      *         )
      *     )
      * )
      */
-    public function accept(string $token, Request $request): JsonResponse
+    public function accept(string $token, Request $request): ProjectResource
     {
-        $acceptDto = AcceptProjectInvitationUseCaseDto::fromTokenAndUserId($token, $request->user()->id);
+        $invitation = $this->invitationReadRepository->findByToken($token);
 
-        $customer = $this->acceptInvitationUseCase->execute($acceptDto);
+        if (!$invitation) {
+            abort(Response::HTTP_NOT_FOUND, 'Invitation not found');
+        }
 
-        return response()->json([
-            'message' => 'Invitation accepted successfully',
-            'customer' => new CustomerResource($customer)
-        ]);
+        $this->authorize('accept', $invitation);
+
+        $acceptDto = new AcceptProjectInvitationUseCaseDto(
+            token  : $token,
+            user_id: $request->user()->id,
+        );
+
+        return new ProjectResource($this->acceptInvitationUseCase->execute($acceptDto));
     }
 
     /**
@@ -194,19 +248,36 @@ class ProjectInvitationController extends Controller
      *             @OA\Property(property="message", type="string", example="Invitation declined successfully"),
      *             @OA\Property(property="invitation", ref="#/components/schemas/ProjectInvitation")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invitation not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Invitation not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
      *     )
      * )
      */
     public function decline(string $token): JsonResponse
     {
-        $declineDto = DeclineProjectInvitationUseCaseDto::fromToken($token);
+        $invitation = $this->invitationReadRepository->findByToken($token);
 
-        $invitation = $this->declineInvitationUseCase->execute($declineDto);
+        if (!$invitation) {
+            abort(Response::HTTP_NOT_FOUND, 'Invitation not found');
+        }
 
-        return response()->json([
-            'message' => 'Invitation declined successfully',
-            'invitation' => new ProjectInvitationResource($invitation)
-        ]);
+        $this->authorize('decline', $invitation);
+
+        $this->declineInvitationUseCase->execute($token);
+
+        return response()->json(['message' => 'Invitation declined successfully']);
     }
 
     /**
@@ -246,7 +317,8 @@ class ProjectInvitationController extends Controller
     public function myInvitations(Request $request): AnonymousResourceCollection
     {
         return ProjectInvitationResource::collection(
-            $this->invitationReadRepository->findByUserIdPaginated($request->user()->id, $this->getPaginationParams($request))
+            $this->invitationReadRepository->findByUserIdPaginated($request->user()->id,
+                $this->getPaginationParams($request))
         );
     }
 }

@@ -49,6 +49,6 @@ class TaskAssignedEvent implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        return ["project.{$this->projectId}"];
+        return ["project"];
     }
 }

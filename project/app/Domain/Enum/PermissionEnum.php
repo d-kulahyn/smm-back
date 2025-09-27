@@ -64,6 +64,13 @@ enum PermissionEnum: string
     case MANAGE_USERS = 'manage_users';
     case VIEW_USER_PROFILES = 'view_user_profiles';
 
+    // Управление проектными приглашениями
+    case MANAGE_ALL_PROJECT_INVITATIONS = 'manage_all_project_invitations';
+    case SEND_PROJECT_INVITATIONS = 'send_project_invitations';
+    case VIEW_PROJECT_INVITATIONS = 'view_project_invitations';
+    case ACCEPT_PROJECT_INVITATIONS = 'accept_project_invitations';
+    case DECLINE_PROJECT_INVITATIONS = 'decline_project_invite';
+
     public function label(): string
     {
         return match ($this) {
@@ -115,6 +122,14 @@ enum PermissionEnum: string
 
             self::MANAGE_USERS => 'Управление пользователями',
             self::VIEW_USER_PROFILES => 'Просмотр профилей пользователей',
+
+            self::MANAGE_ALL_PROJECT_INVITATIONS => 'Управление всеми приглашениями в проекте',
+            self::SEND_PROJECT_INVITATIONS => 'Отправка приглашений в проект',
+            self::VIEW_PROJECT_INVITATIONS => 'Просмотр приглашений в проект',
+            self::ACCEPT_PROJECT_INVITATIONS => 'Принятие приглашений в проекте',
+            self::DECLINE_PROJECT_INVITATIONS => 'Отклонение приглашений в проекте'
         };
     }
 }
+
+

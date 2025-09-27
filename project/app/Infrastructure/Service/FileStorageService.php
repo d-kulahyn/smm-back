@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Services;
+namespace App\Infrastructure\Service;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +31,7 @@ class FileStorageService
 
     public function createEmptyFile(string $fileName, string $directory = 'media'): string
     {
-        $filePath = trim($directory, '/').'/'.$fileName;
+        $filePath = trim($directory, '/').'FileStorageService.php/'.$fileName;
 
         Storage::disk(env('DISK', 'public'))->makeDirectory($directory);
         Storage::disk(env('DISK', 'public'))->put($filePath, '');

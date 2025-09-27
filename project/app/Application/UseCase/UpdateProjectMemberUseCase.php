@@ -9,27 +9,27 @@ use App\Domain\Repository\ProjectMemberWriteRepositoryInterface;
 use App\Domain\Repository\ProjectMemberReadRepositoryInterface;
 use App\Domain\Exception\ProjectMemberNotFoundException;
 
-class UpdateProjectMemberUseCase
+readonly class UpdateProjectMemberUseCase
 {
     public function __construct(
-        private readonly ProjectMemberWriteRepositoryInterface $projectMemberWriteRepository,
-        private readonly ProjectMemberReadRepositoryInterface $projectMemberReadRepository
+        private ProjectMemberWriteRepositoryInterface $projectMemberWriteRepository,
+        private ProjectMemberReadRepositoryInterface $projectMemberReadRepository
     ) {}
 
+    /**
+     * @throws ProjectMemberNotFoundException
+     */
     public function execute(int $projectId, int $userId, ?string $role = null, ?array $permissions = null): ProjectMember
     {
-        // Проверяем, что участник существует
         $member = $this->projectMemberReadRepository->findByProjectAndUser($projectId, $userId);
         if (!$member) {
-            throw new ProjectMemberNotFoundException("Member not found in project");
+            throw new ProjectMemberNotFoundException();
         }
 
-        // Обновляем роль, если указана
         if ($role !== null) {
             $member = $this->projectMemberWriteRepository->updateRole($projectId, $userId, $role);
         }
 
-        // Обновляем права, если указаны
         if ($permissions !== null) {
             $member = $this->projectMemberWriteRepository->updatePermissions($projectId, $userId, $permissions);
         }

@@ -4,19 +4,24 @@ namespace App\Infrastructure\API\Controllers;
 
 use App\Application\UseCase\CreateTaskUseCase;
 use App\Application\UseCase\CreateTaskReminderUseCase;
-use App\Domain\Exception\TaskNotFoundException;
 use App\Domain\Repository\TaskReadRepositoryInterface;
 use App\Domain\Repository\TaskWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateTaskDto;
 use App\Infrastructure\API\DTO\CreateTaskReminderDto;
+use App\Infrastructure\API\DTO\CreateTaskUseCaseDto;
+use App\Infrastructure\API\DTO\UpdateTaskUseCaseDto;
 use App\Infrastructure\API\Resource\TaskResource;
 use App\Infrastructure\API\Resource\TaskReminderResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
-use App\Infrastructure\API\Helpers\ApiResponseHelper;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use OpenApi\Annotations as OA;
+use App\Infrastructure\API\DTO\Filters\TaskFilterDto;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Tag(
@@ -30,10 +35,10 @@ class TaskController extends Controller
     use PaginationTrait;
 
     public function __construct(
-        private TaskReadRepositoryInterface $taskReadRepository,
-        private TaskWriteRepositoryInterface $taskWriteRepository,
-        private CreateTaskUseCase $createTaskUseCase,
-        private CreateTaskReminderUseCase $createTaskReminderUseCase
+        private readonly TaskReadRepositoryInterface $taskReadRepository,
+        private readonly TaskWriteRepositoryInterface $taskWriteRepository,
+        private readonly CreateTaskUseCase $createTaskUseCase,
+        private readonly CreateTaskReminderUseCase $createTaskReminderUseCase
     ) {}
 
     /**
@@ -78,6 +83,27 @@ class TaskController extends Controller
      *         required=false,
      *         @OA\Schema(type="string", enum={"low", "medium", "high", "urgent"})
      *     ),
+     *     @OA\Parameter(
+     *         name="assigned_to",
+     *         in="query",
+     *         description="Filter by assigned user ID",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="overdue",
+     *         in="query",
+     *         description="Filter overdue tasks",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search in task title and description",
+     *         required=false,
+     *         @OA\Schema(type="string", example="social media")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
@@ -89,32 +115,16 @@ class TaskController extends Controller
      *     )
      * )
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', \App\Models\Task::class);
+        $this->authorize('viewAny', Task::class);
 
         $params = $this->getPaginationParams($request);
-        $filters = $request->only(['status', 'priority', 'assigned_to', 'overdue']);
+        $filters = TaskFilterDto::fromRequest($request);
 
-        if ($request->has('project_id')) {
-            $tasksPaginated = $this->taskReadRepository->findByProjectIdPaginated(
-                $request->project_id,
-                $filters,
-                $params->page,
-                $params->perPage
-            );
-        } else {
-            $tasksPaginated = $this->taskReadRepository->findByCustomerIdPaginated(
-                $request->user()->id,
-                $filters,
-                $params->page,
-                $params->perPage
-            );
-        }
+        $tasksPaginated = $this->taskReadRepository->paginate($params, $filters);
 
-        return ApiResponseHelper::successWithPagination(
-            $tasksPaginated
-        );
+        return TaskResource::collection($tasksPaginated);
     }
 
     /**
@@ -149,28 +159,13 @@ class TaskController extends Controller
      *     )
      * )
      */
-    public function store(CreateTaskDto $dto, Request $request): JsonResponse
+    public function store(CreateTaskDto $dto, Request $request): TaskResource
     {
-        $this->authorize('create', \App\Models\Task::class);
+        $this->authorize('create', Task::class);
 
-        $taskUseCaseDto = \App\Infrastructure\API\DTO\CreateTaskUseCaseDto::fromCreateTaskDto($dto, $request->user()->id);
+        $taskUseCaseDto = CreateTaskUseCaseDto::fromCreateTaskDto($dto, $request->user()->id);
 
-        $task = $this->createTaskUseCase->execute($taskUseCaseDto->toArray());
-
-        // Create reminder if specified
-        if ($dto->reminder_before_hours && $dto->due_date) {
-            $this->createTaskReminderUseCase->execute(
-                $task->id,
-                $request->user()->id,
-                $dto->reminder_before_hours
-            );
-        }
-
-        return ApiResponseHelper::success(
-            new TaskResource($task),
-            'Task created successfully',
-            201
-        );
+        return new TaskResource($this->createTaskUseCase->execute($taskUseCaseDto));
     }
 
     /**
@@ -197,20 +192,13 @@ class TaskController extends Controller
      *     )
      * )
      */
-    public function show(int $id): JsonResponse
+    public function show(Task $task): TaskResource
     {
-        $task = $this->taskReadRepository->findById($id);
+        $this->authorize('view', $task);
 
-        if (!$task) {
-            throw new TaskNotFoundException();
-        }
+        $taskEntity = $this->taskReadRepository->findById($task->id);
 
-        $taskModel = \App\Models\Task::find($id);
-        $this->authorize('view', $taskModel);
-
-        return ApiResponseHelper::success(
-            new TaskResource($task)
-        );
+        return new TaskResource($taskEntity);
     }
 
     /**
@@ -247,31 +235,23 @@ class TaskController extends Controller
      *     )
      * )
      */
-    public function update(CreateTaskDto $dto, int $id): JsonResponse
+    public function update(CreateTaskDto $dto, Task $task): TaskResource
     {
-        $taskModel = \App\Models\Task::find($id);
-        if (!$taskModel) {
-            throw new TaskNotFoundException();
-        }
+        $this->authorize('update', $task);
 
-        $this->authorize('update', $taskModel);
+        $updateTaskDto = UpdateTaskUseCaseDto::fromCreateTaskDto($dto);
 
-        $updateTaskDto = \App\Infrastructure\API\DTO\UpdateTaskUseCaseDto::fromCreateTaskDto($dto);
+        $task = $this->taskWriteRepository->update($task->id, $updateTaskDto);
 
-        $task = $this->taskWriteRepository->update($id, $updateTaskDto->toArray());
-
-        return ApiResponseHelper::success(
-            new TaskResource($task),
-            'Task updated successfully'
-        );
+        return new TaskResource($task);
     }
 
     /**
-     * @OA\Post(
-     *     path="/tasks/{id}/complete",
+     * @OA\Delete(
+     *     path="/tasks/{id}",
      *     tags={"Tasks"},
-     *     summary="Mark task as completed",
-     *     description="Change task status to completed",
+     *     summary="Delete task",
+     *     description="Delete an existing task",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -281,62 +261,82 @@ class TaskController extends Controller
      *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
-     *         response=200,
-     *         description="Task marked as completed",
+     *         response=204,
+     *         description="Task deleted successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Task completed"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Task")
+     *             @OA\Property(property="message", type="string", example="Task deleted successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Task not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Task not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden - User not authorized to delete this task",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
      *         )
      *     )
      * )
      */
-    public function complete(int $id): JsonResponse
+    public function destroy(Task $task): JsonResponse
     {
-        $taskModel = \App\Models\Task::find($id);
-        if (!$taskModel) {
-            throw new TaskNotFoundException();
-        }
+        $this->authorize('delete', $task);
 
-        $this->authorize('update', $taskModel);
+        $this->taskWriteRepository->delete($task->id);
 
-        $task = $this->taskWriteRepository->markAsCompleted($id);
-
-        return ApiResponseHelper::success(
-            new TaskResource($task),
-            'Task completed'
-        );
+        return response()->json(['message' => 'Task deleted successfully'], Response::HTTP_NO_CONTENT);
     }
 
-    public function destroy(int $id): JsonResponse
+    /**
+     * @OA\Post(
+     *     path="/tasks/{taskId}/reminders",
+     *     tags={"Tasks"},
+     *     summary="Create task reminder",
+     *     description="Create a reminder for a specific task",
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="taskId",
+     *         in="path",
+     *         description="Task ID",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"hours_before"},
+     *             @OA\Property(property="hours_before", type="integer", example=24, description="Hours before due date to send reminder")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Reminder created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Reminder created successfully"),
+     *             @OA\Property(property="data", ref="#/components/schemas/TaskReminder")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Task not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Task not found")
+     *         )
+     *     )
+     * )
+     */
+    public function createReminder(CreateTaskReminderDto $dto, int $taskId): TaskReminderResource
     {
-        $taskModel = \App\Models\Task::find($id);
-        if (!$taskModel) {
-            throw new TaskNotFoundException();
-        }
+        $this->authorize('create', Task::class);
 
-        $this->authorize('delete', $taskModel);
+        $reminder = $this->createTaskReminderUseCase->execute($taskId, request()->user()->id, $dto->hours_before);
 
-        $deleted = $this->taskWriteRepository->delete($id);
-
-        return ApiResponseHelper::success(
-            null,
-            'Task deleted'
-        );
-    }
-
-    public function createReminder(CreateTaskReminderDto $dto, int $taskId): JsonResponse
-    {
-        $reminder = $this->createTaskReminderUseCase->execute(
-            $taskId,
-            request()->user()->id,
-            $dto->hours_before
-        );
-
-        return ApiResponseHelper::success(
-            new TaskReminderResource($reminder),
-            'Reminder created successfully',
-            201
-        );
+        return new TaskReminderResource($reminder);
     }
 }

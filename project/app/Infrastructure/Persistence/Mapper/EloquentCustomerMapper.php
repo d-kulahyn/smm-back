@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Persistence\Mappers;
+namespace App\Infrastructure\Persistence\Mapper;
 
 use App\Models\Customer;
 

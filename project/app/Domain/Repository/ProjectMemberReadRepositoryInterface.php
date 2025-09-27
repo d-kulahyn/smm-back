@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Repository;
 
 use App\Domain\Entity\ProjectMember;
+use App\Infrastructure\API\DTO\PaginationParamsDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProjectMemberReadRepositoryInterface
@@ -19,13 +20,7 @@ interface ProjectMemberReadRepositoryInterface
 
     public function findByRole(int $projectId, string $role): array;
 
-    /**
-     * Find project members with pagination and filters
-     */
-    public function findByProjectIdPaginated(int $projectId, int $page, int $perPage): LengthAwarePaginator;
+    public function findByProjectIdPaginated(int $projectId, PaginationParamsDto $pagination): LengthAwarePaginator;
 
-    /**
-     * Find project member by project and user ID
-     */
     public function findByProjectAndUserId(int $projectId, int $userId): ?ProjectMember;
 }

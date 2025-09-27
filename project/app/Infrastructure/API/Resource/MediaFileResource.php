@@ -63,3 +63,4 @@ class MediaFileResource extends JsonResource
         ];
     }
 }
+

@@ -19,7 +19,7 @@ interface ProjectInvitationReadRepositoryInterface
     public function findByProjectIdPaginated(int $projectId, PaginationParamsDto $paginationParamsDto): LengthAwarePaginator;
 
     public function findByEmail(string $email): array;
-    public function findByEmailAndProjectId(int $projectId, string $email): array;
+    public function findPendingInvitationByUserIdAndProjectId(int $projectId, int $userId): array;
 
     public function findByUserId(int $userId): array;
 

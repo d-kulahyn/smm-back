@@ -6,9 +6,12 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Task;
 use App\Domain\Repository\TaskReadRepositoryInterface;
+use App\Infrastructure\API\DTO\PaginationParamsDto;
+use App\Infrastructure\API\DTO\Filters\TaskFilterDto;
 use App\Models\Task as TaskModel;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class EloquentTaskReadRepository implements TaskReadRepositoryInterface
 {
@@ -19,7 +22,7 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
         return $model ? Task::from($model->toArray()) : null;
     }
 
-    public function findByProjectId(int $projectId, array $filters = []): Collection
+    public function findByProjectId(int $projectId, ?TaskFilterDto $filters = null): Collection
     {
         $query = TaskModel::where('project_id', $projectId);
 
@@ -32,7 +35,17 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
         return $models->map(fn($model) => Task::from($model->toArray()));
     }
 
-    public function findByCustomerId(int $customerId, array $filters = []): Collection
+    public function paginate(PaginationParamsDto $pagination, ?TaskFilterDto $filters = null): LengthAwarePaginator
+    {
+        $query = TaskModel::query();
+        $this->applyFilters($query, $filters);
+
+        return $query->orderBy('due_date')
+                    ->orderBy('priority', 'desc')
+                    ->paginate($pagination->perPage, ['*'], 'page', $pagination->page);
+    }
+
+    public function findByCustomerId(int $customerId, ?TaskFilterDto $filters = null): Collection
     {
         $query = TaskModel::where('customer_id', $customerId);
 
@@ -41,6 +54,17 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
         $models = $query->orderBy('due_date', 'asc')->get();
 
         return $models->map(fn($model) => Task::from($model->toArray()));
+    }
+
+    public function findByCustomerIdPaginated(int $customerId, PaginationParamsDto $pagination, ?TaskFilterDto $filters = null): LengthAwarePaginator
+    {
+        $query = TaskModel::where('customer_id', $customerId);
+
+        $this->applyFilters($query, $filters);
+
+        return $query->orderBy('due_date', 'asc')
+                    ->orderBy('priority', 'desc')
+                    ->paginate($pagination->perPage, ['*'], 'page', $pagination->page);
     }
 
     public function findOverdueTasks(): Collection
@@ -54,52 +78,39 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
 
     public function findByAssignedTo(int $assignedTo): Collection
     {
-        $models = TaskModel::where('assigned_to', $assignedTo)
-            ->orderBy('due_date', 'asc')
-            ->get();
+        $models = TaskModel::where('assigned_to', $assignedTo)->get();
 
         return $models->map(fn($model) => Task::from($model->toArray()));
     }
 
-    public function findByProjectIdPaginated(int $projectId, array $filters = [], int $page = 1, int $perPage = 10): LengthAwarePaginator
+    private function applyFilters(Builder $query, ?TaskFilterDto $filters): void
     {
-        $query = TaskModel::where('project_id', $projectId);
-
-        $this->applyFilters($query, $filters);
-
-        return $query->orderBy('due_date', 'asc')
-                     ->orderBy('priority', 'desc')
-                     ->paginate($perPage, ['*'], 'page', $page);
-    }
-
-    public function findByCustomerIdPaginated(int $customerId, array $filters = [], int $page = 1, int $perPage = 10): LengthAwarePaginator
-    {
-        $query = TaskModel::where('customer_id', $customerId);
-
-        $this->applyFilters($query, $filters);
-
-        return $query->orderBy('due_date', 'asc')
-                     ->orderBy('priority', 'desc')
-                     ->paginate($perPage, ['*'], 'page', $page);
-    }
-
-    private function applyFilters($query, array $filters): void
-    {
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (!$filters) {
+            return;
         }
 
-        if (isset($filters['priority'])) {
-            $query->where('priority', $filters['priority']);
+        if ($filters->hasStatusFilter()) {
+            $query->where('status', $filters->status);
         }
 
-        if (isset($filters['assigned_to'])) {
-            $query->where('assigned_to', $filters['assigned_to']);
+        if ($filters->hasPriorityFilter()) {
+            $query->where('priority', $filters->priority);
         }
 
-        if (isset($filters['overdue']) && $filters['overdue']) {
+        if ($filters->hasAssignedToFilter()) {
+            $query->where('assigned_to', $filters->assigned_to);
+        }
+
+        if ($filters->hasOverdueFilter() && $filters->overdue) {
             $query->where('due_date', '<', now())
                   ->whereNotIn('status', ['completed', 'cancelled']);
+        }
+
+        if ($filters->hasSearchFilter()) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'like', "%{$filters->search}%")
+                  ->orWhere('description', 'like', "%{$filters->search}%");
+            });
         }
     }
 }

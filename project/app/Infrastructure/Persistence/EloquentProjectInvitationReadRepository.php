@@ -7,14 +7,14 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entity\ProjectInvitation;
 use App\Domain\Repository\ProjectInvitationReadRepositoryInterface;
 use App\Infrastructure\API\DTO\PaginationParamsDto;
-use App\Infrastructure\Mapper\ProjectInvitationMapper;
+use App\Infrastructure\Persistence\Mapper\ProjectInvitationMapper;
 use App\Models\ProjectInvitation as EloquentProjectInvitation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class EloquentProjectInvitationReadRepository implements ProjectInvitationReadRepositoryInterface
+readonly class EloquentProjectInvitationReadRepository implements ProjectInvitationReadRepositoryInterface
 {
     public function __construct(
-        private readonly ProjectInvitationMapper $mapper
+        private ProjectInvitationMapper $mapper
     ) {}
 
     public function findById(int $id): ?ProjectInvitation
@@ -84,8 +84,10 @@ class EloquentProjectInvitationReadRepository implements ProjectInvitationReadRe
         return $eloquentInvitations->map(fn($invitation) => $this->mapper->toDomain($invitation))->toArray();
     }
 
-    public function findByProjectIdPaginated(int $projectId, PaginationParamsDto $paginationParamsDto): LengthAwarePaginator
-    {
+    public function findByProjectIdPaginated(
+        int $projectId,
+        PaginationParamsDto $paginationParamsDto
+    ): LengthAwarePaginator {
         return EloquentProjectInvitation::with(['project', 'invitedBy', 'invitedUser'])
             ->where('project_id', $projectId)
             ->orderBy('created_at', 'desc')
@@ -105,13 +107,19 @@ class EloquentProjectInvitationReadRepository implements ProjectInvitationReadRe
             ->paginate($paginationParamsDto->perPage, ['*'], 'page', $paginationParamsDto->page);
     }
 
-    public function findByEmailAndProjectId(int $projectId, string $email): array
+    public function findPendingInvitationByUserIdAndProjectId(int $projectId, int $userId): array
     {
-        $eloquentInvitations = EloquentProjectInvitation::with(['project', 'invitedBy', 'invitedUser'])
+        $eloquentInvitations = EloquentProjectInvitation::with([
+            'project',
+            'invitedBy',
+            'invitedUser',
+        ])
+            ->whereHas('invitedUser', function ($query) use ($userId) {
+                $query->where('id', $userId);
+            })
             ->where('status', 'pending')
             ->where('expires_at', '>', now())
             ->where('project_id', $projectId)
-            ->where('email', $email)
             ->orderBy('created_at', 'desc')
             ->get();
 

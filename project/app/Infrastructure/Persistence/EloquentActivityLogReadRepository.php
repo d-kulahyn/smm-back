@@ -7,7 +7,7 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entity\ActivityLog;
 use App\Domain\Enum\StatusEnum;
 use App\Domain\Repository\ActivityReadRepositoryInterface;
-use App\Infrastructure\Mapper\CustomerEloquentToDomainEntity;
+use App\Infrastructure\Persistence\Mapper\CustomerMapper;
 use Illuminate\Support\Collection;
 
 class EloquentActivityLogReadRepository implements ActivityReadRepositoryInterface
@@ -32,7 +32,7 @@ class EloquentActivityLogReadRepository implements ActivityReadRepositoryInterfa
                     groupName  : $activityLog->group->name,
                     actionType : $activityLog->action_type,
                     customerIds: $activityLog->customers->pluck('id')->all(),
-                    createdBy  : CustomerEloquentToDomainEntity::toEntity($activityLog->createdBy),
+                    createdBy  : CustomerMapper::toEntity($activityLog->createdBy),
                     status     : $status,
                     createdAt  : $activityLog->created_at ? $activityLog->created_at->getTimestamp() : null,
                     details    : $activityLog->details,

@@ -10,7 +10,7 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
 class SendProjectInvitationDto extends Data
 {
     public function __construct(
-        public readonly string $email,
+        public readonly string $invited_user_id,
         public readonly string $role,
         public readonly array $permissions = []
     ) {}
@@ -18,7 +18,7 @@ class SendProjectInvitationDto extends Data
     public static function rules(ValidationContext $context): array
     {
         return [
-            'email'         => 'required|email',
+            'invited_user_id'       => 'required|integer|exists:customers,id',
             'role'          => 'required|string',
             'permissions'   => 'array',
             'permissions.*' => 'string',

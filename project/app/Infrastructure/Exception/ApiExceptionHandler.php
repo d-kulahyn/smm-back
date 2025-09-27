@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Exception;
 
+use App\Domain\Exception\BadRequestDomainException;
 use App\Domain\Exception\DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -35,6 +36,10 @@ class ApiExceptionHandler
             return $this->handleAuthorizationException($exception);
         }
 
+        if ($exception instanceof BadRequestDomainException) {
+            return $this->handleBadRequestDomainException($exception);
+        }
+
         if ($exception instanceof ModelNotFoundException) {
             return $this->handleModelNotFoundException($exception);
         }
@@ -50,15 +55,27 @@ class ApiExceptionHandler
         return $this->handleGenericException($exception);
     }
 
+    private function handleBadRequestDomainException(BadRequestDomainException $exception): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'error'   => [
+                'code'    => $exception->getErrorCode(),
+                'message' => $exception->getMessage(),
+                'details' => [],
+            ],
+        ], $exception->getHttpStatusCode());
+    }
+
     private function handleDomainException(DomainException $exception): JsonResponse
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => $exception->getErrorCode(),
+            'error'   => [
+                'code'    => $exception->getErrorCode(),
                 'message' => $exception->getMessage(),
-                'details' => $exception->getErrorDetails()
-            ]
+                'details' => $exception->getErrorDetails(),
+            ],
         ], $exception->getHttpStatusCode());
     }
 
@@ -66,13 +83,13 @@ class ApiExceptionHandler
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'VALIDATION_FAILED',
+            'error'   => [
+                'code'    => 'VALIDATION_FAILED',
                 'message' => 'Data validation error',
                 'details' => [
-                    'validation_errors' => $exception->errors()
-                ]
-            ]
+                    'validation_errors' => $exception->errors(),
+                ],
+            ],
         ], 422);
     }
 
@@ -80,11 +97,11 @@ class ApiExceptionHandler
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'UNAUTHENTICATED',
+            'error'   => [
+                'code'    => 'UNAUTHENTICATED',
                 'message' => $exception->getMessage(),
-                'details' => []
-            ]
+                'details' => [],
+            ],
         ], 401);
     }
 
@@ -92,11 +109,11 @@ class ApiExceptionHandler
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'UNAUTHORIZED',
+            'error'   => [
+                'code'    => 'UNAUTHORIZED',
                 'message' => 'Insufficient rights to perform the operation',
-                'details' => []
-            ]
+                'details' => [],
+            ],
         ], 403);
     }
 
@@ -106,11 +123,11 @@ class ApiExceptionHandler
 
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'RESOURCE_NOT_FOUND',
+            'error'   => [
+                'code'    => 'RESOURCE_NOT_FOUND',
                 'message' => "Resource {$model} not found",
-                'details' => []
-            ]
+                'details' => [],
+            ],
         ], 404);
     }
 
@@ -118,11 +135,11 @@ class ApiExceptionHandler
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'ROUTE_NOT_FOUND',
+            'error'   => [
+                'code'    => 'ROUTE_NOT_FOUND',
                 'message' => 'Route not found',
-                'details' => []
-            ]
+                'details' => [],
+            ],
         ], 404);
     }
 
@@ -130,11 +147,11 @@ class ApiExceptionHandler
     {
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'HTTP_ERROR',
+            'error'   => [
+                'code'    => 'HTTP_ERROR',
                 'message' => $exception->getMessage() ?: 'HTTP error',
-                'details' => []
-            ]
+                'details' => [],
+            ],
         ], $exception->getStatusCode());
     }
 
@@ -143,25 +160,25 @@ class ApiExceptionHandler
         if (app()->environment('production')) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'INTERNAL_SERVER_ERROR',
+                'error'   => [
+                    'code'    => 'INTERNAL_SERVER_ERROR',
                     'message' => 'Internal Server Error',
-                    'details' => []
-                ]
+                    'details' => [],
+                ],
             ], 500);
         }
 
         return response()->json([
             'success' => false,
-            'error' => [
-                'code' => 'INTERNAL_SERVER_ERROR',
+            'error'   => [
+                'code'    => 'INTERNAL_SERVER_ERROR',
                 'message' => $exception->getMessage(),
                 'details' => [
-                    'file' => $exception->getFile(),
-                    'line' => $exception->getLine(),
-                    'trace' => $exception->getTraceAsString()
-                ]
-            ]
+                    'file'  => $exception->getFile(),
+                    'line'  => $exception->getLine(),
+                    'trace' => $exception->getTraceAsString(),
+                ],
+            ],
         ], 500);
     }
 }

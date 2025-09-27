@@ -26,9 +26,9 @@ class CustomerResource extends JsonResource
             'name'                => $resource->name,
             'email'               => $resource->email,
             'avatar'              => $resource->avatar !== null ? Storage::url($resource->avatar) : null,
-            'email_is_verified'   => !is_null($resource->email_verified_at),
-            'email_notifications' => $resource->email_notifications,
-            'push_notifications'  => $resource->push_notifications,
+            'email_is_verified'   => $this->when($request->user()->id === $resource->id, !is_null($resource->email_verified_at)),
+            'email_notifications' => $this->when($request->user()->id === $resource->id, !is_null($resource->email_notifications)),
+            'push_notifications'  => $this->when($request->user()->id === $resource->id, !is_null($resource->push_notifications)),
         ];
     }
 }

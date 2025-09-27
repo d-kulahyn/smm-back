@@ -6,7 +6,7 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Customer;
 use App\Domain\Repository\CustomerReadRepositoryInterface;
-use App\Infrastructure\Persistence\Mappers\EloquentCustomerMapper;
+use App\Infrastructure\Persistence\Mapper\EloquentCustomerMapper;
 use Illuminate\Support\Collection;
 
 class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface

@@ -14,12 +14,13 @@ class TaskReminder extends Data
         public readonly int $customer_id,
         public readonly string $remind_at,
         public readonly string $reminder_type,
-        public readonly ?string $message,
+        public readonly ?Task $task,
+        public readonly ?string $message = null,
         public readonly bool $is_sent,
-        public readonly ?string $sent_at,
-        public readonly ?array $metadata,
-        public readonly ?string $created_at,
-        public readonly ?string $updated_at,
+        public readonly ?string $sent_at = null,
+        public readonly ?array $metadata = null,
+        public readonly ?string $created_at = null,
+        public readonly ?string $updated_at = null,
     ) {}
 
     public function isDue(): bool

@@ -31,7 +31,6 @@ class SocialMediaAccountResource extends JsonResource
             'can_create_stories' => $resource->canCreateStories(),
             'created_at'         => $this->formatCreatedAt($resource->created_at),
             'updated_at'         => $this->formatUpdatedAt($resource->updated_at),
-            // Не включаем access_token и refresh_token в ответ по соображениям безопасности
         ];
     }
 }

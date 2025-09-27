@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\TaskReminder;
-use App\Domain\Repository\TaskReminderWriteRepositoryInterface;
 use App\Models\TaskReminder as TaskReminderModel;
+use App\Domain\Repository\TaskReminderWriteRepositoryInterface;
 
 class EloquentTaskReminderWriteRepository implements TaskReminderWriteRepositoryInterface
 {

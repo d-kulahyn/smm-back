@@ -20,7 +20,7 @@ use App\Infrastructure\API\DTO\VoiceMessageUseCaseDto;
 use App\Infrastructure\API\Resource\ChatResource;
 use App\Infrastructure\API\Resource\ChatMessageResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
-use App\Infrastructure\Services\FileStorageService;
+use App\Infrastructure\Service\FileStorageService;
 use App\Models\Chat;
 use App\Models\Project;
 use Illuminate\Auth\Access\AuthorizationException;

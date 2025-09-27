@@ -11,7 +11,7 @@ use App\Infrastructure\API\DTO\CreateProjectRequestDto;
 use App\Infrastructure\API\DTO\UpdateProjectUseCaseDto;
 use App\Infrastructure\API\Resource\ProjectResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
-use App\Infrastructure\Services\FileStorageService;
+use App\Infrastructure\Service\FileStorageService;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -141,8 +141,10 @@ class ProjectController extends Controller
             budget     : $dto->budget,
         );
 
-        return response()->json(new ProjectResource($this->createProjectUseCase->execute($projectUseCaseDto)),
-            Response::HTTP_CREATED);
+        return response()->json(
+            new ProjectResource($this->createProjectUseCase->execute($projectUseCaseDto)),
+            Response::HTTP_CREATED
+        );
     }
 
     /**

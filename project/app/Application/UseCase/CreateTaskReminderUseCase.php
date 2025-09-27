@@ -37,12 +37,12 @@ readonly class CreateTaskReminderUseCase
         $remindAt = Carbon::parse($task->due_date)->subHours($hoursBefore);
 
         $data = [
-            'task_id' => $taskId,
-            'customer_id' => $customerId,
-            'remind_at' => $remindAt->toDateTimeString(),
+            'task_id'       => $taskId,
+            'customer_id'   => $customerId,
+            'remind_at'     => $remindAt->toDateTimeString(),
             'reminder_type' => $reminderType,
-            'message' => "Напоминание: задача '{$task->title}' должна быть выполнена {$task->due_date}",
-            'is_sent' => false,
+            'message'       => "Напоминание: задача '{$task->title}' должна быть выполнена {$task->due_date}",
+            'is_sent'       => false,
         ];
 
         return $this->taskReminderWriteRepository->create($data);

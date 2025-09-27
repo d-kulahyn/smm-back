@@ -44,4 +44,13 @@ class EloquentTaskReminderReadRepository implements TaskReminderReadRepositoryIn
 
         return $models->map(fn($model) => TaskReminder::from($model->toArray()));
     }
+
+    public function batchPendingReminders(int $batchSize = 100): \Generator
+    {
+        $query = TaskReminderModel::with('task')->where('is_sent', false)->where('remind_at', '<=', now())->limit($batchSize);
+
+        foreach ($query->cursor() as $model) {
+            yield TaskReminder::from($model->toArray());
+        }
+    }
 }

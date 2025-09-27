@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Mapper;
+namespace App\Infrastructure\Persistence\Mapper;
 
 
 use App\Models\Customer;
 
-class CustomerEloquentToDomainEntity
+class CustomerMapper
 {
     /**
      * @param Customer $customerEloquent
@@ -16,31 +16,11 @@ class CustomerEloquentToDomainEntity
      */
     public static function toEntity(Customer $customerEloquent): \App\Domain\Entity\Customer
     {
-        $friends = [];
-
-        foreach ($customerEloquent->friends as $friend) {
-            $friends[] = new \App\Domain\Entity\Customer(
-                $friend->password,
-                $friend->email,
-                $friend->email_notifications,
-                $friend->push_notifications,
-                $friend->debt_reminder_period,
-                $friend->firebase_cloud_messaging_token,
-                $friend->social_type,
-                $friend->social_id,
-                $friend->email_verified_at?->format('Y-m-d H:i:s'),
-                $friend->name,
-                $customerEloquent->avatar,
-                $friend->id,
-            );
-        }
-
         return new \App\Domain\Entity\Customer(
             $customerEloquent->password,
             $customerEloquent->email,
             $customerEloquent->email_notifications,
             $customerEloquent->push_notifications,
-            $customerEloquent->debt_reminder_period,
             $customerEloquent->firebase_cloud_messaging_token,
             $customerEloquent->social_type,
             $customerEloquent->social_id,

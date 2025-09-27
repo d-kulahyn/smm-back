@@ -16,4 +16,6 @@ interface TaskReminderReadRepositoryInterface
     public function findByCustomerId(int $customerId): Collection;
 
     public function findPendingReminders(): Collection;
+
+    public function batchPendingReminders(int $batchSize = 100): \Generator;
 }

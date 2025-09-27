@@ -75,18 +75,8 @@ class Customer extends Data
         return $this->getRole() === RoleEnum::ADMIN;
     }
 
-    public function isProjectManager(): bool
-    {
-        return $this->getRole() === RoleEnum::PROJECT_MANAGER;
-    }
-
     public function isClient(): bool
     {
         return $this->getRole() === RoleEnum::CLIENT;
-    }
-
-    public function isFreelancer(): bool
-    {
-        return $this->getRole() === RoleEnum::FREELANCER;
     }
 }

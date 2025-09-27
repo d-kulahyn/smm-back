@@ -12,7 +12,7 @@ use App\Infrastructure\API\DTO\InitChunkedUploadDto;
 use App\Infrastructure\API\DTO\UploadChunkDto;
 use App\Infrastructure\API\Resource\MediaFileResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
-use App\Infrastructure\Services\FileStorageService;
+use App\Infrastructure\Service\FileStorageService;
 use App\Models\MediaFile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;

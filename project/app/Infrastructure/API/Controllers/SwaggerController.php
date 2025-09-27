@@ -2,6 +2,8 @@
 
 namespace App\Infrastructure\API\Controllers;
 
+use OpenApi\Annotations as OA;
+
 /**
  * @OA\Info(
  *     title="SMM Project API",
@@ -26,5 +28,4 @@ namespace App\Infrastructure\API\Controllers;
  */
 class SwaggerController
 {
-    // Этот класс служит только для хранения основных Swagger аннотаций
 }

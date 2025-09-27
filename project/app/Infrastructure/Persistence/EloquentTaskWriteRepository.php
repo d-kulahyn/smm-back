@@ -6,21 +6,23 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Task;
 use App\Domain\Repository\TaskWriteRepositoryInterface;
+use App\Infrastructure\API\DTO\CreateTaskUseCaseDto;
+use App\Infrastructure\API\DTO\UpdateTaskUseCaseDto;
 use App\Models\Task as TaskModel;
 
 class EloquentTaskWriteRepository implements TaskWriteRepositoryInterface
 {
-    public function create(array $data): Task
+    public function create(CreateTaskUseCaseDto $dto): Task
     {
-        $model = TaskModel::create($data);
+        $model = TaskModel::create($dto->toArray());
 
         return Task::from($model->toArray());
     }
 
-    public function update(int $id, array $data): Task
+    public function update(int $id, UpdateTaskUseCaseDto $dto): Task
     {
         $model = TaskModel::findOrFail($id);
-        $model->update($data);
+        $model->update($dto->toArray());
 
         return Task::from($model->fresh()->toArray());
     }
