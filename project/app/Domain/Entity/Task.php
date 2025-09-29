@@ -12,13 +12,17 @@ class Task extends Data
     public function __construct(
         public readonly ?int $id,
         public readonly int $project_id,
+        public readonly int $customer_id,
+        public readonly string $priority,
         public readonly string $title,
         public readonly ?string $description,
         public readonly string $status = StatusEnum::PENDING->value,
         public readonly ?string $due_date = null,
         public readonly ?int $assigned_to = null,
         public readonly ?array $metadata = null,
+        public readonly ?array $notes = null,
         public readonly ?string $created_at = null,
+        public readonly ?string $completed_at = null,
         public readonly ?string $updated_at = null,
         public ?Project $project = null
     ) {}
