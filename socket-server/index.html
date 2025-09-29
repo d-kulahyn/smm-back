@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const socket = io('http://localhost', { transports: ['websocket'] });
+
+    socket.on('connect', () => {
+        console.log('Connected as', socket.id);
+
+        socket.emit('room:join', { roomId: 'socket.chats.1.13' });
+
+        setTimeout(() => {
+            socket.emit('room:message', {
+                roomId: 'room-123',
+                message: 'Hello to room-123 from ' + socket.id
+            });
+        }, 1000);
+    });
+
+    socket.on('room:message', (msg) => {
+        alert(msg);
+    });
+</script>
+</body>
+</html>
