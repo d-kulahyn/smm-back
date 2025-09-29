@@ -19,13 +19,11 @@ readonly class InitChunkedUploadUseCase
 
     public function execute(InitChunkedUploadDto $dto): array
     {
-        $chunkSize = $dto->chunkSize ?? 1048576; // Default 1MB
+        $chunkSize = $dto->chunkSize ?? 1048576;
         $totalChunks = ceil($dto->fileSize / $chunkSize);
 
-        // Create file
         $filePath = $this->fileManager->createEmptyFile($dto->filename);
 
-        // Store metadata
         $uploadData = new UploadMediaFileUseCaseDto(
             file_path    : $filePath,
             file_name    : $dto->filename,

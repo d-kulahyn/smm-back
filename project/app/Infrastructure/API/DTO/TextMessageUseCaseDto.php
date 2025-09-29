@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
+use App\Domain\Enum\ChatMessageTypeEnum;
+use App\Domain\Enum\SenderTypeEnum;
 use Spatie\LaravelData\Data;
 
 class TextMessageUseCaseDto extends Data
@@ -13,27 +15,8 @@ class TextMessageUseCaseDto extends Data
         public int $customer_id,
         public int $chat_id,
         public string $message,
-        public string $message_type = 'text',
-        public string $sender_type = 'customer',
+        public string $message_type = ChatMessageTypeEnum::TEXT->value,
+        public string $sender_type = SenderTypeEnum::CUSTOMER->value,
         public ?array $metadata = null,
     ) {}
-
-    public static function fromTextMessage(
-        int $projectId,
-        int $customerId,
-        int $chatId,
-        string $message,
-        string $messageType = 'text',
-        array $metadata = null
-    ): self {
-        return new self(
-            project_id  : $projectId,
-            customer_id : $customerId,
-            chat_id     : $chatId,
-            message     : $message,
-            message_type: $messageType,
-            sender_type : 'customer',
-            metadata    : $metadata
-        );
-    }
 }

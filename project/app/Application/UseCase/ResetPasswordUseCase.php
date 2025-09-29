@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
-use App\Application\Mail\ResetPasswordEmail;
 use App\Domain\Repository\CustomerReadRepositoryInterface;
 use App\Domain\Repository\CustomerWriteRepositoryInterface;
 use App\Infrastructure\Service\PasswordGenerator;
-use Illuminate\Support\Facades\Mail;
 use Random\RandomException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
@@ -40,7 +38,7 @@ readonly class ResetPasswordUseCase
 
         $this->customerWriteRepository->save($customer);
 
-        Mail::to($customer->email)->queue(new ResetPasswordEmail($customer->password));
+//        Mail::to($customer->email)->queue(new ResetPasswordEmail($customer->password));
 
         return true;
     }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
-use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
+use App\Domain\Enum\InvitationStatusEnum;
 use App\Domain\Repository\ProjectInvitationReadRepositoryInterface;
+use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
 
 readonly class DeclineProjectInvitationUseCase
 {
@@ -22,6 +23,6 @@ readonly class DeclineProjectInvitationUseCase
             throw new \InvalidArgumentException("Invitation cannot be declined (already processed)");
         }
 
-        $this->invitationWriteRepository->update($invitation->id, ['status' => 'declined', 'decided_at' => now()]);
+        $this->invitationWriteRepository->update($invitation->id, ['status' => InvitationStatusEnum::DECLINED->value, 'decided_at' => now()]);
     }
 }

@@ -37,8 +37,8 @@ readonly class AddProjectMemberUseCase
             throw new CustomerNotFoundException();
         }
 
-        if ($this->projectMemberReadRepository->findByProjectAndUserId($projectId, $userId)) {
-            return $this->projectMemberReadRepository->findByProjectAndUserId($projectId, $userId);
+        if ($member = $this->projectMemberReadRepository->findByProjectAndUserId($projectId, $userId)) {
+            return $member;
         }
 
         return $this->projectMemberWriteRepository->addMember($projectId, $userId, $role, $permissions);

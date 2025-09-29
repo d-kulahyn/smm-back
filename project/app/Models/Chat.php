@@ -34,6 +34,11 @@ class Chat extends Model
         return $this->hasMany(ChatMessage::class);
     }
 
+    public function members(): HasMany
+    {
+        return $this->hasMany(ChatMember::class);
+    }
+
     public function latestMessage(): BelongsTo
     {
         return $this->belongsTo(ChatMessage::class, 'id', 'chat_id')

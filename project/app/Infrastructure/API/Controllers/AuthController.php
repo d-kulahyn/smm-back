@@ -29,7 +29,7 @@ use Random\RandomException;
  *     description="User authentication and account management endpoints"
  * )
  */
-readonly class AuthController
+readonly class  AuthController
 {
     /**
      * @param CreateUserUseCase $createUserUseCase

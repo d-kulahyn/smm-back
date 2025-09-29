@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
+use App\Domain\Exception\BadRequestDomainException;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 use App\Domain\Entity\Project;
 use App\Domain\Exception\ProjectNotFoundException;
 use App\Domain\Exception\CustomerNotFoundException;
@@ -16,6 +16,7 @@ use App\Domain\Repository\ProjectMemberWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\AcceptProjectInvitationUseCaseDto;
 use App\Domain\Repository\ProjectInvitationReadRepositoryInterface;
 use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
+use App\Domain\Enum\InvitationStatusEnum;
 
 readonly class AcceptProjectInvitationUseCase
 {
@@ -30,7 +31,7 @@ readonly class AcceptProjectInvitationUseCase
     /**
      * @throws ProjectInvitationNotFoundException
      * @throws CustomerNotFoundException
-     * @throws ProjectNotFoundException
+     * @throws ProjectNotFoundException|BadRequestDomainException
      */
     public function execute(AcceptProjectInvitationUseCaseDto $dto): Project
     {
@@ -51,7 +52,7 @@ readonly class AcceptProjectInvitationUseCase
         }
 
         if (!$invitation->canBeAccepted()) {
-            throw new InvalidArgumentException("Invitation cannot be accepted (expired or already processed)");
+            throw new BadRequestDomainException("Invitation cannot be accepted (expired or already processed)");
         }
 
         $memberData = [
@@ -64,7 +65,7 @@ readonly class AcceptProjectInvitationUseCase
 
         DB::transaction(function () use ($invitation, $memberData) {
             $this->memberWriteRepository->create($memberData);
-            $this->invitationWriteRepository->update($invitation->id, ['status' => 'accepted', 'accepted_at' => now()]);
+            $this->invitationWriteRepository->update($invitation->id, ['status' => InvitationStatusEnum::ACCEPTED->value, 'accepted_at' => now()]);
         });
 
         return $project;

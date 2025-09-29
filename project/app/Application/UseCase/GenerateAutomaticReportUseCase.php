@@ -9,6 +9,7 @@ use App\Domain\Repository\ProjectReportWriteRepositoryInterface;
 use App\Domain\Repository\SocialMediaAccountReadRepositoryInterface;
 use App\Domain\Repository\ContentPlanReadRepositoryInterface;
 use App\Domain\Repository\StorybookReadRepositoryInterface;
+use App\Domain\Enum\StorybookStatusEnum;
 
 class GenerateAutomaticReportUseCase
 {
@@ -85,7 +86,7 @@ class GenerateAutomaticReportUseCase
             'storybooks'    => [
                 'active_count'  => $activeStories,
                 'total_count'   => $totalStories,
-                'expired_count' => $storybooks->where('status', 'expired')->count(),
+                'expired_count' => $storybooks->where('status', StorybookStatusEnum::EXPIRED->value)->count(),
             ],
         ];
     }

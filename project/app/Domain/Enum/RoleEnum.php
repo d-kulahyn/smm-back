@@ -8,6 +8,7 @@ enum RoleEnum: string
 {
     case ADMIN = 'admin';
     case CLIENT = 'client';
+    case CHAT_MEMBER = 'chat_member';
 
     public function label(): string
     {

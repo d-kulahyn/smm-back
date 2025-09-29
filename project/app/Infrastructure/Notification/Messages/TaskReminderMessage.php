@@ -13,8 +13,8 @@ class TaskReminderMessage extends Data implements NotificationMessageInterface
         public string $message,
     ) {}
 
-    public function create(): mixed
+    public function create(): string
     {
-        return "Hello {$this->message}";
+        return $this->message;
     }
 }

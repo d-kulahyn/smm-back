@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
+use App\Domain\Enum\TaskPriorityEnum;
+use App\Domain\Enum\TaskStatusEnum;
 use Spatie\LaravelData\Data;
 
 class CreateTaskDto extends Data
 {
     public function __construct(
-        public string $title,
         public int $project_id,
-        public string $status = 'pending',
+        public string $title,
         public ?string $description = null,
-        public string $priority = 'medium',
+        public string $status = TaskStatusEnum::PENDING->value,
+        public string $priority = TaskPriorityEnum::MEDIUM->value,
         public ?int $assigned_to = null,
         public ?string $due_date = null,
         public ?int $reminder_before_hours = null,

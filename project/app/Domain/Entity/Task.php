@@ -4,30 +4,28 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\StatusEnum;
 use Spatie\LaravelData\Data;
 
 class Task extends Data
 {
     public function __construct(
         public readonly ?int $id,
+        public readonly int $project_id,
         public readonly string $title,
         public readonly ?string $description,
-        public readonly string $status = 'pending',
-        public readonly string $priority,
-        public readonly int $project_id,
-        public readonly int $customer_id,
-        public readonly ?int $assigned_to,
-        public readonly ?string $due_date,
-        public readonly ?string $completed_at,
-        public readonly ?string $notes,
-        public readonly ?array $metadata,
-        public readonly ?string $created_at,
-        public readonly ?string $updated_at,
+        public readonly string $status = StatusEnum::PENDING->value,
+        public readonly ?string $due_date = null,
+        public readonly ?int $assigned_to = null,
+        public readonly ?array $metadata = null,
+        public readonly ?string $created_at = null,
+        public readonly ?string $updated_at = null,
+        public ?Project $project = null
     ) {}
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === StatusEnum::COMPLETED->value;
     }
 
     public function isOverdue(): bool

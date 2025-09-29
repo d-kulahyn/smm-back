@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\StatusEnum;
 use App\Infrastructure\API\DTO\ProjectStatsDto;
 use Spatie\LaravelData\Data;
 
@@ -32,12 +33,12 @@ class Project extends Data
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === StatusEnum::ACTIVE->value;
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === StatusEnum::COMPLETED->value;
     }
 
     /**

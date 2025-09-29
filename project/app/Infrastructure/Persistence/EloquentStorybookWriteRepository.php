@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Storybook;
+use App\Domain\Enum\StorybookStatusEnum;
 use App\Domain\Repository\StorybookWriteRepositoryInterface;
 use App\Models\Storybook as StorybookModel;
 
@@ -38,18 +39,23 @@ class EloquentStorybookWriteRepository implements StorybookWriteRepositoryInterf
         return Storybook::from($model->fresh()->toArray());
     }
 
-    public function markAsExpired(int $id): Storybook
+    public function markAsExpired(int $id): bool
     {
-        $model = StorybookModel::findOrFail($id);
-        $model->update(['status' => 'expired']);
+        $model = Storybook::find($id);
 
-        return Storybook::from($model->fresh()->toArray());
+        if (!$model) {
+            return false;
+        }
+
+        $model->update(['status' => StorybookStatusEnum::EXPIRED->value]);
+
+        return true;
     }
 
     public function activateStory(int $id): Storybook
     {
         $model = StorybookModel::findOrFail($id);
-        $model->update(['status' => 'active']);
+        $model->update(['status' => StorybookStatusEnum::ACTIVE->value]);
 
         return Storybook::from($model->fresh()->toArray());
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence;
 
+use App\Domain\Enum\TaskStatusEnum;
 use App\Domain\Entity\Task;
 use App\Domain\Repository\TaskReadRepositoryInterface;
 use App\Infrastructure\API\DTO\PaginationParamsDto;
@@ -24,7 +25,8 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
 
     public function findByProjectId(int $projectId, ?TaskFilterDto $filters = null): Collection
     {
-        $query = TaskModel::where('project_id', $projectId);
+        $query = TaskModel::where('project_id', $projectId)
+            ->whereNotIn('status', [TaskStatusEnum::COMPLETED->value, TaskStatusEnum::CANCELLED->value]);
 
         $this->applyFilters($query, $filters);
 
@@ -67,13 +69,15 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
                     ->paginate($pagination->perPage, ['*'], 'page', $pagination->page);
     }
 
-    public function findOverdueTasks(): Collection
+    public function findOverdueTasks(int $customerId): array
     {
-        $models = TaskModel::where('due_date', '<', now())
-            ->whereNotIn('status', ['completed', 'cancelled'])
-            ->get();
+        $tasks = TaskModel::whereHas('project', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId);
+            })
+                  ->where('due_date', '<', now())
+                  ->whereNotIn('status', [TaskStatusEnum::COMPLETED->value, TaskStatusEnum::CANCELLED->value]);
 
-        return $models->map(fn($model) => Task::from($model->toArray()));
+        return $tasks->get()->map(fn($model) => Task::from($model->toArray()))->toArray();
     }
 
     public function findByAssignedTo(int $assignedTo): Collection

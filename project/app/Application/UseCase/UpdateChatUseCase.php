@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Application\UseCase;
 
 use App\Domain\Entity\Chat;
-use App\Domain\Exception\ProjectNotFoundException;
-use App\Domain\Repository\ChatWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateChatDto;
+use App\Domain\Repository\ChatWriteRepositoryInterface;
 
 readonly class UpdateChatUseCase
 {
@@ -15,15 +14,12 @@ readonly class UpdateChatUseCase
         private ChatWriteRepositoryInterface $chatWriteRepository,
     ) {}
 
-    /**
-     * @throws ProjectNotFoundException
-     */
     public function execute(int $chatId, CreateChatDto $dto): Chat
     {
         return $this->chatWriteRepository->updateChat($chatId, [
-            'title' => $dto->title,
+            'title'       => $dto->title,
             'description' => $dto->description,
-            'status' => $dto->status,
+            'status'      => $dto->status,
         ]);
     }
 }

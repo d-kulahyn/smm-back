@@ -22,7 +22,7 @@ interface ChatWriteRepositoryInterface
 
     public function markAsRead(int $chatId): Chat;
 
-    public function markMessageAsRead(int $messageId, int $customerId): void;
+    public function markMessagesAsRead(array $ids, int $customerId): void;
 
     public function markAllMessagesAsReadForProject(int $projectId, int $excludeCustomerId): int;
 

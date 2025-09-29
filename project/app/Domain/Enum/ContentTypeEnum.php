@@ -15,7 +15,7 @@ enum ContentTypeEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::POST => 'Пост',
             self::STORY => 'История',
             self::REEL => 'Рилс',

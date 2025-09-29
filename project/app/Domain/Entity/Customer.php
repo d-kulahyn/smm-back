@@ -15,7 +15,8 @@ class Customer extends Data
         public string $email,
         public bool $email_notifications = true,
         public bool $push_notifications = true,
-        public string $role = 'admin',
+        public string $role = RoleEnum::ADMIN->value,
+        public array $chats = [],
         public ?array $permissions = null,
         public ?string $firebase_cloud_messaging_token = null,
         public ?string $social_type = null,
@@ -26,6 +27,16 @@ class Customer extends Data
         public ?int $id = null,
     ) {}
 
+    public function aMemberOfChat(int $chatId): bool
+    {
+        return in_array($chatId, $this->getChatsIds());
+    }
+
+    public function getChatsIds(): array
+    {
+        return array_map(fn($chat) => $chat->id, $this->chats);
+    }
+
     public function getRole(): RoleEnum
     {
         return RoleEnum::from($this->role);
@@ -33,14 +44,12 @@ class Customer extends Data
 
     public function hasPermission(PermissionEnum $permission): bool
     {
-        // Проверяем права роли
         $rolePermissions = $this->getRole()->permissions();
 
         if (in_array($permission, $rolePermissions)) {
             return true;
         }
 
-        // Проверяем дополнительные права пользователя
         if ($this->permissions && in_array($permission->value, $this->permissions)) {
             return true;
         }

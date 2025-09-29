@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Enum\StorybookStatusEnum;
+use App\Domain\Enum\StoryTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -54,26 +56,26 @@ class Storybook extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === StorybookStatusEnum::ACTIVE->value;
     }
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired';
+        return $this->status === StorybookStatusEnum::EXPIRED->value;
     }
 
     public function isDraft(): bool
     {
-        return $this->status === 'draft';
+        return $this->status === StorybookStatusEnum::DRAFT->value;
     }
 
     public function isVideo(): bool
     {
-        return $this->story_type === 'video';
+        return $this->story_type === StoryTypeEnum::VIDEO->value;
     }
 
     public function isImage(): bool
     {
-        return $this->story_type === 'image';
+        return $this->story_type === StoryTypeEnum::IMAGE->value;
     }
 }

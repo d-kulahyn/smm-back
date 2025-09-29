@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\ChatMessageTypeEnum;
+use App\Domain\Enum\SenderTypeEnum;
 use Spatie\LaravelData\Data;
 
 class ChatMessage extends Data
@@ -29,12 +31,12 @@ class ChatMessage extends Data
 
     public function isVoiceMessage(): bool
     {
-        return $this->message_type === 'voice';
+        return $this->message_type === ChatMessageTypeEnum::VOICE->value;
     }
 
     public function isFromCustomer(): bool
     {
-        return $this->sender_type === 'customer';
+        return $this->sender_type === SenderTypeEnum::CUSTOMER->value;
     }
 
     public function hasFile(): bool

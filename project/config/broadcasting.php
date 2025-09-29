@@ -3,7 +3,6 @@
 use Illuminate\Support\Str;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Broadcaster
@@ -31,7 +30,6 @@ return [
     */
 
     'connections' => [
-
         'reverb' => [
             'driver' => 'reverb',
             'key' => env('REVERB_APP_KEY'),
@@ -80,14 +78,11 @@ return [
         ],
 
         'redis' => [
-
             'driver' => 'redis',
-
             'options' => [
                 'cluster' => env('REDIS_CLUSTER', 'redis'),
                 'prefix' => env('REDIS_PREFIX', ''),
             ],
-
             'default' => [
                 'url' => env('REDIS_URL'),
                 'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -96,9 +91,11 @@ return [
                 'port' => env('REDIS_PORT', '6379'),
                 'database' => env('REDIS_DB', '0'),
             ],
-
         ],
 
+        'stream' => [
+            'driver' => 'stream',
+            'connection' => env('REDIS_STREAM_CONNECTION', 'default'),
+        ],
     ],
-
 ];

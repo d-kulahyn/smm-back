@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\StatusEnum;
+use App\Domain\Enum\InvitationStatusEnum;
 use Spatie\LaravelData\Data;
 
 class ProjectInvitation extends Data
@@ -30,22 +32,22 @@ class ProjectInvitation extends Data
 
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return $this->status === StatusEnum::PENDING->value;
     }
 
     public function isAccepted(): bool
     {
-        return $this->status === 'accepted';
+        return $this->status === InvitationStatusEnum::ACCEPTED->value;
     }
 
     public function isDeclined(): bool
     {
-        return $this->status === 'declined';
+        return $this->status === InvitationStatusEnum::DECLINED->value;
     }
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired' || ($this->expires_at && now() > $this->expires_at);
+        return $this->status === InvitationStatusEnum::EXPIRED->value || ($this->expires_at && now() > $this->expires_at);
     }
 
     public function canBeAccepted(): bool

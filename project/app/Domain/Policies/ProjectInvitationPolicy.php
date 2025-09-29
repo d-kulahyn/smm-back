@@ -9,6 +9,7 @@ use App\Domain\Entity\Customer as CustomerEntity;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Domain\Enum\PermissionEnum;
+use App\Domain\Enum\StatusEnum;
 
 class ProjectInvitationPolicy
 {
@@ -62,7 +63,7 @@ class ProjectInvitationPolicy
         $customerEntity = CustomerEntity::from($customer->toArray());
 
         return $invitation->invited_user_id === $customerEntity->id &&
-            $invitation->status === 'pending' &&
+            $invitation->status === StatusEnum::PENDING->value &&
             !$invitation->isExpired();
     }
 
@@ -70,8 +71,8 @@ class ProjectInvitationPolicy
     {
         $customerEntity = CustomerEntity::from($customer->toArray());
 
-        return $customerEntity->hasPermission(PermissionEnum::MANAGE_ALL_PROJECT_INVITATIONS) ||
-            ($invitation->invited_user_id === $customerEntity->id &&
-                $invitation->status === 'pending');
+        return ($invitation->invited_user_id === $customerEntity->id ||
+                $customerEntity->hasPermission(PermissionEnum::MANAGE_ALL_PROJECT_INVITATIONS)) &&
+                $invitation->status === StatusEnum::PENDING->value;
     }
 }

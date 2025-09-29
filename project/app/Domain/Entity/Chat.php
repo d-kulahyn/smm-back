@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Entity;
 
 use Spatie\LaravelData\Data;
+use App\Domain\Enum\ChatStatusEnum;
 
 class Chat extends Data
 {
@@ -19,12 +20,13 @@ class Chat extends Data
         public readonly ?string $updated_at,
         public readonly ?int $unread_messages_count = null,
         public ?Customer $customer = null,
-        public ?Project $project = null
+        public ?Project $project = null,
+        public array $members = []
     ) {}
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === ChatStatusEnum::ACTIVE->value;
     }
 
     public function isArchived(): bool

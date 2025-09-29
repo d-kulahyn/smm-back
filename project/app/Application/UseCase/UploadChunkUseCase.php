@@ -6,9 +6,12 @@ namespace App\Application\UseCase;
 
 use App\Domain\Event\MediaFileUploadedEvent;
 use App\Domain\Repository\MediaFileReadRepositoryInterface;
+use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Infrastructure\API\DTO\UploadChunkDto;
+use App\Infrastructure\API\Resource\MediaFileResource;
 use App\Infrastructure\Service\ChunkedUploadMetadata;
 use App\Infrastructure\Service\FileStorageService;
+use App\Models\Project;
 
 readonly class UploadChunkUseCase
 {
@@ -16,6 +19,7 @@ readonly class UploadChunkUseCase
         private FileStorageService $fileStorageService,
         private ChunkedUploadMetadata $metadata,
         private MediaFileReadRepositoryInterface $fileReadRepository,
+        private ProjectReadRepositoryInterface $projectReadRepository,
     ) {}
 
     public function execute(UploadChunkDto $dto): array
@@ -28,8 +32,11 @@ readonly class UploadChunkUseCase
 
         $currentSize = $this->fileStorageService->getFileSize($uploadData['file_path']);
 
-        if ($this->metadata->areAllChunksUploaded($dto->uploadId)) {
-            event(new MediaFileUploadedEvent($this->fileReadRepository->findById((int)$dto->uploadId)));
+        $media = $this->fileReadRepository->findById((int)$dto->uploadId);
+
+        if ($this->metadata->areAllChunksUploaded($dto->uploadId) && $media->fileable_type === Project::class) {
+            event(new MediaFileUploadedEvent($dto->userId, new MediaFileResource($media),
+                $this->projectReadRepository->findById($media->fileable_id)));
         }
 
         return [

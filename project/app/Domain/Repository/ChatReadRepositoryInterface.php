@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Repository;
 
 use App\Domain\Entity\Chat;
-use App\Domain\Entity\ChatMessage;
 use App\Infrastructure\API\DTO\PaginationParamsDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;

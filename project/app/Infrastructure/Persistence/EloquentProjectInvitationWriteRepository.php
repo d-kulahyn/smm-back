@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence;
 
+use App\Domain\Enum\InvitationStatusEnum;
 use App\Domain\Entity\ProjectInvitation;
 use App\Domain\Repository\ProjectInvitationWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateProjectInvitationDto;
@@ -38,52 +39,48 @@ readonly class EloquentProjectInvitationWriteRepository implements ProjectInvita
         return EloquentProjectInvitation::destroy($id) > 0;
     }
 
-    public function acceptInvitation(string $token, int $userId): ProjectInvitation
+    public function accept(int $id, int $userId): ProjectInvitation
     {
-        $eloquentInvitation = EloquentProjectInvitation::where('token', $token)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        $model = EloquentProjectInvitation::findOrFail($id);
 
-        $eloquentInvitation->update([
-            'status'          => 'accepted',
-            'accepted_at'     => now(),
+        $model->update([
             'invited_user_id' => $userId,
+            'status'          => InvitationStatusEnum::ACCEPTED->value,
+            'accepted_at'     => now(),
         ]);
 
-        $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);
-
-        return $this->mapper->toDomain($eloquentInvitation);
+        return $this->mapper->toDomain($model->fresh());
     }
 
-    public function declineInvitation(string $token): ProjectInvitation
+    public function decline(int $id): ProjectInvitation
     {
-        $eloquentInvitation = EloquentProjectInvitation::where('token', $token)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        $model = EloquentProjectInvitation::findOrFail($id);
 
-        $eloquentInvitation->update([
-            'status'      => 'declined',
+        $model->update([
+            'status'      => InvitationStatusEnum::DECLINED->value,
             'declined_at' => now(),
         ]);
 
-        $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);
-
-        return $this->mapper->toDomain($eloquentInvitation);
+        return $this->mapper->toDomain($model->fresh());
     }
 
-    public function markAsExpired(int $id): ProjectInvitation
+    public function markAsExpired(int $id): bool
     {
-        $eloquentInvitation = EloquentProjectInvitation::findOrFail($id);
-        $eloquentInvitation->update(['status' => 'expired']);
-        $eloquentInvitation->load(['project', 'invitedBy', 'invitedUser']);
+        $eloquentInvitation = EloquentProjectInvitation::find($id);
 
-        return $this->mapper->toDomain($eloquentInvitation);
+        if (!$eloquentInvitation) {
+            return false;
+        }
+
+        $eloquentInvitation->update(['status' => InvitationStatusEnum::EXPIRED->value]);
+
+        return true;
     }
 
     public function markExpiredInvitations(): int
     {
-        return EloquentProjectInvitation::where('status', 'pending')
-            ->where('expires_at', '<=', now())
-            ->update(['status' => 'expired']);
+        return EloquentProjectInvitation::where('expires_at', '<', now())
+            ->where('status', InvitationStatusEnum::PENDING->value)
+            ->update(['status' => InvitationStatusEnum::EXPIRED->value]);
     }
 }

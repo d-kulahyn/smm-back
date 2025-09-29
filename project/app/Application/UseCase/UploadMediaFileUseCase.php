@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\UseCase;
 
 use App\Domain\Entity\MediaFile;
-use App\Domain\Event\MediaFileUploadedEvent;
 use App\Domain\Repository\MediaFileWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\UploadMediaFileUseCaseDto;
 
@@ -31,10 +30,6 @@ readonly class UploadMediaFileUseCase
             uploaded_by  : $uploadMediaFileUseCaseDto->uploaded_by,
             description  : $uploadMediaFileUseCaseDto->description,
         );
-
-        if ($triggerEvent) {
-            event(new MediaFileUploadedEvent($media));
-        }
 
         return $this->mediaFileWriteRepository->save($media);
     }

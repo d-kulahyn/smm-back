@@ -8,6 +8,8 @@ use App\Domain\Policies\ProjectInvitationPolicy;
 use App\Domain\Policies\ProjectPolicy;
 use App\Domain\Policies\TaskPolicy;
 use App\Domain\Repository\ActivityWriteRepositoryInterface;
+use App\Domain\Repository\ChatMemberReadRepositoryInterface;
+use App\Domain\Repository\ChatMemberWriteRepositoryInterface;
 use App\Domain\Repository\ContentPlanReadRepositoryInterface;
 use App\Domain\Repository\ContentPlanWriteRepositoryInterface;
 use App\Domain\Repository\CustomerReadRepositoryInterface;
@@ -35,6 +37,8 @@ use App\Domain\Repository\MediaFileWriteRepositoryInterface;
 use App\Domain\Repository\TaskReminderReadRepositoryInterface;
 use App\Domain\Repository\TaskReminderWriteRepositoryInterface;
 use App\Infrastructure\Persistence\EloquentActivityLogWriteWriteRepository;
+use App\Infrastructure\Persistence\EloquentChatMemberReadRepository;
+use App\Infrastructure\Persistence\EloquentChatMemberWriteRepository;
 use App\Infrastructure\Persistence\EloquentContentPlanReadRepository;
 use App\Infrastructure\Persistence\EloquentContentPlanWriteRepository;
 use App\Infrastructure\Persistence\EloquentCustomerReadRepository;
@@ -61,6 +65,7 @@ use App\Infrastructure\Persistence\EloquentMediaFileReadRepository;
 use App\Infrastructure\Persistence\EloquentMediaFileWriteRepository;
 use App\Infrastructure\Persistence\EloquentTaskReminderReadRepository;
 use App\Infrastructure\Persistence\EloquentTaskReminderWriteRepository;
+use App\Infrastructure\Service\Broadcaster\RedisStreamBroadcaster;
 use App\Infrastructure\Service\Interface\SecurityCodeStorageInterface;
 use App\Infrastructure\Service\SecurityCodeRedisStorage;
 use App\Models\Chat;
@@ -70,6 +75,7 @@ use App\Models\ProjectInvitation;
 use App\Models\Task;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Gate;
@@ -154,6 +160,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SocialMetricReadRepositoryInterface::class,
             EloquentSocialMetricReadRepository::class);
 
+        $this->app->bind(ChatMemberWriteRepositoryInterface::class, EloquentChatMemberWriteRepository::class);
+        $this->app->bind(ChatMemberReadRepositoryInterface::class, EloquentChatMemberReadRepository::class);
+
+
         $this->app->bind(ActivityWriteRepositoryInterface::class, EloquentActivityLogWriteWriteRepository::class);
 
         $this->app->bind(Factory::class, function (Application $app) {
@@ -177,5 +187,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Chat::class, ChatPolicy::class);
         Gate::policy(MediaFile::class, MediaFilePolicy::class);
         Gate::policy(ProjectInvitation::class, ProjectInvitationPolicy::class);
+
+        Broadcast::extend('stream', fn ($app, array $config) => new RedisStreamBroadcaster($config));
     }
 }

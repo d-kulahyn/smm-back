@@ -14,6 +14,7 @@ use App\Infrastructure\API\Resource\TaskResource;
 use App\Infrastructure\API\Resource\TaskReminderResource;
 use App\Infrastructure\API\Traits\PaginationTrait;
 use App\Models\Task;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

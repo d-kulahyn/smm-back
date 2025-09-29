@@ -4,6 +4,7 @@ namespace App\Infrastructure\API\Controllers;
 
 use App\Application\UseCase\CreateProjectUseCase;
 use App\Application\UseCase\UpdateProjectUseCase;
+use App\Domain\Enum\ProjectStatusEnum;
 use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Domain\Repository\ProjectWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateProjectDto;
@@ -241,7 +242,7 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $project = $this->projectWriteRepository->updateStatus($project->id, 'completed');
+        $project = $this->projectWriteRepository->updateStatus($project->id, ProjectStatusEnum::COMPLETED->value);
 
         return new ProjectResource($project);
     }

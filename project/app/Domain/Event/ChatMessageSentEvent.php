@@ -3,8 +3,8 @@
 namespace App\Domain\Event;
 
 use App\Domain\Entity\Chat;
-use App\Domain\Enum\PermissionEnum;
-use App\Infrastructure\API\Resource\ChatResource;
+use App\Infrastructure\API\Resource\ChatMessageResource;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -15,37 +15,32 @@ class ChatMessageSentEvent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public int $projectId,
-        public Chat $chat
+        public int $initiatorId,
+        public ChatMessageResource $message,
+        protected Chat $chat
     ) {}
-
-    protected function getRequiredPermission(): PermissionEnum
-    {
-        return PermissionEnum::VIEW_PROJECT_CHATS;
-    }
-
-    protected function getResourceOwnerId(): ?int
-    {
-        return $this->chat->customer_id;
-    }
-
-    protected function getProjectId(): ?int
-    {
-        return $this->projectId;
-    }
-
-    public function broadcastWith(): array
-    {
-        return ['message' => new ChatResource($this->chat)];
-    }
 
     public function broadcastAs(): string
     {
         return 'messageSent';
     }
 
+    public function broadcastConnections(): array
+    {
+        return ['stream'];
+    }
+
     public function broadcastOn(): array
     {
-        return ["project.{$this->projectId}"];
+        $channels = [];
+
+        foreach ($this->chat->members as $member) {
+            if ($member->user_id === $this->initiatorId) {
+                continue;
+            }
+            $channels[] = new Channel("socket.chats.{$this->chat->id}.{$member->user_id}");
+        }
+
+        return $channels;
     }
 }

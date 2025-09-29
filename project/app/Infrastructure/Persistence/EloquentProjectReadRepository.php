@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Project;
 use App\Domain\Entity\Task;
+use App\Domain\Enum\StatusEnum;
 use App\Domain\Repository\ProjectReadRepositoryInterface;
 use App\Infrastructure\API\DTO\ProjectRelationsDto;
 use App\Infrastructure\API\DTO\ProjectStatsDto;
@@ -73,8 +74,8 @@ readonly class EloquentProjectReadRepository implements ProjectReadRepositoryInt
         return TaskModel::selectRaw("
             project_id,
             COUNT(*) as total_tasks,
-            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
+            SUM(CASE WHEN status = '" . StatusEnum::COMPLETED->value . "' THEN 1 ELSE 0 END) as completed_tasks,
+            SUM(CASE WHEN status = '" . StatusEnum::PENDING->value . "' THEN 1 ELSE 0 END) as pending_tasks,
             SUM(CASE WHEN due_date < NOW() AND status NOT IN ('completed', 'cancelled') THEN 1 ELSE 0 END) as overdue_tasks
         ")
             ->whereIn('project_id', $projectIds)
@@ -153,7 +154,7 @@ readonly class EloquentProjectReadRepository implements ProjectReadRepositoryInt
             return [];
         }
 
-        $chats = Chat::with('customer')
+        $chats = Chat::with(['customer', 'members'])
             ->whereIn('project_id', $projectIds)
             ->orderBy('created_at', 'desc')
             ->get()

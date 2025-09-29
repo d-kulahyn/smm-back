@@ -2,9 +2,9 @@
 
 namespace App\Domain\Event;
 
-use App\Domain\Entity\MediaFile;
-use App\Domain\Enum\PermissionEnum;
+use App\Domain\Entity\Project;
 use App\Infrastructure\API\Resource\MediaFileResource;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -15,13 +15,10 @@ class MediaFileUploadedEvent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public MediaFile $mediaFile
+        public int $initiatorId,
+        public MediaFileResource $mediaFile,
+        protected Project $project,
     ) {}
-
-    public function broadcastWith(): array
-    {
-        return ['media_file' => new MediaFileResource($this->mediaFile)];
-    }
 
     public function broadcastAs(): string
     {
@@ -30,21 +27,20 @@ class MediaFileUploadedEvent implements ShouldBroadcastNow
 
     public function broadcastConnections(): array
     {
-        return ['redis'];
-    }
-
-    protected function getRequiredPermission(): PermissionEnum
-    {
-        return PermissionEnum::VIEW_ALL_MEDIA;
-    }
-
-    protected function getProjectId(): ?int
-    {
-        return null;
+        return ['stream'];
     }
 
     public function broadcastOn(): array
     {
-        return ["projects.{$this->mediaFile->uploaded_by}"];
+        $channels = [];
+
+        foreach ($this->project->members as $member) {
+            if ($member->user_id === $this->initiatorId) {
+                continue;
+            }
+            $channels[] = new Channel("projects.{$this->project->id}.members.{$member->user_id}");
+        }
+
+        return $channels;
     }
 }

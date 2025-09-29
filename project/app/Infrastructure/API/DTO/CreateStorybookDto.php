@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\API\DTO;
 
+use App\Domain\Enum\StorybookStatusEnum;
+use App\Domain\Enum\StoryTypeEnum;
 use Spatie\LaravelData\Data;
 
 class CreateStorybookDto extends Data
@@ -12,10 +14,10 @@ class CreateStorybookDto extends Data
         public int $project_id,
         public string $title,
         public ?string $description = null,
-        public string $story_type = 'image',
+        public string $story_type = StoryTypeEnum::IMAGE->value,
         public string $platform = 'instagram',
         public ?string $scheduled_date = null,
-        public string $status = 'draft',
+        public string $status = StorybookStatusEnum::DRAFT->value,
         public ?int $assigned_to = null,
         public ?string $story_text = null,
         public ?array $stickers = null,
@@ -31,10 +33,10 @@ class CreateStorybookDto extends Data
             'project_id'       => 'required|exists:projects,id',
             'title'            => 'required|string|max:255',
             'description'      => 'nullable|string',
-            'story_type'       => 'required|in:image,video,boomerang,text',
+            'story_type'       => 'required|in:' . implode(',', StoryTypeEnum::allValues()),
             'platform'         => 'required|in:instagram,facebook,tiktok,youtube,twitter,linkedin,telegram',
             'scheduled_date'   => 'nullable|date|after:now',
-            'status'           => 'nullable|in:draft,active,expired,scheduled',
+            'status'           => 'nullable|in:' . implode(',', StorybookStatusEnum::allValues()),
             'assigned_to'      => 'nullable|exists:customers,id',
             'story_text'       => 'nullable|string',
             'stickers'         => 'nullable|array',

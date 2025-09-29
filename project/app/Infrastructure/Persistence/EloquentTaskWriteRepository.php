@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence;
 
+use App\Domain\Enum\TaskStatusEnum;
 use App\Domain\Entity\Task;
 use App\Domain\Repository\TaskWriteRepositoryInterface;
 use App\Infrastructure\API\DTO\CreateTaskUseCaseDto;
@@ -32,11 +33,16 @@ class EloquentTaskWriteRepository implements TaskWriteRepositoryInterface
         return TaskModel::destroy($id) > 0;
     }
 
-    public function markAsCompleted(int $id): Task
+    public function markAsCompleted(int $id): ?Task
     {
-        $model = TaskModel::findOrFail($id);
+        $model = TaskModel::find($id);
+
+        if (!$model) {
+            return null;
+        }
+
         $model->update([
-            'status' => 'completed',
+            'status' => TaskStatusEnum::COMPLETED->value,
             'completed_at' => now(),
         ]);
 

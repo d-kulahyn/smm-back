@@ -25,7 +25,8 @@ class ChatMessage extends Model
     ];
 
     protected $casts = [
-        'metadata' => 'array'
+        'metadata' => 'array',
+        'file_size' => 'integer',
     ];
 
     public function chat(): BelongsTo

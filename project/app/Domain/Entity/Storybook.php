@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\StatusEnum;
+use App\Domain\Enum\StorybookStatusEnum;
+use App\Domain\Enum\StoryTypeEnum;
 use Spatie\LaravelData\Data;
 
 class Storybook extends Data
@@ -31,32 +34,32 @@ class Storybook extends Data
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === StatusEnum::ACTIVE->value;
     }
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired';
+        return $this->status === StorybookStatusEnum::EXPIRED->value;
     }
 
     public function isDraft(): bool
     {
-        return $this->status === 'draft';
+        return $this->status === StorybookStatusEnum::DRAFT->value;
     }
 
     public function isVideo(): bool
     {
-        return $this->story_type === 'video';
+        return $this->story_type === StoryTypeEnum::VIDEO->value;
     }
 
     public function isImage(): bool
     {
-        return $this->story_type === 'image';
+        return $this->story_type === StoryTypeEnum::IMAGE->value;
     }
 
     public function isBoomerang(): bool
     {
-        return $this->story_type === 'boomerang';
+        return $this->story_type === StoryTypeEnum::BOOMERANG->value;
     }
 
     public function getFormattedDuration(): string

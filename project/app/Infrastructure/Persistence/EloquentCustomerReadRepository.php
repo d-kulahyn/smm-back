@@ -6,11 +6,16 @@ namespace App\Infrastructure\Persistence;
 
 use App\Domain\Entity\Customer;
 use App\Domain\Repository\CustomerReadRepositoryInterface;
-use App\Infrastructure\Persistence\Mapper\EloquentCustomerMapper;
+use App\Infrastructure\Persistence\Mapper\CustomerMapper;
 use Illuminate\Support\Collection;
 
 class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
 {
+
+    public function __construct(
+        private readonly CustomerMapper $mapper
+    ) {}
+
     /**
      * @param string $field
      * @param string $login
@@ -25,7 +30,7 @@ class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
             return null;
         }
 
-        return EloquentCustomerMapper::map($customer);
+        return $this->mapper->toDomain($customer);
     }
 
     /**
@@ -41,7 +46,7 @@ class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
             return null;
         }
 
-        return EloquentCustomerMapper::map($customer);
+        return $this->mapper->toDomain($customer);
     }
 
     /**
@@ -59,7 +64,7 @@ class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
         }
 
         return $customer->mapWithKeys(function ($customer) {
-            return [$customer->id => EloquentCustomerMapper::map($customer)];
+            return [$customer->id => $this->mapper->toDomain($customer)];
         });
     }
 
@@ -79,7 +84,7 @@ class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
             return null;
         }
 
-        return EloquentCustomerMapper::map($customer);
+        return $this->mapper->toDomain($customer);
     }
 
     /**
@@ -100,7 +105,7 @@ class EloquentCustomerReadRepository implements CustomerReadRepositoryInterface
         }
 
         return $customers->map(function ($customer) {
-            return EloquentCustomerMapper::map($customer);
+            return $this->mapper->toDomain($customer);
         });
     }
 }

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\UseCase;
 
+use App\Domain\Entity\Customer;
+use App\Domain\Enum\RoleEnum;
 use Illuminate\Support\Facades\DB;
 use App\Infrastructure\API\DTO\CreateUserDTO;
 use App\Infrastructure\Service\PasswordEncoder;
 use App\Domain\Repository\CustomerWriteRepositoryInterface;
-use App\Infrastructure\Mapper\CreateCustomerDTOToDomainEntity;
 
 readonly class CreateUserUseCase
 {
@@ -35,7 +36,15 @@ readonly class CreateUserUseCase
 
             $createUserDTO->name = explode('@', $createUserDTO->email)[0];
 
-            $customerId = $this->customerWriteRepository->save(CreateCustomerDTOToDomainEntity::toEntity($createUserDTO));
+            $customerEntity = new Customer(
+                password                      : $createUserDTO->password,
+                email                         : $createUserDTO->email,
+                role                          : RoleEnum::ADMIN->value,
+                firebase_cloud_messaging_token: $createUserDTO->firebase_cloud_messaging_token,
+                name                          : $createUserDTO->name
+            );
+
+            $customerId = $this->customerWriteRepository->save($customerEntity);
 
             $code = $this->sendConfirmationCodeToCustomerUseCase->execute($createUserDTO->email);
 

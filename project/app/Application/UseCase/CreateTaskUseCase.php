@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\UseCase;
 
 use App\Domain\Entity\Task;
-use App\Domain\Event\TaskCreatedEvent;
 use App\Domain\Event\TaskAssignedEvent;
 use App\Domain\Exception\ProjectNotFoundException;
 use App\Domain\Exception\TaskCannotCreateReminderException;
@@ -34,8 +33,6 @@ readonly class CreateTaskUseCase
         }
 
         $task = $this->taskWriteRepository->create($dto);
-
-        event(new TaskCreatedEvent($dto->project_id, $task));
 
         if ($dto->hasAssignedUser()) {
             event(new TaskAssignedEvent($dto->assigned_to, $task));

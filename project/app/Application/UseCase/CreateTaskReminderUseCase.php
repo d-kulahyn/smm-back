@@ -41,7 +41,7 @@ readonly class CreateTaskReminderUseCase
             'customer_id'   => $customerId,
             'remind_at'     => $remindAt->toDateTimeString(),
             'reminder_type' => $reminderType,
-            'message'       => "Напоминание: задача '{$task->title}' должна быть выполнена {$task->due_date}",
+            'message'       => "Reminder: Task '{$task->title}' must be completed {$task->due_date}",
             'is_sent'       => false,
         ];
 

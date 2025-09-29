@@ -73,7 +73,7 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="project_id", type="integer", example=1),
  *     @OA\Property(property="customer_id", type="integer", example=2),
  *     @OA\Property(property="message", type="string", example="Hello team! Let's discuss the project requirements."),
- *     @OA\Property(property="message_type", type="string", enum={"text", "voice", "file"}, example="text"),
+ *     @OA\Property(property="message_type", type="string", enum={"text", "voice", "file", "image"}, example="text"),
  *     @OA\Property(property="sender_type", type="string", enum={"customer", "admin"}, example="customer"),
  *     @OA\Property(property="file_path", type="string", example="http://localhost/storage/files/document.pdf"),
  *     @OA\Property(property="is_voice_message", type="boolean", example=false),
@@ -121,6 +121,20 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="description", type="string", example="New task was created"),
  *     @OA\Property(property="status", type="string", enum={"pending", "read", "archived"}, example="pending"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-21T10:00:00Z")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="ChatMember",
+ *     type="object",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="chat_id", type="integer", example=1),
+ *     @OA\Property(property="user_id", type="integer", example=2),
+ *     @OA\Property(property="role", type="string", enum={"admin", "member", "viewer"}, example="member"),
+ *     @OA\Property(property="permissions", type="array", @OA\Items(type="string"), example={"read", "write"}),
+ *     @OA\Property(property="joined_at", type="string", format="date-time", example="2025-09-27T10:00:00Z"),
+ *     @OA\Property(property="user", ref="#/components/schemas/User"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-27T10:00:00Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-09-27T10:00:00Z")
  * )
  */
 class SwaggerSchemas

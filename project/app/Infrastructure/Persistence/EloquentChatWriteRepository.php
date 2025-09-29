@@ -65,14 +65,22 @@ readonly class EloquentChatWriteRepository implements ChatWriteRepositoryInterfa
         return $this->chatMapper->toDomain($model);
     }
 
-    public function markMessageAsRead(int $messageId, int $customerId): void
+    public function markMessagesAsRead(array $ids, int $customerId): void
     {
-        ChatMessageRead::firstOrCreate([
-            'chat_message_id' => $messageId,
-            'customer_id'     => $customerId,
-        ], [
-            'read_at' => now(),
-        ]);
+        $reads = [];
+        $now = now();
+
+        foreach ($ids as $messageId) {
+            $reads[] = [
+                'chat_message_id' => $messageId,
+                'customer_id'     => $customerId,
+                'read_at'         => $now,
+            ];
+        }
+
+        if (!empty($reads)) {
+            ChatMessageRead::insert($reads);
+        }
     }
 
     public function markAllMessagesAsReadForProject(int $projectId, int $excludeCustomerId): int

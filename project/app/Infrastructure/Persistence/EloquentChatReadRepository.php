@@ -23,14 +23,15 @@ class EloquentChatReadRepository implements ChatReadRepositoryInterface
 
     public function findChatById(int $id): ?Chat
     {
-        $model = ChatModel::find($id);
+        $model = ChatModel::with(['members.user'])->find($id);
 
         return $model ? $this->chatMapper->toDomain($model) : null;
     }
 
     public function findChatsByProjectId(int $projectId, int $limit = 50): Collection
     {
-        $models = ChatModel::where('project_id', $projectId)
+        $models = ChatModel::with(['members.user'])
+            ->where('project_id', $projectId)
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -40,7 +41,8 @@ class EloquentChatReadRepository implements ChatReadRepositoryInterface
 
     public function findChatsByProjectIdPaginated(int $projectId, PaginationParamsDto $paramsDto): LengthAwarePaginator
     {
-        $paginated = ChatModel::where('project_id', $projectId)
+        $paginated = ChatModel::with(['members.user'])
+            ->where('project_id', $projectId)
             ->orderBy('created_at', 'desc')
             ->paginate($paramsDto->perPage, ['*'], 'page', $paramsDto->page);
 
@@ -82,7 +84,8 @@ class EloquentChatReadRepository implements ChatReadRepositoryInterface
 
     public function findChatsByCustomerId(int $customerId): Collection
     {
-        $models = ChatModel::where('customer_id', $customerId)
+        $models = ChatModel::with(['members.user'])
+            ->where('customer_id', $customerId)
             ->orderBy('created_at', 'desc')
             ->get();
 

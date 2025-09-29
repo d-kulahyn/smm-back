@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Enum\StatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -96,11 +97,11 @@ class Project extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === StatusEnum::ACTIVE->value;
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === StatusEnum::COMPLETED->value;
     }
 }

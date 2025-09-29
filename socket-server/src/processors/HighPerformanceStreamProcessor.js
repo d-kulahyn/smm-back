@@ -23,6 +23,7 @@ export class HighPerformanceStreamProcessor extends EventEmitter {
         this.processingStats = {
             messagesProcessed: 0,
             errorsCount: 0,
+            avgProcessingTime: 0,
             startTime: Date.now()
         };
 
@@ -127,13 +128,18 @@ export class HighPerformanceStreamProcessor extends EventEmitter {
     async _processPool(streamPool) {
         if (streamPool.length === 0) return;
 
+        const startTime = Date.now();
+
         try {
-            const streamIds = streamPool.map(() => '0');
+            const streamIds = streamPool.map(() => '$');
             const result = await this.redisService.readStreamsBatch(streamPool, streamIds, 1000);
 
             if (result && result.length > 0) {
                 await this._processBatchMessages(result);
             }
+
+            this.processingStats.avgProcessingTime =
+                (this.processingStats.avgProcessingTime + (Date.now() - startTime)) / 2;
 
         } catch (error) {
             this.processingStats.errorsCount++;
@@ -189,7 +195,7 @@ export class HighPerformanceStreamProcessor extends EventEmitter {
                         });
 
                         const roomsCount = this.socketIO.sockets.adapter.rooms.get(streamName)?.size || 0;
-                        this.socketIO.to(streamName).emit('room:message', processedMessage);
+                        this.socketIO.to(streamName).emit('room:message', processedMessage.socket);
 
                         this.logger.info(`📤 Message ${messageId} sent to ${roomsCount} clients in room "${streamName}"`);
 
@@ -252,15 +258,10 @@ export class HighPerformanceStreamProcessor extends EventEmitter {
     }
 
     getMetrics() {
-        const poolStats = this.poolManager.getStats();
-
         return {
-            messagesProcessed: this.processingStats.messagesProcessed,
-            errorsCount: this.processingStats.errorsCount,
-            totalStreams: poolStats.totalStreams,
-            activePools: poolStats.activePools,
-            priorityStreams: poolStats.priorityStreams,
-            avgPoolSize: poolStats.avgPoolSize
+            ...this.processingStats,
+            uptime: Date.now() - this.processingStats.startTime,
+            poolStats: this.poolManager.getStats()
         };
     }
 }

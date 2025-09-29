@@ -68,6 +68,18 @@ export class ScalableRedisStreamApp {
         this.app = express();
         this.httpServer = createServer(this.app);
 
+        // Добавляем health endpoint для Docker healthcheck
+        this.app.get('/health', (req, res) => {
+            const healthStatus = {
+                status: 'ok',
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                redis: this.redis?.status || 'unknown'
+            };
+            res.status(200).json(healthStatus);
+        });
+
         this.io = new Server(this.httpServer, this.config.socketIO);
 
         this.redis = this._createOptimizedRedisConnection();
@@ -173,12 +185,7 @@ export class ScalableRedisStreamApp {
             const memUsage = process.memoryUsage();
 
             this.logger.info(`📈 Worker ${process.pid} Performance:`, {
-                messagesProcessed: metrics.messagesProcessed,
-                errorsCount: metrics.errorsCount,
-                totalStreams: metrics.totalStreams,
-                activePools: metrics.activePools,
-                priorityStreams: metrics.priorityStreams,
-                avgPoolSize: metrics.avgPoolSize,
+                ...metrics,
                 memory: {
                     rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
                     heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',

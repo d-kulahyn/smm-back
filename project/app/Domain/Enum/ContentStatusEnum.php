@@ -13,7 +13,7 @@ enum ContentStatusEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Черновик',
             self::PENDING_APPROVAL => 'На модерации',
             self::APPROVED => 'Одобрено',

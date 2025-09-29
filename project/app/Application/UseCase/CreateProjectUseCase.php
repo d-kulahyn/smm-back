@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\UseCase;
 
 use App\Domain\Entity\Project;
-use App\Domain\Event\ProjectCreatedEvent;
 use App\Infrastructure\API\DTO\CreateProjectDto;
 use App\Domain\Repository\ProjectWriteRepositoryInterface;
 
@@ -17,10 +16,6 @@ readonly class CreateProjectUseCase
 
     public function execute(CreateProjectDto $data): Project
     {
-        $project = $this->projectWriteRepository->create($data);
-
-        event(new ProjectCreatedEvent($data->customer_id, $project));
-
-        return $project;
+        return $this->projectWriteRepository->create($data);
     }
 }
