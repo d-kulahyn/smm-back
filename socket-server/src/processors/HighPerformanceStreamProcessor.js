@@ -131,7 +131,7 @@ export class HighPerformanceStreamProcessor extends EventEmitter {
         const startTime = Date.now();
 
         try {
-            const streamIds = streamPool.map(() => '$');
+            const streamIds = streamPool.map(() => '0');
             const result = await this.redisService.readStreamsBatch(streamPool, streamIds, 1000);
 
             if (result && result.length > 0) {
