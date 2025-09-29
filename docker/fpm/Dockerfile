@@ -37,10 +37,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN addgroup -g 1000 -S www && \
     adduser -u 1000 -D -S -G www www
 
-RUN sed -i 's/user = www-data/user = www/' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's/group = www-data/group = www/' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's/listen.owner = www-data/listen.owner = www/' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's/listen.group = www-data/listen.group = www/' /usr/local/etc/php-fpm.d/www.conf
+# Copy optimized PHP-FPM pool configuration
+COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 
 COPY php.ini /usr/local/etc/php/conf.d/custom.ini
 
@@ -48,9 +46,9 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /var/www/html
 
-RUN mkdir -p /var/log/supervisor /run/php
+RUN mkdir -p /var/log/supervisor /run/php /var/log
 
-RUN chown -R www:www /var/www/html /var/log/supervisor /run/php
+RUN chown -R www:www /var/www/html /var/log/supervisor /run/php /var/log
 
 EXPOSE 9000
 
