@@ -163,7 +163,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ChatMemberWriteRepositoryInterface::class, EloquentChatMemberWriteRepository::class);
         $this->app->bind(ChatMemberReadRepositoryInterface::class, EloquentChatMemberReadRepository::class);
 
-
         $this->app->bind(ActivityWriteRepositoryInterface::class, EloquentActivityLogWriteWriteRepository::class);
 
         $this->app->bind(Factory::class, function (Application $app) {
@@ -179,7 +178,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         JsonResource::withoutWrapping();
-
         bcscale(2);
 
         Gate::policy(Project::class, ProjectPolicy::class);

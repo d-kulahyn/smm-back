@@ -18,7 +18,6 @@ use App\Infrastructure\API\DTO\CreateChatData;
 use App\Infrastructure\API\DTO\ReadMessagesRequestDto;
 use App\Infrastructure\API\DTO\SendMessageData;
 use App\Infrastructure\API\DTO\SendVoiceMessageData;
-use App\Infrastructure\API\DTO\AddUserToChatDto;
 use App\Infrastructure\API\DTO\RemoveUserFromChatDto;
 use App\Infrastructure\API\DTO\CreateChatDto;
 use App\Infrastructure\API\DTO\TextMessageUseCaseDto;
@@ -62,7 +61,7 @@ class ChatController extends Controller
         private readonly AddUserToChatUseCase $addUserToChatUseCase,
         private readonly RemoveUserFromChatUseCase $removeUserFromChatUseCase,
         private readonly GetChatMembersUseCase $getChatMembersUseCase,
-        private readonly FileStorageService $fileStorageService
+        private readonly FileStorageService $fileStorageService,
     ) {}
 
     /**

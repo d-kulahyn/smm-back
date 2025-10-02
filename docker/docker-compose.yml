@@ -17,7 +17,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      split_trip_fpm:
+      split_trip_swoole:
         condition: service_healthy
       split_trip_node:
         condition: service_healthy
@@ -34,37 +34,6 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/nginx_health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  split_trip_fpm:
-    build:
-      context: ./fpm
-      dockerfile: Dockerfile
-    container_name: split_trip_fpm
-    volumes:
-      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
-    ports:
-      - ${FPM_PORT}:9000
-    networks:
-      - split_trip
-    deploy:
-      resources:
-        limits:
-          memory: 8G
-          cpus: '6.0'
-        reservations:
-          memory: 4G
-          cpus: '4.0'
-    environment:
-      - PHP_MEMORY_LIMIT=256M
-      - PHP_MAX_EXECUTION_TIME=30
-      - PHP_OPCACHE_ENABLE=1
-      - PHP_OPCACHE_MEMORY_CONSUMPTION=512
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "php", "-v"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -149,20 +118,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DATABASE}
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_SHARED_BUFFERS: 1GB
-      POSTGRES_EFFECTIVE_CACHE_SIZE: 4GB
-      POSTGRES_WORK_MEM: 64MB
-      POSTGRES_MAINTENANCE_WORK_MEM: 512MB
-      POSTGRES_MAX_CONNECTIONS: 300
-      POSTGRES_MAX_WAL_SIZE: 4GB
-      POSTGRES_MIN_WAL_SIZE: 1GB
-      POSTGRES_CHECKPOINT_COMPLETION_TARGET: 0.9
-      POSTGRES_WAL_BUFFERS: 32MB
-      POSTGRES_RANDOM_PAGE_COST: 1.1
-      POSTGRES_EFFECTIVE_IO_CONCURRENCY: 200
-      POSTGRES_MAX_WORKER_PROCESSES: 8
-      POSTGRES_MAX_PARALLEL_WORKERS_PER_GATHER: 4
-      POSTGRES_MAX_PARALLEL_WORKERS: 8
     volumes:
       - ./database_pg:/var/lib/postgresql/data/pgdata
     ports:
@@ -182,6 +137,47 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  split_trip_swoole:
+    build:
+      context: ./swoole
+      dockerfile: Dockerfile
+    container_name: split_trip_swoole
+    volumes:
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    ports:
+      - ${SWOOLE_PORT:-8081}:8080
+    networks:
+      - split_trip
+    environment:
+      - APP_ENV=production
+      - OCTANE_SERVER=swoole
+      - OCTANE_WORKERS=auto
+      - OCTANE_TASK_WORKERS=auto
+      - OCTANE_MAX_REQUESTS=1000
+      - SWOOLE_HTTP_REACTOR_NUM=auto
+      - SWOOLE_HTTP_WORKER_NUM=auto
+      - SWOOLE_HTTP_TASK_WORKER_NUM=auto
+    depends_on:
+      split_trip_redis:
+        condition: service_healthy
+      split_trip_db_pg:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '8.0'
+        reservations:
+          memory: 2G
+          cpus: '4.0'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   redis_data:

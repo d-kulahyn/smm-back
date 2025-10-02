@@ -17,5 +17,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('activities', [ActivityController::class, 'index']);
     Route::post('activities/status/batch', [ActivityController::class, 'statusBatch']);
 });
-
-require base_path('routes/api/v1/common.php');

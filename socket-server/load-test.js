@@ -6,13 +6,13 @@ import { URL } from 'url';
 
 // Конфигурация
 const CONFIG = {
-    url: 'http://127.0.0.1/v1/projects/17/chats/1/messages',
+    url: 'http://127.0.0.1:80/v1/projects/17/chats/1/messages',
     method: 'POST',
-    token: '818|CGYHRd2t4Iz7KvSWkMhiKYJC4UvdXcDbFrLL6RlWa32f52c3',
+    token: '851|Py98vOanhbkUwStNd9vZ8g8DZHD7iFU8pAuuj1JNd780da3f',
     payload: {
         message: "some chat"
     },
-    totalRequests: 200,
+    totalRequests: 5000,
     timeout: 30000 // 30 секунд таймаут
 };
 
