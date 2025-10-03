@@ -1,0 +1,268 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  name            String
+  avatar          String?
+  role            String   @default("client")  // Добавляем поле роли с значением по умолчанию
+  isActive        Boolean  @default(true)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  ownedProjects     Project[] @relation("ProjectOwner")
+  projectMembers    ProjectMember[]
+  tasks             Task[]
+  assignedTasks     TaskAssignment[]
+  projectInvitations ProjectInvitation[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(active)
+  ownerId     String
+
+  // Новые поля из PHP версии
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal?
+  avatar      String?
+  color       String?
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner       User @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     ProjectMember[]
+  tasks       Task[]
+  invitations ProjectInvitation[]
+
+  // Новые связи из PHP версии
+  mediaFiles         MediaFile[]
+  contentPlans       ContentPlan[]
+  storybooks         Storybook[]
+  socialMediaAccounts SocialMediaAccount[]
+  projectReports     ProjectReport[]
+  socialMetrics      SocialMetric[]
+
+  @@map("projects")
+}
+
+// Новые модели из PHP версии
+model MediaFile {
+  id        String   @id @default(cuid())
+  projectId String
+  fileName  String
+  filePath  String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("media_files")
+}
+
+model ContentPlan {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  scheduledAt DateTime?
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("content_plans")
+}
+
+model Storybook {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("storybooks")
+}
+
+model SocialMediaAccount {
+  id        String   @id @default(cuid())
+  projectId String
+  platform  String
+  username  String
+  accessToken String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("social_media_accounts")
+}
+
+model ProjectReport {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String
+  content   String?
+  reportDate DateTime
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_reports")
+}
+
+model SocialMetric {
+  id         String   @id @default(cuid())
+  projectId  String
+  platform   String
+  metricType String
+  value      Float
+  recordedAt DateTime
+  createdAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("social_metrics")
+}
+
+// Существующие модели с обновлениями
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(member)
+  permissions Json?
+  joinedAt  DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model ProjectInvitation {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  status    InvitationStatus @default(pending)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_invitations")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(pending)
+  priority    TaskPriority @default(medium)
+  dueDate     DateTime?
+  projectId   String
+  creatorId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator     User    @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+  reminders   TaskReminder[]
+
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id       String @id @default(cuid())
+  taskId   String
+  userId   String
+  assignedAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
+}
+
+model TaskReminder {
+  id        String   @id @default(cuid())
+  taskId    String
+  remindAt  DateTime
+  message   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_reminders")
+}
+
+// Обновленные энумы
+enum ProjectStatus {
+  active
+  on_hold
+  completed
+  cancelled
+  archived
+}
+
+enum ProjectRole {
+  owner
+  admin
+  member
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum TaskStatus {
+  pending
+  on_hold
+  completed
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
