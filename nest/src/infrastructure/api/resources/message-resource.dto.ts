@@ -13,7 +13,7 @@ export class MessageResource {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  isRead?: boolean; // Для конкретного пользователя
+  isReadByCurrentUser?: boolean; // Renamed from isRead for clarity
 
   constructor(message: Message) {
     this.id = message.id;
@@ -39,7 +39,7 @@ export class MessageResource {
   }
 
   withReadStatus(userId: string): MessageResource {
-    this.isRead = this.readBy.includes(userId);
+    this.isReadByCurrentUser = this.readBy.includes(userId);
     return this;
   }
 }

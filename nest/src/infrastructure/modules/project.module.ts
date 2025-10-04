@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectController } from '../api/controllers/project.controller';
-import { StorageController } from '../api/controllers/storage.controller';
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
 import { CompleteProjectUseCase } from '../../application/use-cases/complete-project.use-case';
 import { GetProjectStatsUseCase } from '../../application/use-cases/get-project-stats.use-case';
@@ -24,7 +23,7 @@ export const USER_REPOSITORY = 'USER_REPOSITORY';
       { name: Chat.name, schema: ChatSchema },
     ]),
   ],
-  controllers: [ProjectController, StorageController],
+  controllers: [ProjectController],
   providers: [
     CreateProjectUseCase,
     CompleteProjectUseCase,

@@ -13,6 +13,11 @@ export interface MarkAllMessagesAsReadDto {
   userId: string;
 }
 
+export interface MarkMultipleMessagesAsReadDto {
+  messageIds: string[];
+  userId: string;
+}
+
 @Injectable()
 export class MarkMessageAsReadUseCase {
   constructor(
@@ -55,5 +60,37 @@ export class MarkAllMessagesAsReadUseCase {
     }
 
     await this.messageRepository.markAllAsRead(dto.chatId, dto.userId);
+  }
+}
+
+@Injectable()
+export class MarkMultipleMessagesAsReadUseCase {
+  constructor(
+    @Inject('MESSAGE_REPOSITORY')
+    private readonly messageRepository: MessageRepository,
+    @Inject('CHAT_MEMBER_REPOSITORY')
+    private readonly chatMemberRepository: ChatMemberRepository,
+  ) {}
+
+  async execute(dto: MarkMultipleMessagesAsReadDto): Promise<void> {
+    if (!dto.messageIds || dto.messageIds.length === 0) {
+      return;
+    }
+
+    const messages = await this.messageRepository.findByIdIn(dto.messageIds);
+    if (messages.length === 0) {
+      throw new ResourceNotFoundException('Messages not found');
+    }
+
+    // Check if user is member of all chats that contain these messages
+    const chatIds = [...new Set(messages.map(msg => msg.chatId))];
+    for (const chatId of chatIds) {
+      const isMember = await this.chatMemberRepository.isUserInChat(chatId, dto.userId);
+      if (!isMember) {
+        throw new AccessDeniedException(`You are not a member of chat ${chatId}`);
+      }
+    }
+
+    await this.messageRepository.markMultipleAsRead(dto.messageIds, dto.userId);
   }
 }

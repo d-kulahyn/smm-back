@@ -26,7 +26,8 @@ import {AddUserToChatUseCase} from '../../../application/use-cases/add-user-to-c
 import {RemoveUserFromChatUseCase} from '../../../application/use-cases/remove-user-from-chat.use-case';
 import {
     MarkMessageAsReadUseCase,
-    MarkAllMessagesAsReadUseCase
+    MarkAllMessagesAsReadUseCase,
+    MarkMultipleMessagesAsReadUseCase
 } from '../../../application/use-cases/mark-messages-as-read.use-case';
 // Repositories imports
 import {ChatRepository} from '../../../domain/repositories/chat.repository';
@@ -73,6 +74,9 @@ export class ChatResponseDto {
 
     @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
     updatedAt: string;
+
+    @ApiProperty({ example: 5, description: 'Number of unread messages for current user' })
+    unreadCount?: number;
 }
 
 export class MessageResponseDto {
@@ -96,6 +100,9 @@ export class MessageResponseDto {
 
     @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
     createdAt: string;
+
+    @ApiProperty({ example: true, description: 'Whether the message is read by current user' })
+    isReadByCurrentUser?: boolean;
 }
 
 export class ChatMemberResponseDto {
@@ -235,6 +242,16 @@ export class AddUserToChatDto {
     role?: ChatMemberRole;
 }
 
+export class MarkMessagesAsReadDto {
+    @ApiProperty({
+        description: 'Array of message IDs to mark as read',
+        example: ['clm1msg123def456', 'clm1msg789ghi012'],
+        type: [String]
+    })
+    @IsUUID('4', { each: true })
+    messageIds: string[];
+}
+
 @ApiTags('chats')
 @Controller('projects/:projectId/chats')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -247,6 +264,7 @@ export class ChatController {
         private readonly removeUserFromChatUseCase: RemoveUserFromChatUseCase,
         private readonly markMessageAsReadUseCase: MarkMessageAsReadUseCase,
         private readonly markAllMessagesAsReadUseCase: MarkAllMessagesAsReadUseCase,
+        private readonly markMultipleMessagesAsReadUseCase: MarkMultipleMessagesAsReadUseCase,
         private readonly fileService: FileService,
         private readonly chatPolicy: ChatPolicy,
         @Inject('CHAT_REPOSITORY')
@@ -293,17 +311,22 @@ export class ChatController {
             paginationParams.perPage
         );
 
-        // Filter chats by access rights
+        // Filter chats by access rights and add unread count
         const filteredChats = [];
         for (const chat of paginatedResult.data) {
             if (await this.chatPolicy.view(user, chat)) {
-                filteredChats.push(chat);
+                // Get unread count for current user
+                const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
+
+                // Create chat resource with unread count
+                const chatResource = ChatResource.fromEntity(chat).withUnreadCount(unreadCount);
+                filteredChats.push(chatResource);
             }
         }
 
         return {
             success: true,
-            data: ChatResource.collection(filteredChats),
+            data: filteredChats,
             pagination: {
                 total: paginatedResult.total,
                 page: paginatedResult.page,
@@ -379,9 +402,12 @@ export class ChatController {
             throw new AccessDeniedException('You do not have permission to view this chat');
         }
 
+        // Get unread count for current user
+        const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
+
         return {
             success: true,
-            data: ChatResource.fromEntity(chat)
+            data: ChatResource.fromEntity(chat).withUnreadCount(unreadCount)
         };
     }
 
@@ -423,9 +449,14 @@ export class ChatController {
             paginationParams.perPage
         );
 
+        // Add read status for each message for current user
+        const messagesWithReadStatus = paginatedResult.data.map(message =>
+            MessageResource.fromEntity(message).withReadStatus(req.user.userId)
+        );
+
         return {
             success: true,
-            data: MessageResource.collection(paginatedResult.data),
+            data: messagesWithReadStatus,
             pagination: {
                 total: paginatedResult.total,
                 page: paginatedResult.page,
@@ -497,7 +528,7 @@ export class ChatController {
         return {
             success: true,
             message: 'Message sent successfully',
-            data: MessageResource.fromEntity(message)
+            data: MessageResource.fromEntity(message).withReadStatus(req.user.userId)
         };
     }
 
@@ -510,14 +541,7 @@ export class ChatController {
     @ApiResponse({
         status: 201,
         description: 'User added to chat successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                success: { type: 'boolean', example: true },
-                message: { type: 'string', example: 'User added to chat successfully' },
-                data: { $ref: '#/components/schemas/ChatMemberResponseDto' }
-            }
-        }
+        type: ChatMemberResponseDto
     })
     @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto })
     @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
@@ -607,16 +631,7 @@ export class ChatController {
     @ApiResponse({
         status: 200,
         description: 'Chat members retrieved successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                success: { type: 'boolean', example: true },
-                data: {
-                    type: 'array',
-                    items: { $ref: '#/components/schemas/ChatMemberResponseDto' }
-                }
-            }
-        }
+        type: [ChatMemberResponseDto]
     })
     @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
     @ApiResponse({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto })
@@ -724,6 +739,47 @@ export class ChatController {
         return {
             success: true,
             message: 'All messages marked as read'
+        };
+    }
+
+    @Put(':id/messages/read-multiple')
+    @ApiOperation({
+        summary: 'Mark multiple messages as read',
+        description: 'Mark multiple messages as read by the current user'
+    })
+    @ApiResponse({ status: 200, description: 'Messages marked as read', type: MessageDto })
+    @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+    @ApiResponse({ status: 403, description: 'Forbidden - No permission to access this chat', type: ErrorResponseDto })
+    @ApiResponse({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto })
+    async markMultipleMessagesAsRead(
+        @Param('projectId') projectId: string,
+        @Param('id') chatId: string,
+        @Body() markMessagesDto: MarkMessagesAsReadDto,
+        @Request() req: AuthenticatedRequest
+    ) {
+        const chat = await this.chatRepository.findById(chatId);
+        if (!chat) {
+            throw new ResourceNotFoundException('Chat not found');
+        }
+
+        const user = await this.userRepository.findById(req.user.userId);
+        if (!user) {
+            throw new ResourceNotFoundException('User', req.user.userId);
+        }
+
+        if (!await this.chatPolicy.view(user, chat)) {
+            throw new AccessDeniedException('You do not have permission to access this chat');
+        }
+
+        await this.markMultipleMessagesAsReadUseCase.execute({
+            messageIds: markMessagesDto.messageIds,
+            userId: req.user.userId,
+        });
+
+        return {
+            success: true,
+            message: `${markMessagesDto.messageIds.length} messages marked as read`
         };
     }
 }

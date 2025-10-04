@@ -9,6 +9,7 @@ import { ProjectModule } from './infrastructure/modules/project.module';
 import { TaskModule } from './infrastructure/modules/task.module';
 import { ChatModule } from './infrastructure/modules/chat.module';
 import { HealthModule } from './infrastructure/modules/health.module';
+import { FileModule } from './infrastructure/modules/file.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { HealthModule } from './infrastructure/modules/health.module';
     TaskModule,
     ChatModule,
     HealthModule,
+    FileModule,
   ],
   controllers: [],
 })

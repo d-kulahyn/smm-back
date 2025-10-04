@@ -3,13 +3,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { Message } from '../../domain/entities/message.entity';
+import { MessageType } from '../../domain/enums/message-type.enum';
 import { Message as MessageSchema, MessageDocument } from '../database/schemas/message.schema';
-import { PaginatedResult } from '../../shared/interfaces/pagination.interface';
+import { MessageRead as MessageReadSchema, MessageReadDocument } from '../database/schemas/message-read.schema';
 
 @Injectable()
 export class MongoMessageRepository implements MessageRepository {
   constructor(
     @InjectModel(MessageSchema.name) private messageModel: Model<MessageDocument>,
+    @InjectModel(MessageReadSchema.name) private messageReadModel: Model<MessageReadDocument>,
   ) {}
 
   async findById(id: string): Promise<Message | null> {
@@ -27,16 +29,16 @@ export class MongoMessageRepository implements MessageRepository {
 
     const [messages, total] = await Promise.all([
       this.messageModel
-        .find({ chatId, isDeleted: false })
+        .find({ chatId })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),
-      this.messageModel.countDocuments({ chatId, isDeleted: false })
+      this.messageModel.countDocuments({ chatId })
     ]);
 
     return {
-      data: messages.map(this.toDomain).reverse(), // Возвращаем в хронологическом порядке
+      data: messages.map(this.toDomain),
       total,
       page,
       limit,
@@ -44,156 +46,114 @@ export class MongoMessageRepository implements MessageRepository {
   }
 
   async create(message: Message): Promise<Message> {
-    const messageDoc = new this.messageModel({
+    const createdMessage = new this.messageModel(this.toDocument(message));
+    const savedMessage = await createdMessage.save();
+    return this.toDomain(savedMessage);
+  }
+
+  async update(id: string, updates: Partial<Message>): Promise<Message> {
+    const updatedMessage = await this.messageModel
+      .findByIdAndUpdate(id, updates, { new: true })
+      .exec();
+    return this.toDomain(updatedMessage);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.messageModel.findByIdAndDelete(id).exec();
+  }
+
+  async markAsRead(messageId: string, userId: string): Promise<void> {
+    await this.messageReadModel.findOneAndUpdate(
+      { messageId, userId },
+      { messageId, userId, readAt: new Date() },
+      { upsert: true }
+    ).exec();
+  }
+
+  async markAllAsRead(chatId: string, userId: string): Promise<void> {
+    const messages = await this.messageModel.find({ chatId }).select('_id').exec();
+    const messageIds = messages.map(msg => msg._id.toString());
+
+    if (messageIds.length > 0) {
+      await this.markMultipleAsRead(messageIds, userId);
+    }
+  }
+
+  async markMultipleAsRead(messageIds: string[], userId: string): Promise<void> {
+    const operations = messageIds.map(messageId => ({
+      updateOne: {
+        filter: { messageId, userId },
+        update: { messageId, userId, readAt: new Date() },
+        upsert: true
+      }
+    }));
+
+    if (operations.length > 0) {
+      await this.messageReadModel.bulkWrite(operations);
+    }
+  }
+
+  async findUnreadMessages(userId: string): Promise<Message[]> {
+    const readMessageIds = await this.messageReadModel
+      .find({ userId })
+      .select('messageId')
+      .exec();
+
+    const readIds = readMessageIds.map(read => read.messageId);
+
+    const messages = await this.messageModel
+      .find({ _id: { $nin: readIds } })
+      .exec();
+
+    return messages.map(this.toDomain);
+  }
+
+  async countUnreadMessages(chatId: string, userId: string): Promise<number> {
+    const readMessageIds = await this.messageReadModel
+      .find({ userId })
+      .select('messageId')
+      .exec();
+
+    const readIds = readMessageIds.map(read => read.messageId);
+
+    return await this.messageModel.countDocuments({
+      chatId,
+      _id: { $nin: readIds }
+    });
+  }
+
+  async findByIdIn(ids: string[]): Promise<Message[]> {
+    const messages = await this.messageModel.find({ _id: { $in: ids } }).exec();
+    return messages.map(this.toDomain);
+  }
+
+  async deleteManyByChatId(chatId: string): Promise<void> {
+    await this.messageModel.deleteMany({ chatId }).exec();
+  }
+
+  private toDomain(doc: any): Message {
+    return new Message(
+      doc._id.toString(),
+      doc.chatId,
+      doc.senderId,
+      doc.content,
+      doc.type || MessageType.TEXT,
+      doc.fileUrl || null,
+      doc.createdAt,
+      doc.updatedAt
+    );
+  }
+
+  private toDocument(message: Message): any {
+    return {
       _id: message.id,
       chatId: message.chatId,
       senderId: message.senderId,
       content: message.content,
       type: message.type,
       fileUrl: message.fileUrl,
-      readBy: message.readBy,
-      isEdited: message.isEdited,
-      editedAt: message.editedAt,
-      isDeleted: message.isDeleted,
       createdAt: message.createdAt,
-      updatedAt: message.updatedAt,
-    });
-
-    const created = await messageDoc.save();
-    return this.toDomain(created);
-  }
-
-  async update(id: string, messageData: Partial<Message>): Promise<Message> {
-    const updated = await this.messageModel
-      .findByIdAndUpdate(id, {
-        ...messageData,
-        updatedAt: new Date()
-      }, { new: true })
-      .exec();
-
-    if (!updated) {
-      throw new Error('Message not found');
-    }
-
-    return this.toDomain(updated);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.messageModel
-      .findByIdAndUpdate(id, {
-        isDeleted: true,
-        updatedAt: new Date()
-      })
-      .exec();
-  }
-
-  async markAsRead(messageId: string, userId: string): Promise<void> {
-    await this.messageModel
-      .findByIdAndUpdate(
-        messageId,
-        {
-          $addToSet: { readBy: userId },
-          updatedAt: new Date()
-        }
-      )
-      .exec();
-  }
-
-  async markAllAsRead(chatId: string, userId: string): Promise<void> {
-    await this.messageModel
-      .updateMany(
-        {
-          chatId,
-          senderId: { $ne: userId }, // Не отмечаем свои сообщения
-          readBy: { $nin: [userId] }, // Только те, что еще не прочитаны
-          isDeleted: false
-        },
-        {
-          $addToSet: { readBy: userId },
-          updatedAt: new Date()
-        }
-      )
-      .exec();
-  }
-
-  async markAllAsReadInChat(chatId: string, userId: string): Promise<void> {
-    await this.messageModel
-      .updateMany(
-        {
-          chatId,
-          senderId: { $ne: userId }, // Не отмечаем свои сообщения
-          readBy: { $nin: [userId] }, // Только те, что еще не прочитаны
-          isDeleted: false
-        },
-        {
-          $addToSet: { readBy: userId },
-          updatedAt: new Date()
-        }
-      )
-      .exec();
-  }
-
-  async getUnreadCount(chatId: string, userId: string): Promise<number> {
-    return this.messageModel
-      .countDocuments({
-        chatId,
-        senderId: { $ne: userId }, // Не считаем свои сообщения
-        readBy: { $nin: [userId] }, // Не прочитанные пользователем
-        isDeleted: false
-      })
-      .exec();
-  }
-
-  async findUnreadMessages(userId: string): Promise<Message[]> {
-    const messages = await this.messageModel
-      .find({
-        senderId: { $ne: userId }, // Не свои сообщения
-        readBy: { $nin: [userId] }, // Не прочитанные пользователем
-        isDeleted: false
-      })
-      .sort({ createdAt: -1 })
-      .exec();
-
-    return messages.map(this.toDomain);
-  }
-
-  async findByIdIn(ids: string[]): Promise<Message[]> {
-    const messages = await this.messageModel
-      .find({ _id: { $in: ids }, isDeleted: false })
-      .exec();
-
-    return messages.map(this.toDomain);
-  }
-
-  async deleteManyByChatId(chatId: string): Promise<void> {
-    await this.messageModel
-      .updateMany(
-        { chatId },
-        {
-          isDeleted: true,
-          updatedAt: new Date()
-        }
-      )
-      .exec();
-  }
-
-  private toDomain(messageDoc: any): Message {
-    return new Message(
-      messageDoc._id.toString(),
-      messageDoc.chatId, // Убираем .toString() так как chatId теперь уже строка
-      messageDoc.senderId,
-      messageDoc.content,
-      messageDoc.type as any,
-      messageDoc.createdAt,
-      messageDoc.updatedAt,
-      messageDoc.isRead || false,
-      messageDoc.readAt,
-      messageDoc.attachments || [],
-      messageDoc.fileUrl,
-      messageDoc.readBy || [],
-      messageDoc.isEdited || false,
-      messageDoc.editedAt,
-      messageDoc.isDeleted || false
-    );
+      updatedAt: message.updatedAt
+    };
   }
 }

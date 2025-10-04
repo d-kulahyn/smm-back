@@ -14,7 +14,9 @@ export interface MessageRepository {
   delete(id: string): Promise<void>;
   markAsRead(messageId: string, userId: string): Promise<void>;
   markAllAsRead(chatId: string, userId: string): Promise<void>;
+  markMultipleAsRead(messageIds: string[], userId: string): Promise<void>;
   findUnreadMessages(userId: string): Promise<Message[]>;
+  countUnreadMessages(chatId: string, userId: string): Promise<number>;
   // Additional methods from MongoMessageRepository
   findByIdIn(ids: string[]): Promise<Message[]>;
   deleteManyByChatId(chatId: string): Promise<void>;
