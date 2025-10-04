@@ -15,7 +15,7 @@ import {
   Patch,
   ForbiddenException
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiQuery, ApiProperty } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiQuery, ApiProperty, ApiResponse } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsNumber, IsDateString } from 'class-validator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
@@ -33,6 +33,119 @@ import { ProjectStatus } from '../../../domain/enums/project-status.enum';
 import { PaginationParamsDto } from '../resources/pagination-params.dto';
 import { ProjectResource } from '../resources/project-resource.dto';
 import { FileService } from '../../../shared';
+
+// Response DTOs для Swagger документации
+export class ProjectResponseDto {
+  @ApiProperty({ example: 'clm1abc123def456' })
+  id: string;
+
+  @ApiProperty({ example: 'My Project' })
+  name: string;
+
+  @ApiProperty({ example: 'Project description', nullable: true })
+  description: string | null;
+
+  @ApiProperty({ example: 'active' })
+  status: string;
+
+  @ApiProperty({ example: 'clm1owner123456' })
+  ownerId: string;
+
+  @ApiProperty({ example: '2024-01-01', nullable: true })
+  startDate: string | null;
+
+  @ApiProperty({ example: '2024-12-31', nullable: true })
+  endDate: string | null;
+
+  @ApiProperty({ example: 10000, nullable: true })
+  budget: number | null;
+
+  @ApiProperty({ example: 'avatar.jpg', nullable: true })
+  avatar: string | null;
+
+  @ApiProperty({ example: '#FF5733', nullable: true })
+  color: string | null;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  createdAt: string;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  updatedAt: string;
+}
+
+export class ProjectListResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ type: [ProjectResponseDto] })
+  data: ProjectResponseDto[];
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      total: { type: 'number', example: 25 },
+      page: { type: 'number', example: 1 },
+      limit: { type: 'number', example: 10 },
+      totalPages: { type: 'number', example: 3 }
+    }
+  })
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export class ProjectCreateResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ example: 'Project created successfully' })
+  message: string;
+
+  @ApiProperty({ type: ProjectResponseDto })
+  data: ProjectResponseDto;
+}
+
+export class ProjectStatsResponseDto {
+  @ApiProperty({ example: 5 })
+  totalProjects: number;
+
+  @ApiProperty({ example: 3 })
+  activeProjects: number;
+
+  @ApiProperty({ example: 1 })
+  completedProjects: number;
+
+  @ApiProperty({ example: 1 })
+  onHoldProjects: number;
+
+  @ApiProperty({ example: 15 })
+  totalTasks: number;
+
+  @ApiProperty({ example: 8 })
+  completedTasks: number;
+
+  @ApiProperty({ example: 7 })
+  pendingTasks: number;
+}
+
+export class MessageResponseDto {
+  @ApiProperty({ example: 'Operation completed successfully' })
+  message: string;
+}
+
+export class ErrorResponseDto {
+  @ApiProperty({ example: 400 })
+  statusCode: number;
+
+  @ApiProperty({ example: 'Bad Request' })
+  error: string;
+
+  @ApiProperty({ example: 'Validation failed' })
+  message: string;
+}
 
 export class CreateProjectDto {
   @ApiProperty({ description: 'Project name', example: 'My Project' })
@@ -132,6 +245,7 @@ export class ProjectController {
   })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
   @ApiQuery({ name: 'per_page', required: false, type: Number, description: 'Items per page (default: 10, max: 100)' })
+  @ApiResponse({ status: 200, type: ProjectListResponseDto })
   async index(
     @Request() req: AuthenticatedRequest,
     @Query('page') page?: string,
@@ -181,6 +295,7 @@ export class ProjectController {
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('avatar'))
+  @ApiResponse({ status: 201, type: ProjectCreateResponseDto })
   async store(
     @Body() createProjectDto: CreateProjectDto,
     @Request() req: AuthenticatedRequest,
@@ -223,6 +338,7 @@ export class ProjectController {
     summary: 'Get project details',
     description: 'Retrieve detailed project information with authorization checks'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async show(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const project = await this.projectRepository.findById(id);
     if (!project) {
@@ -249,6 +365,7 @@ export class ProjectController {
     summary: 'Update project',
     description: 'Update project with authorization checks'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
@@ -285,6 +402,7 @@ export class ProjectController {
     summary: 'Delete project',
     description: 'Delete project with authorization checks'
   })
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   async destroy(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const project = await this.projectRepository.findById(id);
     if (!project) {
@@ -310,6 +428,7 @@ export class ProjectController {
     summary: 'Mark project as on_hold',
     description: 'Change project status to on_hold'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async complete(@Param('id') id: string) {
     const completedProject = await this.completeProjectUseCase.execute(id);
     return ProjectResource.fromEntity(completedProject);
@@ -320,6 +439,7 @@ export class ProjectController {
     summary: 'Put project on hold',
     description: 'Change project status to on hold'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async putOnHold(@Param('id') id: string) {
     const project = await this.projectRepository.findById(id);
     if (!project) {
@@ -336,6 +456,7 @@ export class ProjectController {
     summary: 'Cancel project',
     description: 'Change project status to cancelled'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async cancel(@Param('id') id: string) {
     const project = await this.projectRepository.findById(id);
     if (!project) {
@@ -352,6 +473,7 @@ export class ProjectController {
     summary: 'Archive project',
     description: 'Change project status to archived'
   })
+  @ApiResponse({ status: 200, type: ProjectResponseDto })
   async archive(@Param('id') id: string) {
     const project = await this.projectRepository.findById(id);
     if (!project) {

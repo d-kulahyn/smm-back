@@ -13,7 +13,7 @@ import {
   Patch,
   ForbiddenException
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsDateString, IsUUID } from 'class-validator';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
 import {
@@ -123,6 +123,120 @@ export class CreateTaskReminderDto {
   message?: string;
 }
 
+// Response DTOs для Swagger документации
+export class TaskResponseDto {
+  @ApiProperty({ example: 'clm1abc123def456' })
+  id: string;
+
+  @ApiProperty({ example: 'Complete project documentation' })
+  title: string;
+
+  @ApiProperty({ example: 'Write comprehensive docs for the project', nullable: true })
+  description: string | null;
+
+  @ApiProperty({ example: 'pending' })
+  status: string;
+
+  @ApiProperty({ example: 'high' })
+  priority: string;
+
+  @ApiProperty({ example: 'clm1project123456' })
+  project_id: string;
+
+  @ApiProperty({ example: 'clm1user123456', nullable: true })
+  assigned_to: string | null;
+
+  @ApiProperty({ example: '2024-12-31', nullable: true })
+  due_date: string | null;
+
+  @ApiProperty({ example: null, nullable: true })
+  completed_at: string | null;
+
+  @ApiProperty({ example: 'Additional notes', nullable: true })
+  notes: string | null;
+
+  @ApiProperty({ example: false })
+  is_completed: boolean;
+
+  @ApiProperty({ example: false })
+  is_overdue: boolean;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  created_at: string;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  updated_at: string;
+}
+
+export class TaskListResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ type: [TaskResponseDto] })
+  data: TaskResponseDto[];
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      total: { type: 'number', example: 25 },
+      page: { type: 'number', example: 1 },
+      limit: { type: 'number', example: 10 }
+    }
+  })
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export class TaskCreateResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ example: 'Task created successfully' })
+  message: string;
+
+  @ApiProperty({ type: TaskResponseDto })
+  data: TaskResponseDto;
+}
+
+export class TaskStatsResponseDto {
+  @ApiProperty({ example: 25 })
+  total_tasks: number;
+
+  @ApiProperty({ example: 10 })
+  completed_tasks: number;
+
+  @ApiProperty({ example: 12 })
+  pending_tasks: number;
+
+  @ApiProperty({ example: 3 })
+  in_progress_tasks: number;
+
+  @ApiProperty({ example: 2 })
+  overdue_tasks: number;
+
+  @ApiProperty({ example: 40 })
+  completion_rate: number;
+}
+
+export class MessageResponseDto {
+  @ApiProperty({ example: 'Task updated successfully' })
+  message: string;
+}
+
+export class ErrorResponseDto {
+  @ApiProperty({ example: 400 })
+  statusCode: number;
+
+  @ApiProperty({ example: 'Bad Request' })
+  error: string;
+
+  @ApiProperty({ example: 'Validation failed' })
+  message: string;
+}
+
 @ApiTags('tasks')
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -155,6 +269,9 @@ export class TaskController {
   @ApiQuery({ name: 'assigned_to', required: false, type: String, description: 'Filter by assigned user ID' })
   @ApiQuery({ name: 'overdue', required: false, type: Boolean, description: 'Filter overdue tasks' })
   @ApiQuery({ name: 'search', required: false, type: String, description: 'Search in task title and description' })
+  @ApiResponse({ status: 200, description: 'Tasks retrieved successfully', type: TaskListResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to view tasks', type: ErrorResponseDto })
   async index(
     @Request() req: AuthenticatedRequest,
     @Query('page') page?: string,
@@ -214,6 +331,10 @@ export class TaskController {
     summary: 'Create a new task',
     description: 'Create a new task with authorization checks'
   })
+  @ApiResponse({ status: 201, description: 'Task created successfully', type: TaskCreateResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request - Project ID is required or invalid data', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to create tasks', type: ErrorResponseDto })
   async store(
     @Body() createTaskDto: CreateTaskDto,
     @Request() req: AuthenticatedRequest,
@@ -273,6 +394,10 @@ export class TaskController {
     summary: 'Get task details',
     description: 'Retrieve detailed task information with authorization checks'
   })
+  @ApiResponse({ status: 200, description: 'Task details retrieved successfully', type: TaskResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to view this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async show(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const task = await this.taskRepository.findById(id);
     if (!task) {
@@ -296,6 +421,11 @@ export class TaskController {
     summary: 'Update task',
     description: 'Update task with authorization checks'
   })
+  @ApiResponse({ status: 200, description: 'Task updated successfully', type: TaskResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to update this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
@@ -331,6 +461,10 @@ export class TaskController {
     summary: 'Delete task',
     description: 'Delete task with authorization checks'
   })
+  @ApiResponse({ status: 200, description: 'Task deleted successfully', type: MessageResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to delete this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async destroy(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const task = await this.taskRepository.findById(id);
     if (!task) {
@@ -362,6 +496,11 @@ export class TaskController {
     summary: 'Change task status',
     description: 'Change task status with authorization checks'
   })
+  @ApiResponse({ status: 200, description: 'Task status changed successfully', type: TaskResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid status', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to change task status', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async changeStatus(
     @Param('id') id: string,
     @Body() body: { status: TaskStatus },
@@ -395,6 +534,11 @@ export class TaskController {
     summary: 'Assign task to user',
     description: 'Assign task with authorization checks'
   })
+  @ApiResponse({ status: 200, description: 'Task assigned successfully', type: TaskResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid user ID', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to assign this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async assign(
     @Param('id') id: string,
     @Body('userId') userId: string,
@@ -425,6 +569,30 @@ export class TaskController {
     summary: 'Create task reminder',
     description: 'Create a reminder for a specific task with hours before logic'
   })
+  @ApiResponse({
+    status: 201,
+    description: 'Reminder created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Reminder created successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            taskId: { type: 'string' },
+            remindAt: { type: 'string', format: 'date-time' },
+            message: { type: 'string', nullable: true },
+            hours_before: { type: 'number' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request - Task must have a due date', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to create reminders for this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async createReminder(
     @Param('taskId') taskId: string,
     @Body() body: { hours_before: number; message?: string },
@@ -465,6 +633,25 @@ export class TaskController {
     summary: 'Get overdue tasks',
     description: 'Retrieve all overdue tasks for the current user'
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Overdue tasks retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: { type: 'array', items: { $ref: '#/components/schemas/TaskResponseDto' } },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'number' },
+            overdue_count: { type: 'number' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
   async getOverdueTasks(@Request() req: AuthenticatedRequest) {
     const overdueTasks = await this.taskRepository.findOverdueByUserId(req.user.userId);
 
@@ -483,6 +670,8 @@ export class TaskController {
     summary: 'Get tasks assigned to current user',
     description: 'Retrieve all tasks assigned to the current user'
   })
+  @ApiResponse({ status: 200, description: 'Assigned tasks retrieved successfully', type: TaskListResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
   async getAssignedToMe(
     @Request() req: AuthenticatedRequest,
     @Query('page') page?: string,
@@ -508,6 +697,18 @@ export class TaskController {
     summary: 'Get task statistics',
     description: 'Get task statistics for the current user'
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Task statistics retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: { $ref: '#/components/schemas/TaskStatsResponseDto' }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
   async getStatistics(@Request() req: AuthenticatedRequest) {
     const stats = await this.taskRepository.getUserTaskStatistics(req.user.userId);
 
@@ -529,6 +730,11 @@ export class TaskController {
     summary: 'Change task priority',
     description: 'Change the priority of a specific task'
   })
+  @ApiResponse({ status: 200, description: 'Task priority changed successfully', type: TaskResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid priority', type: ErrorResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({ status: 403, description: 'Forbidden - No permission to change priority of this task', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'Task not found', type: ErrorResponseDto })
   async changePriority(
     @Param('id') id: string,
     @Body() body: { priority: TaskPriority },

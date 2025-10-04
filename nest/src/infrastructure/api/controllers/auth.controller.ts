@@ -12,7 +12,7 @@ import {
     BadRequestException,
     Inject
 } from '@nestjs/common';
-import {ApiTags, ApiOperation, ApiBearerAuth, ApiParam} from '@nestjs/swagger';
+import {ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse, ApiProperty} from '@nestjs/swagger';
 import {IsEmail, IsString, MinLength, IsOptional} from 'class-validator';
 import {JwtService} from '@nestjs/jwt';
 import {AuthenticatedRequest} from '../../../shared';
@@ -30,43 +30,157 @@ import {RedisService} from '../../services/redis.service';
 import {ResourceNotFoundException} from '../../../shared/exceptions';
 
 export class RegisterDto {
+    @ApiProperty({ description: 'User email', example: 'user@example.com' })
     @IsEmail()
     email: string;
 
+    @ApiProperty({ description: 'User password', minLength: 6, example: 'password123' })
     @IsString()
     @MinLength(6)
     password: string;
 
+    @ApiProperty({ description: 'User name', required: false, example: 'John Doe' })
     @IsOptional()
     @IsString()
     name?: string;
 
+    @ApiProperty({ description: 'Firebase Cloud Messaging token', required: false })
     @IsOptional()
     @IsString()
     firebase_cloud_messaging_token?: string;
 }
 
 export class LoginDto {
+    @ApiProperty({ description: 'User email', example: 'user@example.com' })
     @IsEmail()
     email: string;
 
+    @ApiProperty({ description: 'User password', example: 'password123' })
     @IsString()
     password: string;
 }
 
 export class ResetPasswordDto {
+    @ApiProperty({ description: 'User email for password reset', example: 'user@example.com' })
     @IsEmail()
     email: string;
 }
 
 export class ConfirmEmailDto {
+    @ApiProperty({ description: 'Email confirmation code', example: 'A1B2C3' })
     @IsString()
     code: string;
 }
 
 export class SocialAuthDto {
+    @ApiProperty({ description: 'Social provider access token', example: 'ya29.a0AfH6SMB...' })
     @IsString()
     access_token: string;
+}
+
+// Response DTOs для Swagger документации
+export class RegisterResponseDto {
+    @ApiProperty({ example: true })
+    success: boolean;
+
+    @ApiProperty({ example: 'Registration successful. Please check your email for verification code.' })
+    message: string;
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'clm1abc123def456' },
+            email: { type: 'string', example: 'user@example.com' },
+            name: { type: 'string', example: 'John Doe' },
+            code: { type: 'string', example: 'A1B2C3' }
+        }
+    })
+    data: {
+        userId: string;
+        email: string;
+        name: string;
+        code: string;
+    };
+}
+
+export class LoginResponseDto {
+    @ApiProperty({ example: true })
+    success: boolean;
+
+    @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+    access_token: string;
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            id: { type: 'string', example: 'clm1abc123def456' },
+            email: { type: 'string', example: 'user@example.com' },
+            name: { type: 'string', example: 'John Doe' },
+            avatar: { type: 'string', nullable: true, example: null },
+            role: { type: 'string', example: 'CLIENT' },
+            permissions: { type: 'array', items: { type: 'string' } },
+            isActive: { type: 'boolean', example: true },
+            emailVerifiedAt: { type: 'string', nullable: true, example: null }
+        }
+    })
+    user: {
+        id: string;
+        email: string;
+        name: string;
+        avatar: string | null;
+        role: string;
+        permissions: string[];
+        isActive: boolean;
+        emailVerifiedAt: string | null;
+    };
+}
+
+export class MessageResponseDto {
+    @ApiProperty({ example: 'Operation completed successfully' })
+    message: string;
+}
+
+export class ErrorResponseDto {
+    @ApiProperty({ example: 400 })
+    statusCode: number;
+
+    @ApiProperty({ example: 'Bad Request' })
+    error: string;
+
+    @ApiProperty({ example: 'Validation failed' })
+    message: string;
+}
+
+export class UserProfileResponseDto {
+    @ApiProperty({ example: 'clm1abc123def456' })
+    id: string;
+
+    @ApiProperty({ example: 'user@example.com' })
+    email: string;
+
+    @ApiProperty({ example: 'John Doe' })
+    name: string;
+
+    @ApiProperty({ example: null, nullable: true })
+    avatar: string | null;
+
+    @ApiProperty({ example: 'CLIENT' })
+    role: string;
+
+    @ApiProperty({ type: 'array', items: { type: 'string' } })
+    permissions: string[];
+
+    @ApiProperty({ example: true })
+    isActive: boolean;
+
+    @ApiProperty({ example: null, nullable: true })
+    emailVerifiedAt: string | null;
+
+    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+    createdAt: string;
+
+    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+    updatedAt: string;
 }
 
 @ApiTags('Authentication')
@@ -92,6 +206,8 @@ export class AuthController {
         summary: 'Register a new user',
         description: 'Create a new user account with CLIENT role and full project management permissions'
     })
+    @ApiResponse({ status: 201, description: 'User successfully registered', type: RegisterResponseDto })
+    @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto })
     async register(@Body() registerDto: RegisterDto) {
         try {
             const role = Role.CLIENT;
@@ -129,6 +245,8 @@ export class AuthController {
         summary: 'Login user',
         description: 'Authenticate user and return access token with permissions'
     })
+    @ApiResponse({ status: 200, description: 'Login successful', type: LoginResponseDto })
+    @ApiResponse({ status: 400, description: 'Bad Request - Invalid credentials', type: ErrorResponseDto })
     async login(@Body() loginDto: LoginDto) {
         try {
             const result = await this.loginUserUseCase.execute(loginDto);
@@ -171,6 +289,10 @@ export class AuthController {
         summary: 'Send email verification code',
         description: 'Send verification code to user\'s email'
     })
+    @ApiResponse({ status: 200, description: 'Verification code sent', type: MessageResponseDto })
+    @ApiResponse({ status: 400, description: 'Bad Request', type: ErrorResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+    @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
     async sendConfirmationCode(@Request() req: AuthenticatedRequest) {
         try {
             const user = await this.userRepository.findById(req.user.userId);
@@ -192,6 +314,8 @@ export class AuthController {
         summary: 'Logout user',
         description: 'Revoke user\'s access token'
     })
+    @ApiResponse({ status: 200, description: 'Logout successful', type: MessageResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
     async logout(@Request() req: AuthenticatedRequest) {
         try {
             await this.logoutUserUseCase.execute(req.user.userId);
@@ -206,6 +330,8 @@ export class AuthController {
         summary: 'Reset password',
         description: 'Send password reset email to user'
     })
+    @ApiResponse({ status: 200, description: 'Reset email sent', type: MessageResponseDto })
+    @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
         try {
             await this.resetPasswordUseCase.execute(resetPasswordDto.email);
@@ -222,6 +348,10 @@ export class AuthController {
         summary: 'Confirm email',
         description: 'Confirm user\'s email address with verification code'
     })
+    @ApiResponse({ status: 200, description: 'Email confirmed', type: MessageResponseDto })
+    @ApiResponse({ status: 400, description: 'Bad Request - Invalid code', type: ErrorResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+    @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
     async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto, @Request() req: AuthenticatedRequest) {
         try {
             const user = await this.userRepository.findById(req.user.userId);
@@ -245,6 +375,17 @@ export class AuthController {
         summary: 'Social authentication',
         description: 'Authenticate user via social provider (Google, Facebook, etc.)'
     })
+    @ApiResponse({
+        status: 200,
+        description: 'Social login successful',
+        schema: {
+            type: 'object',
+            properties: {
+                access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad Request - Invalid token or provider', type: ErrorResponseDto })
     async social(
         @Body() socialAuthDto: SocialAuthDto,
         @Param('provider') provider: string
@@ -268,6 +409,9 @@ export class AuthController {
         summary: 'Get current user',
         description: 'Get authenticated user information'
     })
+    @ApiResponse({ status: 200, description: 'User profile retrieved', type: UserProfileResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+    @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
     async me(@Request() req: AuthenticatedRequest) {
         try {
             const user = await this.userRepository.findById(req.user.userId);
