@@ -68,22 +68,21 @@ return [
         ],
 
         RequestReceived::class => [
-            // Очистка состояния аутентификации перед каждым запросом
-            \App\Listeners\ClearAuthenticationState::class,
+            // Убираем FlushTemporaryContainerInstances - он не работает с этим событием
         ],
 
         RequestHandled::class => [
-            // Убираем проблемный слушатель
+            // Убираем FlushTemporaryContainerInstances - он не работает с этим событием
         ],
 
         RequestTerminated::class => [
             FlushUploadedFiles::class,
-            // Сборка мусора для освобождения памяти
             CollectGarbage::class,
+            // Убираем FlushTemporaryContainerInstances - он не работает с этим событием
         ],
 
         TaskReceived::class => [
-            // Обработка фоновых задач
+            //
         ],
 
         TaskTerminated::class => [
@@ -91,15 +90,16 @@ return [
         ],
 
         TickReceived::class => [
-            // Периодические задачи
+            //
         ],
 
         TickTerminated::class => [
-            // Убираем проблемный слушатель
+            //
         ],
 
         OperationTerminated::class => [
-            // Убираем проблемный слушатель до исправления
+            // Оставляем только здесь - FlushTemporaryContainerInstances работает только с OperationTerminated
+            FlushTemporaryContainerInstances::class,
         ],
 
         WorkerErrorOccurred::class => [
@@ -152,9 +152,6 @@ return [
         'sanctum.guard',
         'sanctum.token',
         'sanctum.user',
-        // Добавляем дополнительные биндинги для полной очистки
-        'Laravel\Sanctum\Guard',
-        'Laravel\Sanctum\PersonalAccessToken',
     ],
 
     /*
@@ -237,4 +234,32 @@ return [
     */
 
     'max_execution_time' => 30,
-];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Swoole Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure some of the Swoole settings used by your server.
+    |
+    */
+
+    'swoole' => [
+        'options' => [
+            'log_file' => storage_path('logs/swoole_http.log'),
+            'package_max_length' => 10 * 1024 * 1024,
+            // ЭКСТРЕМАЛЬНО агрессивные настройки - перезапуск после каждого запроса
+            'max_request' => 1, // Перезапускать воркер после КАЖДОГО запроса
+            'max_conn' => 1024,
+            'task_max_request' => 1, // Перезапускать task воркер после каждой задачи
+            'task_enable_coroutine' => false,
+            'enable_coroutine' => false,
+            // Максимально агрессивная сборка мусора
+            'reload_async' => true,
+            'max_wait_time' => 1,
+            'heartbeat_check_interval' => 1,
+            'heartbeat_idle_time' => 2,
+            'heartbeat_idle_time' => 10,
+            'dispatch_mode' => 2, // Перенаправление по процессам
+            'worker_num' => 1, // Один воркер для минимизации состояния
+            'task_worker_num' => 1,

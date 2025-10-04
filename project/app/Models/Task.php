@@ -71,7 +71,7 @@ class Task extends Model
     public function markAsCompleted(): void
     {
         $this->update([
-            'status' => 'completed',
+            'status' => 'on_hold',
             'completed_at' => now(),
         ]);
     }

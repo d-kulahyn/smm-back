@@ -10,7 +10,7 @@ enum StatusEnum: string
 
     case PENDING = 'pending';
     case PAID = 'paid';
-    case COMPLETED = 'completed';
+    case COMPLETED = 'on_hold';
     case ACTIVE = 'active';
 
     case READ = 'read';

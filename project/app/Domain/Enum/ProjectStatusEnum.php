@@ -11,7 +11,7 @@ enum ProjectStatusEnum: string
     use AllCasesTrait;
 
     case ACTIVE = 'active';
-    case COMPLETED = 'completed';
+    case COMPLETED = 'on_hold';
     case ON_HOLD = 'on_hold';
     case CANCELLED = 'cancelled';
 

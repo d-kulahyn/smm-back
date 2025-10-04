@@ -103,13 +103,13 @@ class MediaFileController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/media-files",
+     *     path="/projects/{project_id}/media-files",
      *     tags={"Media Files"},
      *     summary="Get media files for a project",
      *     description="Retrieve paginated list of media files for a specific project",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,

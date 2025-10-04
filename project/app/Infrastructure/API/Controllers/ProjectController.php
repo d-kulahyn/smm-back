@@ -99,7 +99,7 @@ class ProjectController extends Controller
      *                 required={"name", "status"},
      *                 @OA\Property(property="name", type="string", example="New Marketing Campaign"),
      *                 @OA\Property(property="description", type="string", example="Social media marketing campaign for Q4"),
-     *                 @OA\Property(property="status", type="string", enum={"active", "completed", "on_hold", "cancelled"}, example="active"),
+     *                 @OA\Property(property="status", type="string", enum={"active", "on_hold", "on_hold", "cancelled"}, example="active"),
      *                 @OA\Property(property="start_date", type="string", format="date", example="2025-09-21"),
      *                 @OA\Property(property="end_date", type="string", format="date", example="2025-12-31"),
      *                 @OA\Property(property="budget", type="number", format="float", example=15000.50),
@@ -195,7 +195,7 @@ class ProjectController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="name", type="string", example="Updated Marketing Campaign"),
      *             @OA\Property(property="description", type="string", example="Updated description"),
-     *             @OA\Property(property="status", type="string", enum={"active", "completed", "on_hold"}, example="active"),
+     *             @OA\Property(property="status", type="string", enum={"active", "on_hold", "on_hold"}, example="active"),
      *             @OA\Property(property="budget", type="number", format="float", example=20000.00)
      *         )
      *     ),
@@ -221,8 +221,8 @@ class ProjectController extends Controller
      * @OA\Patch(
      *     path="/projects/{id}/complete",
      *     tags={"Projects"},
-     *     summary="Mark project as completed",
-     *     description="Change project status to completed",
+     *     summary="Mark project as on_hold",
+     *     description="Change project status to on_hold",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
      *         name="id",
@@ -233,7 +233,7 @@ class ProjectController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Project marked as completed",
+     *         description="Project marked as on_hold",
      *         @OA\JsonContent(ref="#/components/schemas/Project")
      *     )
      * )

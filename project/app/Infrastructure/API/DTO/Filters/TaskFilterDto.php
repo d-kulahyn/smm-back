@@ -32,7 +32,7 @@ class TaskFilterDto extends BaseFilterDto
     protected function getValidationRules(): array
     {
         return [
-            'status'      => 'in:pending,in_progress,completed,cancelled',
+            'status'      => 'in:pending,in_progress,on_hold,cancelled',
             'priority'    => 'in:low,medium,high,urgent',
             'assigned_to' => 'integer|min:1',
             'overdue'     => 'boolean',

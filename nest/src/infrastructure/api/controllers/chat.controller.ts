@@ -310,7 +310,7 @@ export class ChatController {
             }
 
             // Save file
-            const savedFile = await this.fileService.saveTaskAttachment(file);
+            const savedFile = await this.fileService.saveMessageFile(file);
             fileUrl = savedFile.filePath;
         }
 

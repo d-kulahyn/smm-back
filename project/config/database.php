@@ -157,6 +157,13 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
+            'timeout' => env('REDIS_TIMEOUT', 5),
+            'read_timeout' => env('REDIS_READ_TIMEOUT', 10),
+            'persistent' => env('REDIS_PERSISTENT_CONNECTION', false),
+            'retry_interval' => 100,
+            'options' => [
+                'tcp_keepalive' => 1
+            ],
         ],
 
         'cache' => [
@@ -166,6 +173,13 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
+            'timeout' => env('REDIS_TIMEOUT', 5),
+            'read_timeout' => env('REDIS_READ_TIMEOUT', 10),
+            'persistent' => env('REDIS_PERSISTENT_CONNECTION', false),
+            'retry_interval' => 100,
+            'options' => [
+                'tcp_keepalive' => 1
+            ],
         ],
 
     ],

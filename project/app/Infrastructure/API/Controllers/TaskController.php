@@ -75,7 +75,7 @@ class TaskController extends Controller
      *         in="query",
      *         description="Filter by status",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"pending", "in_progress", "completed", "cancelled"})
+     *         @OA\Schema(type="string", enum={"pending", "in_progress", "on_hold", "cancelled"})
      *     ),
      *     @OA\Parameter(
      *         name="priority",
@@ -144,7 +144,7 @@ class TaskController extends Controller
      *             @OA\Property(property="project_id", type="integer", example=1),
      *             @OA\Property(property="assigned_to", type="integer", example=2),
      *             @OA\Property(property="priority", type="string", enum={"low", "medium", "high", "urgent"}, example="high"),
-     *             @OA\Property(property="status", type="string", enum={"pending", "in_progress", "completed", "cancelled"}, example="pending"),
+     *             @OA\Property(property="status", type="string", enum={"pending", "in_progress", "on_hold", "cancelled"}, example="pending"),
      *             @OA\Property(property="due_date", type="string", format="date", example="2025-09-30"),
      *             @OA\Property(property="reminder_before_hours", type="integer", example=24)
      *         )
@@ -221,7 +221,7 @@ class TaskController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="title", type="string", example="Updated task title"),
      *             @OA\Property(property="description", type="string", example="Updated description"),
-     *             @OA\Property(property="status", type="string", enum={"pending", "in_progress", "completed", "cancelled"}, example="in_progress"),
+     *             @OA\Property(property="status", type="string", enum={"pending", "in_progress", "on_hold", "cancelled"}, example="in_progress"),
      *             @OA\Property(property="priority", type="string", enum={"low", "medium", "high", "urgent"}, example="high")
      *         )
      *     ),

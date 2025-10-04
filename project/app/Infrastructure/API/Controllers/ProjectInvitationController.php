@@ -44,13 +44,13 @@ class ProjectInvitationController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/invitations",
+     *     path="/projects/{project_id}/invitations",
      *     tags={"Project Invitations"},
      *     summary="Get project invitations",
      *     description="Retrieve paginated list of invitations for a specific project",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -109,13 +109,13 @@ class ProjectInvitationController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/invitations",
+     *     path="/projects/{project_id}/invitations",
      *     tags={"Project Invitations"},
      *     summary="Send project invitation",
      *     description="Send an invitation to join a project",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,

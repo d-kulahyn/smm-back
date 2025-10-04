@@ -52,17 +52,15 @@ export class RedisBroadcaster extends BaseBroadcaster {
         ...options
       };
 
-      const streamName = `events:${channel}`;
-
       const messageId = await this.redisService.addToStream(
-        streamName,
+          channel,
         streamData,
         {
           maxLen: 10000
         }
       );
 
-      console.log(`Redis Stream: Event '${event.getEventName()}' added to stream '${streamName}' with ID: ${messageId}`);
+      console.log(`Redis Stream: Event '${event.getEventName()}' added to stream '${channel}' with ID: ${messageId}`);
 
     } catch (error) {
       console.error(`Failed to broadcast event to Redis Stream for channel ${channel}:`, error);

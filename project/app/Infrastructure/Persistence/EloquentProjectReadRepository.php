@@ -76,7 +76,7 @@ readonly class EloquentProjectReadRepository implements ProjectReadRepositoryInt
             COUNT(*) as total_tasks,
             SUM(CASE WHEN status = '" . StatusEnum::COMPLETED->value . "' THEN 1 ELSE 0 END) as completed_tasks,
             SUM(CASE WHEN status = '" . StatusEnum::PENDING->value . "' THEN 1 ELSE 0 END) as pending_tasks,
-            SUM(CASE WHEN due_date < NOW() AND status NOT IN ('completed', 'cancelled') THEN 1 ELSE 0 END) as overdue_tasks
+            SUM(CASE WHEN due_date < NOW() AND status NOT IN ('on_hold', 'cancelled') THEN 1 ELSE 0 END) as overdue_tasks
         ")
             ->whereIn('project_id', $projectIds)
             ->groupBy('project_id')

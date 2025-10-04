@@ -17,11 +17,13 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      split_trip_swoole:
-        condition: service_healthy
       split_trip_node:
         condition: service_healthy
+      split_trip_nest:
+        condition: service_healthy
       split_trip_redis:
+        condition: service_healthy
+      split_trip_mongodb:
         condition: service_healthy
     deploy:
       resources:
@@ -41,7 +43,7 @@ services:
   split_trip_node:
     build:
       context: ../socket-server
-      dockerfile: ../docker/node/Dockerfile
+      dockerfile: Dockerfile
     container_name: split_trip_node
     volumes:
       - ../socket-server:/app
@@ -57,6 +59,8 @@ services:
       - NODE_OPTIONS=--max-old-space-size=1024
     depends_on:
       split_trip_redis:
+        condition: service_healthy
+      split_trip_mongodb:
         condition: service_healthy
     deploy:
       resources:
@@ -106,6 +110,36 @@ services:
       timeout: 3s
       retries: 5
 
+  split_trip_mongodb:
+    image: mongo:7.0
+    container_name: split_trip_mongodb
+    restart: unless-stopped
+    ports:
+      - ${MONGODB_PORT:-27017}:27017
+    networks:
+      - split_trip
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-smm_chat}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   split_trip_db_pg:
     build:
       context: ./pg
@@ -115,7 +149,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_DB: smm
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -138,42 +172,55 @@ services:
       timeout: 10s
       retries: 5
 
-  split_trip_swoole:
+  split_trip_nest:
     build:
-      context: ./swoole
-      dockerfile: Dockerfile
-    container_name: split_trip_swoole
-    volumes:
-      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+      context: ../nest
+      dockerfile: ../docker/nest/Dockerfile
+    container_name: split_trip_nest
     ports:
-      - ${SWOOLE_PORT:-8081}:8080
+      - ${NEST_PORT:-3001}:3001
     networks:
       - split_trip
     environment:
-      - APP_ENV=production
-      - OCTANE_SERVER=swoole
-      - OCTANE_WORKERS=auto
-      - OCTANE_TASK_WORKERS=auto
-      - OCTANE_MAX_REQUESTS=1000
-      - SWOOLE_HTTP_REACTOR_NUM=auto
-      - SWOOLE_HTTP_WORKER_NUM=auto
-      - SWOOLE_HTTP_TASK_WORKER_NUM=auto
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@split_trip_db_pg:5432/${POSTGRES_DATABASE}
+      - MONGODB_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@split_trip_mongodb:27017/${MONGODB_DATABASE}?authSource=admin
+      - REDIS_HOST=split_trip_redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-key}
+      - PORT=3001
+      - NODE_OPTIONS=--max-old-space-size=1024
     depends_on:
       split_trip_redis:
         condition: service_healthy
       split_trip_db_pg:
         condition: service_healthy
+      split_trip_mongodb:
+        condition: service_healthy
+    volumes:
+      # Монтируем исходный код для hot reload
+      - ../nest/src:/app/src
+      - ../nest/prisma:/app/prisma
+      # Конфигурационные файлы
+      - ../nest/package.json:/app/package.json:ro
+      - ../nest/package-lock.json:/app/package-lock.json:ro
+      - ../nest/tsconfig.json:/app/tsconfig.json:ro
+      - ../nest/nest-cli.json:/app/nest-cli.json:ro
+      # Исключаем node_modules из монтирования
+      - /app/node_modules
+      # Монтируем uploads для сохранения файлов
+      - nest_uploads:/app/uploads
     deploy:
       resources:
         limits:
-          memory: 4G
-          cpus: '8.0'
-        reservations:
           memory: 2G
           cpus: '4.0'
+        reservations:
+          memory: 1G
+          cpus: '2.0'
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:3001/v1/health || curl -f http://localhost:3001/v1/health || wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/v1/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -181,6 +228,12 @@ services:
 
 volumes:
   redis_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  nest_uploads:
     driver: local
 
 networks:

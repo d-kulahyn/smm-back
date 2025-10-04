@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 
+header('Content-Type: application/json');
+echo json_encode(123);die;
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

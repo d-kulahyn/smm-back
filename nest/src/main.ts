@@ -10,13 +10,18 @@ async function bootstrap() {
   app.useGlobalFilters(new ApiExceptionFilter());
   app.useGlobalPipes(new GlobalValidationPipe());
 
-  // CORS
-  app.enableCors();
+  // CORS - разрешить для всех origins
+  app.enableCors({
+    origin: true, // Разрешить любой origin с credentials
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    credentials: true,
+  });
 
   // API prefix
   app.setGlobalPrefix('v1');
 
-  // Swagger documentation
+  // Swagger documentation (без префикса, чтобы был доступен по /api-docs)
   const config = new DocumentBuilder()
     .setTitle('SMM API')
     .setDescription('The SMM API documentation')
@@ -24,10 +29,15 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
-  await app.listen(process.env.PORT || 3000);
-  console.log('Application is running on: http://localhost:3000');
-  console.log('Swagger UI available at: http://localhost:3000/api-docs');
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger UI available at: http://localhost:${port}/api-docs`);
 }
 bootstrap();

@@ -113,9 +113,5 @@ php artisan octane:start \
     --max-requests=1000 \
     --watch &
 
-# Start WebSocket server via Artisan command
-#echo "🌐 Starting WebSocket server on port 8082..."
-#php artisan websocket:serve --host=0.0.0.0 --port=8082 &
-
 # Wait for processes to complete
 wait

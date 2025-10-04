@@ -79,7 +79,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Gate;
-use L5Swagger\L5SwaggerServiceProvider;
+use Laravel\Octane\Facades\Octane;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -168,8 +168,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(Factory::class, function (Application $app) {
             return (new Factory())->withServiceAccount($app->basePath('firebase.json'));
         });
-
-        $this->app->register(L5SwaggerServiceProvider::class);
     }
 
     /**
@@ -179,6 +177,61 @@ class AppServiceProvider extends ServiceProvider
     {
         JsonResource::withoutWrapping();
         bcscale(2);
+
+        // АГРЕССИВНАЯ очистка для Octane
+        if (class_exists(\Laravel\Octane\Facades\Octane::class)) {
+            // Очищаем resolved instances
+            Octane::clearResolvedInstances();
+
+            // Принудительно очищаем все после каждого запроса
+            Octane::tick('garbage-collection', function () {
+                // Принудительная сборка мусора
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+
+                // Очищаем opcache если включен
+                if (function_exists('opcache_reset')) {
+                    opcache_reset();
+                }
+
+                // Очищаем все кэши Laravel
+                app('cache')->flush();
+
+                // Очищаем resolved instances еще раз
+                app()->forgetInstance('auth');
+                app()->forgetInstance('auth.driver');
+                app()->forgetInstance('session');
+                app()->forgetInstance('session.store');
+
+                // Очищаем все Sanctum guards
+                foreach (config('auth.guards', []) as $guard => $config) {
+                    app()->forgetInstance("auth.guard.{$guard}");
+                }
+            });
+
+            // Очистка после каждого запроса
+            Octane::afterRequest(function ($request, $response, $sandbox) {
+                // Принудительная сборка мусора после каждого запроса
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+
+                // Очищаем все auth instances
+                app()->forgetInstance('auth');
+                app()->forgetInstance('auth.driver');
+                app()->forgetInstance('session');
+                app()->forgetInstance('session.store');
+
+                // Очищаем memory leaks
+                if (function_exists('memory_get_usage')) {
+                    $memory = memory_get_usage(true);
+                    if ($memory > 50 * 1024 * 1024) { // Если больше 50MB
+                        gc_collect_cycles();
+                    }
+                }
+            });
+        }
 
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);

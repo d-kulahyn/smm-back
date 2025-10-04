@@ -9,24 +9,19 @@ import {
   UseGuards,
   Request,
   Inject,
-  UploadedFile,
-  UseInterceptors,
   Query,
   Patch,
-  UploadedFiles,
   ForbiddenException
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty, ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty, ApiQuery } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsDateString, IsUUID } from 'class-validator';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
 import {
   PermissionsGuard,
   RequireAnyPermission,
   Permission,
   TaskPolicy,
-  AuthenticatedRequest,
-  FileService
+  AuthenticatedRequest
 } from '../../../shared';
 import { CreateTaskUseCase } from '../../../application/use-cases/create-task.use-case';
 import { TaskRepository } from '../../../domain/repositories/task.repository';
@@ -74,9 +69,6 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   notes?: string;
-
-  @ApiProperty({ type: 'array', items: { type: 'string', format: 'binary' }, description: 'Task attachment files', required: false })
-  attachments?: any[];
 
   @ApiProperty({ description: 'Reminder time in hours before the due date', required: false })
   @IsOptional()
@@ -138,7 +130,6 @@ export class CreateTaskReminderDto {
 export class TaskController {
   constructor(
     private readonly createTaskUseCase: CreateTaskUseCase,
-    private readonly fileService: FileService,
     private readonly taskPolicy: TaskPolicy,
     @Inject('TASK_REPOSITORY')
     private readonly taskRepository: TaskRepository,
@@ -223,11 +214,9 @@ export class TaskController {
     summary: 'Create a new task',
     description: 'Create a new task with authorization checks'
   })
-  @UseInterceptors(FilesInterceptor('attachments', 5))
   async store(
     @Body() createTaskDto: CreateTaskDto,
     @Request() req: AuthenticatedRequest,
-    @UploadedFiles() attachments?: Express.Multer.File[]
   ) {
     const rawBody = req.body as any;
     const mappedDto = {
@@ -257,22 +246,6 @@ export class TaskController {
       throw new ForbiddenException('You do not have permission to create tasks');
     }
 
-    const savedAttachments: Array<{ filePath: string; originalName: string }> = [];
-
-    if (attachments && attachments.length > 0) {
-      try {
-        for (const file of attachments) {
-          const savedFile = await this.fileService.saveTaskAttachment(file);
-          savedAttachments.push(savedFile);
-        }
-      } catch (error) {
-        for (const attachment of savedAttachments) {
-          await this.fileService.deleteTaskAttachment(attachment.filePath);
-        }
-        throw new Error(`Failed to save attachments: ${error.message}`);
-      }
-    }
-
     try {
       const task = await this.createTaskUseCase.execute({
         title: mappedDto.title,
@@ -282,7 +255,6 @@ export class TaskController {
         priority: mappedDto.priority,
         status: mappedDto.status,
         dueDate: mappedDto.dueDate ? new Date(mappedDto.dueDate) : undefined,
-        attachments: savedAttachments.map(attachment => attachment.filePath),
         reminderBeforeHours: mappedDto.reminderBeforeHours
       });
 
@@ -292,9 +264,6 @@ export class TaskController {
         data: TaskResource.fromEntity(task)
       };
     } catch (error) {
-      for (const attachment of savedAttachments) {
-        await this.fileService.deleteTaskAttachment(attachment.filePath);
-      }
       throw error;
     }
   }
@@ -374,12 +343,7 @@ export class TaskController {
       throw new ForbiddenException('You do not have permission to delete this task');
     }
 
-    if (task.attachments) {
-      for (const attachment of task.attachments) {
-        await this.fileService.deleteTaskAttachment(attachment);
-      }
-    }
-
+    // Удаляем задачу
     await this.taskRepository.delete(id);
 
     return {
@@ -454,59 +418,6 @@ export class TaskController {
       message: 'Task assigned successfully',
       data: TaskResource.fromEntity(updatedTask)
     };
-  }
-
-  @Post(':id/attachments')
-  @ApiOperation({
-    summary: 'Add attachment to task',
-    description: 'Upload and attach a file to existing task'
-  })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('attachment'))
-  async addAttachment(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-    @UploadedFile() attachment: Express.Multer.File
-  ) {
-    if (!attachment) {
-      throw new Error('No file provided');
-    }
-
-    const task = await this.taskRepository.findById(id);
-    if (!task) {
-      throw new Error('Task not found');
-    }
-
-    const user = await this.userRepository.findById(req.user.userId);
-
-    if (!this.taskPolicy.addAttachment(user, task)) {
-      throw new ForbiddenException('You do not have permission to add attachments to this task');
-    }
-
-    const savedFile = await this.fileService.saveTaskAttachment(attachment);
-
-    return {
-      message: 'Attachment uploaded successfully',
-      attachment: {
-        originalName: savedFile.originalName,
-        downloadUrl: `/storage/tasks/${savedFile.filePath}`
-      }
-    };
-  }
-
-  @Delete(':taskId/attachments/:attachmentId')
-  @ApiOperation({
-    summary: 'Remove attachment from task',
-    description: 'Delete a specific attachment from task'
-  })
-  async removeAttachment(
-    @Param('taskId') taskId: string,
-    @Param('attachmentId') attachmentId: string
-  ) {
-    // Получаем информацию о вложении из базы данных
-    // Удаляем файл и запись из БД
-
-    return { message: 'Attachment removed successfully' };
   }
 
   @Post(':taskId/reminders')

@@ -68,6 +68,11 @@ RUN npm i chokidar
 #    && echo "opcache.fast_shutdown=1" >> /usr/local/etc/php/conf.d/opcache.ini
 
 
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
+    && echo "xdebug.client_host = host.docker.internal" >> /usr/local/etc/php/conf.d/xdebug.ini
+
 # Configure PHP for high performance
 RUN echo "memory_limit=1G" >> /usr/local/etc/php/conf.d/performance.ini \
     && echo "max_execution_time=0" >> /usr/local/etc/php/conf.d/performance.ini \

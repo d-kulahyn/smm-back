@@ -66,13 +66,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/chats",
+     *     path="/projects/{project_id}/chats",
      *     tags={"Chats"},
      *     summary="Get project chats",
      *     description="Retrieve paginated list of chats for a specific project",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -117,13 +117,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats",
+     *     path="/projects/{project_id}/chats",
      *     tags={"Chats"},
      *     summary="Create a new chat",
      *     description="Create a new chat for a specific project",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -173,13 +173,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/chats/{chatId}",
+     *     path="/projects/{project_id}/chats/{chatId}",
      *     tags={"Chats"},
      *     summary="Get specific chat",
      *     description="Retrieve details of a specific chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -216,13 +216,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/projects/{projectId}/chats/{chatId}",
+     *     path="/projects/{project_id}/chats/{chatId}",
      *     tags={"Chats"},
      *     summary="Update chat",
      *     description="Update chat details",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -278,13 +278,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/projects/{projectId}/chats/{chatId}",
+     *     path="/projects/{project_id}/chats/{chatId}",
      *     tags={"Chats"},
      *     summary="Delete chat",
      *     description="Delete a chat and all its messages",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -322,13 +322,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/chats/{chatId}/messages",
+     *     path="/projects/{project_id}/chats/{chatId}/messages",
      *     tags={"Chats"},
      *     summary="Get chat messages",
      *     description="Retrieve paginated list of messages for a specific chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -389,13 +389,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats/{chatId}/messages",
+     *     path="/projects/{project_id}/chats/{chatId}/messages",
      *     tags={"Chats"},
      *     summary="Send message to chat",
      *     description="Send a text message to specific chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -450,13 +450,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats/{chatId}/messages/voice",
+     *     path="/projects/{project_id}/chats/{chatId}/messages/voice",
      *     tags={"Chats"},
      *     summary="Send voice message to chat",
      *     description="Send a voice message to specific chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -511,13 +511,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats/{chatId}/messages/mark-all-read",
+     *     path="/projects/{project_id}/chats/{chatId}/messages/mark-all-read",
      *     tags={"Chats"},
      *     summary="Mark all messages as read",
      *     description="Mark all messages in chat as read for current user",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -560,13 +560,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats/{chatId}/messages/read",
+     *     path="/projects/{project_id}/chats/{chatId}/messages/read",
      *     tags={"Chats"},
      *     summary="Mark specific message as read",
      *     description="Mark a specific message as read for current user",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -611,13 +611,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/projects/{projectId}/chats/{chatId}/users",
+     *     path="/projects/{project_id}/chats/{chatId}/users",
      *     tags={"Chats"},
      *     summary="Add user to chat",
      *     description="Add an existing user to the chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -670,13 +670,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/projects/{projectId}/chats/{chatId}/users/{userId}",
+     *     path="/projects/{project_id}/chats/{chatId}/users/{userId}",
      *     tags={"Chats"},
      *     summary="Remove user from chat",
      *     description="Remove a user from the chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,
@@ -727,13 +727,13 @@ class ChatController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/projects/{projectId}/chats/{chatId}/users",
+     *     path="/projects/{project_id}/chats/{chatId}/users",
      *     tags={"Chats"},
      *     summary="Get chat members",
      *     description="Retrieve list of members in a specific chat",
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(
-     *         name="projectId",
+     *         name="project_id",
      *         in="path",
      *         description="Project ID",
      *         required=true,

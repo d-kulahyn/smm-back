@@ -1,6 +1,5 @@
 import { DateFormatter, FormattedDate } from '../../../shared/formatters/date.formatter';
 import { TaskReminderResource } from './task-reminder-resource.dto';
-import { TaskAttachmentResource } from './task-attachment-resource.dto';
 
 export class TaskResource {
   id: string;
@@ -25,7 +24,6 @@ export class TaskResource {
   assignee?: any;
   creator?: any;
   reminders: TaskReminderResource[];
-  attachments: TaskAttachmentResource[];
 
   constructor(task: any) {
     this.id = task.id;
@@ -72,9 +70,8 @@ export class TaskResource {
       };
     }
 
-    // Напоминания и вложения
+    // Напоминания (убираем attachments)
     this.reminders = task.reminders ? TaskReminderResource.collection(task.reminders) : [];
-    this.attachments = task.attachments ? TaskAttachmentResource.collection(task.attachments) : [];
   }
 
   static fromEntity(task: any): TaskResource {

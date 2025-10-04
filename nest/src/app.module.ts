@@ -8,6 +8,7 @@ import { AuthModule } from './infrastructure/modules/auth.module';
 import { ProjectModule } from './infrastructure/modules/project.module';
 import { TaskModule } from './infrastructure/modules/task.module';
 import { ChatModule } from './infrastructure/modules/chat.module';
+import { HealthModule } from './infrastructure/modules/health.module';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { ChatModule } from './infrastructure/modules/chat.module';
     ProjectModule,
     TaskModule,
     ChatModule,
+    HealthModule,
   ],
+  controllers: [],
 })
 export class AppModule {}

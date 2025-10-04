@@ -9,12 +9,11 @@ export interface CreateTaskCommand {
   projectId: string;
   creatorId: string;
   priority?: TaskPriority;
-  status?: TaskStatus; // Добавляем это поле
-  attachments?: string[]; // Добавляем поле attachments
+  status?: TaskStatus;
   dueDate?: Date;
   assignedTo?: string;
   notes?: string;
-  reminderBeforeHours?: number; // Добавляем это поле
+  reminderBeforeHours?: number;
 }
 
 @Injectable()
@@ -34,7 +33,6 @@ export class CreateTaskUseCase {
       TaskStatus.pending, // status будет по умолчанию pending
       command.priority || TaskPriority.MEDIUM,
       command.assignedTo, // assignedTo
-      command.attachments, // attachments
       undefined, // completedAt
       command.dueDate,
     );

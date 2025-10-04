@@ -164,29 +164,6 @@ export class TaskPolicy {
   }
 
   /**
-   * Determine whether the user can add attachments to the task.
-   */
-  addAttachment(user: AuthUser, task: TaskEntity): boolean {
-    if (task.status === 'completed') {
-      return false;
-    }
-
-    if (user.hasPermission(Permission.MANAGE_ALL_TASKS)) {
-      return true;
-    }
-
-    if (task.creatorId === user.id || task.assignedTo === user.id) {
-      return true;
-    }
-
-    if (user.hasPermission(Permission.MANAGE_PROJECT_TASKS)) {
-      return this.canUserAccessProjectTasks(user, task);
-    }
-
-    return false;
-  }
-
-  /**
    * Determine whether the user can create reminders for the task.
    */
   createReminder(user: AuthUser, task: TaskEntity): boolean {

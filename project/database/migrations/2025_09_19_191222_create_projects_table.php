@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('status', ['active', 'completed', 'on_hold', 'cancelled'])->default('active');
+            $table->enum('status', ['active', 'on_hold', 'on_hold', 'cancelled'])->default('active');
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

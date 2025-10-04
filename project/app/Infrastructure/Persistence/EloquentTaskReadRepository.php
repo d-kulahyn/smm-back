@@ -107,7 +107,7 @@ class EloquentTaskReadRepository implements TaskReadRepositoryInterface
 
         if ($filters->hasOverdueFilter() && $filters->overdue) {
             $query->where('due_date', '<', now())
-                  ->whereNotIn('status', ['completed', 'cancelled']);
+                  ->whereNotIn('status', ['on_hold', 'cancelled']);
         }
 
         if ($filters->hasSearchFilter()) {

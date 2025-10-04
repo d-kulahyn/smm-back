@@ -33,14 +33,14 @@ export class StorageController {
     }
   }
 
-  @Get('tasks/:filename')
+  @Get('messages/:filename')
   @ApiOperation({
-    summary: 'Get task attachment file',
-    description: 'Serve task attachment files'
+    summary: 'Get message file',
+    description: 'Serve message attachment files'
   })
-  async getTaskAttachment(@Param('filename') filename: string, @Res() res: Response) {
+  async getMessageFile(@Param('filename') filename: string, @Res() res: Response) {
     try {
-      const filePath = join(this.uploadPath, 'tasks', filename);
+      const filePath = join(this.uploadPath, 'messages', filename);
 
       if (!existsSync(filePath)) {
         throw new NotFoundException('File not found');
@@ -51,7 +51,7 @@ export class StorageController {
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Cache-Control', 'public, max-age=86400');
 
-      if (!mimeType.startsWith('image/')) {
+      if (!mimeType.startsWith('image/') && !mimeType.startsWith('audio/') && !mimeType.startsWith('video/')) {
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       }
 

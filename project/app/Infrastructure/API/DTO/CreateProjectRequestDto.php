@@ -27,7 +27,7 @@ class CreateProjectRequestDto extends Data
             'avatar'      => 'nullable|file', // 5MB max
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status'      => 'nullable|in:active,completed,on_hold,cancelled',
+            'status'      => 'nullable|in:active,on_hold,on_hold,cancelled',
             'start_date'  => 'nullable|date',
             'end_date'    => 'nullable|date|after_or_equal:start_date',
             'budget'      => 'nullable|numeric|min:0',

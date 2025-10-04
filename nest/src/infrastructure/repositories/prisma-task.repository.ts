@@ -231,7 +231,6 @@ export class PrismaTaskRepository implements TaskRepository {
       status: task.status,
       priority: task.priority,
       dueDate: task.dueDate,
-      attachments: task.attachments,
       completedAt: task.completedAt,
     };
 
@@ -240,9 +239,6 @@ export class PrismaTaskRepository implements TaskRepository {
     }
     if (taskData.dueDate !== undefined) {
       taskData.dueDate = taskData.dueDate;
-    }
-    if (taskData.attachments !== undefined) {
-      taskData.attachments = taskData.attachments;
     }
     if (taskData.completedAt !== undefined) {
       taskData.completedAt = taskData.completedAt;
@@ -317,7 +313,6 @@ export class PrismaTaskRepository implements TaskRepository {
       task.status as TaskStatus,
       task.priority as TaskPriority,
       assignedTo,
-      task.attachments || [],
       task.completedAt,
       task.dueDate,
       task.createdAt,

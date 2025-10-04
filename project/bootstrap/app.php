@@ -15,17 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Добавляем агрессивную очистку памяти в самое начало
+        $middleware->prepend(\App\Http\Middleware\AggressiveGarbageCollection::class);
         $middleware->append(\App\Http\Middleware\SwooleMiddleware::class);
-
         $middleware->web(append: [
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
-
-        $middleware->api(prepend: [
-            \App\Http\Middleware\OctaneSanctumMiddleware::class,
-        ]);
-
-        //
     })
     ->withEvents(discover: [
         __DIR__.'/../app/Application/Listener'
