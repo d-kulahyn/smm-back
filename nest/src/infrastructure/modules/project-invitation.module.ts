@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ProjectInvitationController } from '../api/controllers/project-invitation.controller';
-import { PublicProjectInvitationController } from '../api/controllers/public-project-invitation.controller';
 import { SendProjectInvitationUseCase } from '../../application/use-cases/send-project-invitation.use-case';
 import { AcceptProjectInvitationUseCase } from '../../application/use-cases/accept-project-invitation.use-case';
 import { DeclineProjectInvitationUseCase } from '../../application/use-cases/decline-project-invitation.use-case';
@@ -18,8 +17,7 @@ export const USER_REPOSITORY = 'USER_REPOSITORY';
     ConfigModule, // Импортируем ConfigModule для доступа к переменным окружения
   ],
   controllers: [
-    ProjectInvitationController,
-    PublicProjectInvitationController // Добавляем публичный контроллер
+    ProjectInvitationController
   ],
   providers: [
     // Use Cases
