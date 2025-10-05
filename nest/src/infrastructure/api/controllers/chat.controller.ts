@@ -34,6 +34,7 @@ import {ChatRepository} from '../../../domain/repositories/chat.repository';
 import {MessageRepository} from '../../../domain/repositories/message.repository';
 import {ChatMemberRepository} from '../../../domain/repositories/chat-member.repository';
 import {UserRepository} from '../../../domain/repositories/user.repository';
+import {PrismaService} from '../../database/prisma.service';
 import {ChatPolicy} from '../../../shared';
 import {ChatStatus} from '../../../domain/enums/chat-status.enum';
 import {MessageType} from '../../../domain/enums/message-type.enum';
@@ -275,6 +276,7 @@ export class ChatController {
         private readonly chatMemberRepository: ChatMemberRepository,
         @Inject('USER_REPOSITORY')
         private readonly userRepository: UserRepository,
+        private readonly prismaService: PrismaService, // Добавляем PrismaService
     ) {
     }
 
@@ -351,13 +353,10 @@ export class ChatController {
         @Body() createChatDto: CreateChatDto,
         @Request() req: AuthenticatedRequest
     ) {
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new ResourceNotFoundException('User', req.user.userId);
-        }
-
-        if (!this.chatPolicy.create(user)) {
-            throw new AccessDeniedException('You do not have permission to create chats');
+        // Проверяем возможность создания чата в проекте через ChatPolicy
+        const canCreateInProject = await this.chatPolicy.canCreateChatInProject(req.user.userId, projectId);
+        if (!canCreateInProject) {
+            throw new AccessDeniedException('You do not have permission to create chats in this project');
         }
 
         const chat = await this.createChatUseCase.execute({
@@ -553,18 +552,22 @@ export class ChatController {
         @Body() addUserDto: AddUserToChatDto,
         @Request() req: AuthenticatedRequest
     ) {
-        const chat = await this.chatRepository.findById(chatId);
-        if (!chat) {
-            throw new ResourceNotFoundException('Chat not found');
+        // Валидация пользователя для добавления через ChatPolicy
+        const validation = await this.chatPolicy.validateUserForChatAddition(addUserDto.userId, chatId);
+        if (!validation.isValid) {
+            throw new ResourceNotFoundException(validation.reason);
         }
 
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new ResourceNotFoundException('User', req.user.userId);
-        }
+        // Все проверки безопасности и прав выполняются в ChatPolicy
+        const canAddMember = await this.chatPolicy.canAddMembersToProjectChat(
+            chatId,
+            req.user.userId,
+            addUserDto.userId,
+            projectId
+        );
 
-        if (!await this.chatPolicy.canAddMembers(chatId, req.user.userId)) {
-            throw new AccessDeniedException('You do not have permission to add members to this chat');
+        if (!canAddMember) {
+            throw new AccessDeniedException('You cannot add this user to the chat. User must be a project member and you must have appropriate permissions.');
         }
 
         const chatMember = await this.addUserToChatUseCase.execute({
@@ -580,6 +583,7 @@ export class ChatController {
             data: ChatMemberResource.fromEntity(chatMember)
         };
     }
+
 
     @Delete(':id/members/:userId')
     @RequireAnyPermission(Permission.MANAGE_ALL_CHATS, Permission.UPDATE_CHATS)
@@ -597,18 +601,22 @@ export class ChatController {
         @Param('userId') userId: string,
         @Request() req: AuthenticatedRequest
     ) {
+        // Проверяем существование чата
         const chat = await this.chatRepository.findById(chatId);
         if (!chat) {
             throw new ResourceNotFoundException('Chat not found');
         }
 
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new ResourceNotFoundException('User', req.user.userId);
+        // Валидация пользователя для удаления через ChatPolicy
+        const validation = await this.chatPolicy.validateUserForChatRemoval(userId, chatId);
+        if (!validation.isValid) {
+            throw new ResourceNotFoundException(validation.reason);
         }
 
-        if (!await this.chatPolicy.canRemoveMembers(chatId, req.user.userId)) {
-            throw new AccessDeniedException('You do not have permission to remove members from this chat');
+        // Проверяем права на удаление конкретного пользователя через расширенную логику ChatPolicy
+        const canRemove = await this.chatPolicy.canRemoveMemberFromChat(chatId, req.user.userId, userId);
+        if (!canRemove) {
+            throw new AccessDeniedException('You do not have permission to remove this user from the chat');
         }
 
         await this.removeUserFromChatUseCase.execute({

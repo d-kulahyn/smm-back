@@ -42,7 +42,15 @@ export class PrismaProjectRepository implements ProjectRepository {
         },
         invitations: {
           include: {
-            user: {
+            inviter: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              }
+            },
+            accepter: {
               select: {
                 id: true,
                 name: true,
@@ -197,7 +205,15 @@ export class PrismaProjectRepository implements ProjectRepository {
         },
         invitations: {
           include: {
-            user: {
+            inviter: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              }
+            },
+            accepter: {
               select: {
                 id: true,
                 name: true,

@@ -23,11 +23,12 @@ model User {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  ownedProjects     Project[] @relation("ProjectOwner")
-  projectMembers    ProjectMember[]
-  tasks             Task[]
-  assignedTasks     TaskAssignment[]
-  projectInvitations ProjectInvitation[]
+  ownedProjects        Project[] @relation("ProjectOwner")
+  projectMembers       ProjectMember[]
+  tasks                Task[]
+  assignedTasks        TaskAssignment[]
+  sentInvitations      ProjectInvitation[] @relation("InvitationInviter")
+  acceptedInvitations  ProjectInvitation[] @relation("InvitationAccepter")
 
   @@map("users")
 }
@@ -170,18 +171,26 @@ model ProjectMember {
 }
 
 model ProjectInvitation {
-  id        String   @id @default(cuid())
-  projectId String
-  userId    String
-  status    InvitationStatus @default(pending)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  projectId    String
+  invitedBy    String
+  invitedEmail String?  // Необязательный email для приглашений по ссылке
+  token        String   @unique  // Уникальный токен для приглашения
+  role         ProjectRole @default(member)
+  permissions  Json?    // Массив разрешений в JSON формате
+  status       InvitationStatus @default(pending)
+  expiresAt    DateTime // Срок действия приглашения
+  acceptedAt   DateTime?
+  declinedAt   DateTime?
+  acceptedBy   String?  // ID пользователя, который принял приглашение
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  inviter   User    @relation("InvitationInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+  accepter  User?   @relation("InvitationAccepter", fields: [acceptedBy], references: [id], onDelete: SetNull)
 
-  @@unique([projectId, userId])
   @@map("project_invitations")
 }
 
@@ -251,6 +260,7 @@ enum ProjectRole {
 enum InvitationStatus {
   pending
   accepted
+  declined
   rejected
 }
 
