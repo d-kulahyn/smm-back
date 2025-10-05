@@ -128,10 +128,6 @@ export class ProjectInvitationController {
         permissions: result.invitation.permissions,
         expiresAt: result.invitation.expiresAt
       },
-      links: {
-        accept: result.acceptUrl,
-        decline: result.declineUrl
-      },
       emailSent: !!dto.email // Показываем, было ли отправлено письмо
     };
   }
