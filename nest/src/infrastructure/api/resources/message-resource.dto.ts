@@ -26,8 +26,8 @@ export class MessageResource {
     this.isEdited = message.isEdited;
     this.editedAt = message.editedAt?.toISOString();
     this.isDeleted = message.isDeleted;
-    this.createdAt = message.createdAt.toISOString();
-    this.updatedAt = message.updatedAt.toISOString();
+    this.createdAt = message.createdAt?.toISOString();
+    this.updatedAt = message.updatedAt?.toISOString();
   }
 
   static fromEntity(message: Message): MessageResource {
@@ -39,7 +39,7 @@ export class MessageResource {
   }
 
   withReadStatus(userId: string): MessageResource {
-    this.isReadByCurrentUser = this.readBy.includes(userId);
+    this.isReadByCurrentUser = this.readBy?.includes(userId);
     return this;
   }
 }
