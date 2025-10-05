@@ -39,7 +39,7 @@ export class ChatMessageSentEvent extends BaseEvent {
   }
 
   getBroadcastChannels(): string[] {
-    const memberChannels = this.chatMembers.map(userId => `socket.chats.${this.chatId}.${userId}`);
+    const memberChannels = this.chatMembers.map(userId => `socket.projects.${this.projectId}.${userId}`);
 
     return [...memberChannels];
   }
