@@ -460,6 +460,11 @@ export class ChatController {
         return {
             success: true,
             data: messagesWithReadStatus,
+            pagination: {
+                total: 0,
+                page: 1,
+                limit: 10
+            }
         };
     }
 

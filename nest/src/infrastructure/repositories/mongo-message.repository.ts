@@ -23,9 +23,21 @@ export class MongoMessageRepository implements MessageRepository {
     data: Message[];
     total: number;
   }> {
+    // Строим правильный фильтр для MongoDB
+    const filter: any = { chatId };
+
+    // Добавляем условие по createdAt только если оно задано
+    if (createdAt && sort) {
+      if (sort === 'asc') {
+        filter.createdAt = { $gt: new Date(createdAt) };
+      } else if (sort === 'desc') {
+        filter.createdAt = { $lt: new Date(createdAt) };
+      }
+    }
+
     const [messages, total] = await Promise.all([
       this.messageModel
-        .find({ chatId, createdAt:  sort === 'asc' && createdAt ? { $gt: new Date(createdAt) } : sort === 'desc' && createdAt ? { $lt: new Date(createdAt) } : {} })
+        .find(filter)
         .sort({ createdAt: -1 })
         .exec(),
       this.messageModel.countDocuments({ chatId })

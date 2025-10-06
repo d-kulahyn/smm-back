@@ -108,7 +108,6 @@ export class PrismaProjectRepository implements ProjectRepository {
   }
 
   async create(project: Project): Promise<Project> {
-      console.log(project.ownerId);
     const created = await this.prisma.project.create({
       data: {
         id: project.id,
