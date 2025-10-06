@@ -1,4 +1,5 @@
 import { Chat } from '../../../domain/entities/chat.entity';
+import { MessageResource } from './message-resource.dto';
 
 export class ChatResource {
   id: string;
@@ -13,6 +14,7 @@ export class ChatResource {
   updatedAt: string;
   membersCount?: number;
   unreadCount?: number;
+  lastMessage?: MessageResource;
 
   constructor(chat: Chat) {
     this.id = chat.id;
@@ -42,6 +44,11 @@ export class ChatResource {
 
   withUnreadCount(count: number): ChatResource {
     this.unreadCount = count;
+    return this;
+  }
+
+  withLastMessage(lastMessage: MessageResource | null): ChatResource {
+    this.lastMessage = lastMessage || undefined;
     return this;
   }
 }

@@ -50,7 +50,32 @@ import {
     AccessDeniedException,
 } from '../../../shared/exceptions';
 
-// Response DTOs для Swagger документации
+export class MessageResponseDto {
+    @ApiProperty({ example: 'clm1msg123def456' })
+    id: string;
+
+    @ApiProperty({ example: 'Hello everyone!' })
+    content: string;
+
+    @ApiProperty({ example: 'text' })
+    type: string;
+
+    @ApiProperty({ example: 'clm1chat123456' })
+    chatId: string;
+
+    @ApiProperty({ example: 'clm1sender123456' })
+    senderId: string;
+
+    @ApiProperty({ example: 'file-path.jpg', nullable: true })
+    fileUrl: string | null;
+
+    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+    createdAt: string;
+
+    @ApiProperty({ example: true, description: 'Whether the message is read by current user' })
+    isReadByCurrentUser?: boolean;
+}
+
 export class ChatResponseDto {
     @ApiProperty({ example: 'clm1abc123def456' })
     id: string;
@@ -78,32 +103,9 @@ export class ChatResponseDto {
 
     @ApiProperty({ example: 5, description: 'Number of unread messages for current user' })
     unreadCount?: number;
-}
 
-export class MessageResponseDto {
-    @ApiProperty({ example: 'clm1msg123def456' })
-    id: string;
-
-    @ApiProperty({ example: 'Hello everyone!' })
-    content: string;
-
-    @ApiProperty({ example: 'text' })
-    type: string;
-
-    @ApiProperty({ example: 'clm1chat123456' })
-    chatId: string;
-
-    @ApiProperty({ example: 'clm1sender123456' })
-    senderId: string;
-
-    @ApiProperty({ example: 'file-path.jpg', nullable: true })
-    fileUrl: string | null;
-
-    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-    createdAt: string;
-
-    @ApiProperty({ example: true, description: 'Whether the message is read by current user' })
-    isReadByCurrentUser?: boolean;
+    @ApiProperty({ type: MessageResponseDto, description: 'Last message in the chat', nullable: true })
+    lastMessage?: MessageResponseDto;
 }
 
 export class ChatMemberResponseDto {
@@ -320,8 +322,14 @@ export class ChatController {
                 // Get unread count for current user
                 const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
 
-                // Create chat resource with unread count
-                const chatResource = ChatResource.fromEntity(chat).withUnreadCount(unreadCount);
+                // Get last message for the chat
+                const lastMessage = await this.messageRepository.findLastMessageByChatId(chat.id);
+
+                // Create chat resource with unread count and last message
+                const chatResource = ChatResource.fromEntity(chat)
+                    .withUnreadCount(unreadCount)
+                    .withLastMessage(lastMessage ? MessageResource.fromEntity(lastMessage).withReadStatus(req.user.userId) : null);
+
                 filteredChats.push(chatResource);
             }
         }

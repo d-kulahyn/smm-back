@@ -19,7 +19,7 @@ import {ApiTags, ApiOperation, ApiResponse, ApiParam, ApiProperty, ApiBearerAuth
 import {FileInterceptor} from '@nestjs/platform-express';
 import {IsString, IsNumber, IsOptional, IsUUID} from 'class-validator';
 import {JwtAuthGuard} from '../../../shared/guards/jwt-auth.guard';
-import {AuthenticatedRequest} from '../../../shared';
+import {AuthenticatedRequest, PermissionsGuard} from '../../../shared';
 import {ChunkedFileService} from '../../../application/services/chunked-file.service';
 
 // DTOs для чанковой загрузки
@@ -134,6 +134,8 @@ export class EntityFilesResponseDto {
 
 @ApiTags('Storage')
 @Controller('storage')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@ApiBearerAuth()
 export class StorageController {
     private readonly uploadPath = join(process.cwd(), 'uploads');
 
@@ -143,8 +145,6 @@ export class StorageController {
     }
 
     @Post('create')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Create empty file for chunked upload',
         description: 'Create an empty file with metadata for chunked upload'
@@ -188,8 +188,6 @@ export class StorageController {
     }
 
     @Post('chunked/:fileId')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Upload file chunk',
         description: 'Upload a chunk of a file (for large files). Send file data in "chunk" field.'
@@ -252,8 +250,6 @@ export class StorageController {
     }
 
     @Post('upload/:fileId')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Upload file chunk (flexible)',
         description: 'Upload a chunk of a file with flexible field name. Accepts any file field name.'
@@ -335,8 +331,6 @@ export class StorageController {
     }
 
     @Post('complete/:fileId')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Complete file upload',
         description: 'Complete the upload of a chunked file'
@@ -482,8 +476,6 @@ export class StorageController {
     }
 
     @Post('chunk/:fileId/:chunkIndex')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Upload file chunk with index',
         description: 'Upload a specific chunk by index for parallel uploads. Chunks can be uploaded in any order.'
@@ -558,8 +550,6 @@ export class StorageController {
     }
 
     @Get('info/:fileId')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Get chunk upload info',
         description: 'Get information about chunk upload progress including missing chunks'

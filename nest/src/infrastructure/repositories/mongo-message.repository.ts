@@ -131,6 +131,15 @@ export class MongoMessageRepository implements MessageRepository {
     await this.messageModel.deleteMany({ chatId }).exec();
   }
 
+  async findLastMessageByChatId(chatId: string): Promise<Message | null> {
+    const message = await this.messageModel
+      .findOne({ chatId })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return message ? this.toDomain(message) : null;
+  }
+
   private toDomain(doc: any): Message {
     return new Message(
       doc._id.toString(),

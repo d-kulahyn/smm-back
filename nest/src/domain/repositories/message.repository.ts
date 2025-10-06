@@ -20,5 +20,6 @@ export interface MessageRepository {
   // Additional methods from MongoMessageRepository
   findByIdIn(ids: string[]): Promise<Message[]>;
   deleteManyByChatId(chatId: string): Promise<void>;
+  findLastMessageByChatId(chatId: string): Promise<Message | null>;
   // Add any other missing methods here
 }
