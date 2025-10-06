@@ -68,5 +68,6 @@ export const USER_REPOSITORY = 'USER_REPOSITORY';
       useClass: PrismaUserRepository,
     },
   ],
+  exports: [CHAT_REPOSITORY], // Экспортируем CHAT_REPOSITORY для использования в других модулях
 })
 export class ChatModule {}

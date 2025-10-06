@@ -10,6 +10,9 @@ export interface ChatWithExtras extends Chat {
 export interface ChatRepository {
   findById(id: string): Promise<Chat | null>;
   findByUserId(userId: string): Promise<Chat[]>;
+  findByProjectId(projectId: string): Promise<Chat[]>;
+  findByProjectIds(projectIds: string[]): Promise<Map<string, Chat[]>>;
+  findByProjectIdsWithExtras(projectIds: string[], userId: string): Promise<Map<string, ChatWithExtras[]>>;
   create(chat: Chat): Promise<Chat>;
   update(id: string, updates: Partial<Chat>): Promise<Chat>;
   delete(id: string): Promise<void>;

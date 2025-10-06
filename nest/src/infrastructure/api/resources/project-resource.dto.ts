@@ -58,7 +58,7 @@ export class ProjectResource {
     this.tasks = project.tasks ? TaskResource.collection(project.tasks) : [];
     this.members = project.members ? ProjectMemberResource.collection(project.members) : [];
     this.invitations = project.invitations ? ProjectInvitationResource.collection(project.invitations) : [];
-    this.chats = project.chats ? ChatResource.collection(project.chats) : [];
+    this.chats = project.chats ? ChatResource.collectionWithExtras(project.chats) : [];
   }
 
   static fromEntity(project: Project): ProjectResource {

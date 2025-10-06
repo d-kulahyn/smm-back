@@ -8,10 +8,9 @@ import { PrismaProjectRepository } from '../repositories/prisma-project.reposito
 import { PrismaTaskRepository } from '../repositories/prisma-task.repository';
 import { PrismaUserRepository } from '../repositories/prisma-user.repository';
 import { PrismaService } from '../database/prisma.service';
-import { ChatService } from '../services/chat.service';
+import { ChatModule } from './chat.module'; // Импортируем ChatModule
 import { FileService } from '../../shared';
 import { ProjectPolicy } from '../../shared';
-import { Chat, ChatSchema } from '../database/schemas/chat.schema';
 
 export const PROJECT_REPOSITORY = 'PROJECT_REPOSITORY';
 export const TASK_REPOSITORY = 'TASK_REPOSITORY';
@@ -19,16 +18,13 @@ export const USER_REPOSITORY = 'USER_REPOSITORY';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Chat.name, schema: ChatSchema },
-    ]),
+    ChatModule, // Импортируем ChatModule чтобы получить доступ к CHAT_REPOSITORY
   ],
   controllers: [ProjectController],
   providers: [
     CreateProjectUseCase,
     CompleteProjectUseCase,
     GetProjectStatsUseCase,
-    ChatService,
     PrismaService,
     FileService,
     ProjectPolicy,

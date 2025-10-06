@@ -3,7 +3,7 @@ import { MessageType } from '../enums/message-type.enum';
 
 export interface MessageRepository {
   findById(id: string): Promise<Message | null>;
-  findByChatId(chatId: string, page: number, limit: number): Promise<{
+  findByChatId(chatId: string, page: number, limit: number, createdAt?: string, sort?: 'asc' | 'desc'): Promise<{
     data: Message[];
     total: number;
     page: number;

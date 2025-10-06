@@ -23,6 +23,28 @@ export class MongoChatRepository implements ChatRepository {
     return chats.map(this.toDomain);
   }
 
+  async findByProjectIds(projectIds: string[]): Promise<Map<string, Chat[]>> {
+    const chats = await this.chatModel.find({
+      projectId: { $in: projectIds }
+    }).exec();
+
+    const chatsMap = new Map<string, Chat[]>();
+
+    // Инициализируем карту пустыми массивами для каждого проекта
+    projectIds.forEach(id => chatsMap.set(id, []));
+
+    // Группируем чаты по projectId
+    chats.forEach(chatDoc => {
+      const chat = this.toDomain(chatDoc);
+      const projectId = chat.projectId;
+      const existingChats = chatsMap.get(projectId) || [];
+      existingChats.push(chat);
+      chatsMap.set(projectId, existingChats);
+    });
+
+    return chatsMap;
+  }
+
   async findByProjectIdPaginated(projectId: string, page: number, limit: number): Promise<{
     data: Chat[];
     total: number;
@@ -177,6 +199,46 @@ export class MongoChatRepository implements ChatRepository {
       page,
       limit,
     };
+  }
+
+  async findByProjectIdsWithExtras(projectIds: string[], userId: string): Promise<Map<string, ChatWithExtras[]>> {
+    const chats = await this.chatModel.find({
+      projectId: { $in: projectIds }
+    }).exec();
+
+    const chatsMap = new Map<string, ChatWithExtras[]>();
+
+    // Инициализируем карту пустыми массивами для каждого проекта
+    projectIds.forEach(id => chatsMap.set(id, []));
+
+    // Получаем дополнительные данные для каждого чата
+    const chatsWithExtras = await Promise.all(
+      chats.map(async (chatDoc) => {
+        const chat = this.toDomain(chatDoc);
+
+        // Параллельно получаем количество непрочитанных сообщений и последнее сообщение
+        const [unreadCount, lastMessage] = await Promise.all([
+          this.messageRepository.countUnreadMessages(chat.id, userId),
+          this.messageRepository.findLastMessageByChatId(chat.id)
+        ]);
+
+        return {
+          ...chat,
+          unreadCount,
+          lastMessage
+        } as ChatWithExtras;
+      })
+    );
+
+    // Группируем чаты с дополнительными данными по projectId
+    chatsWithExtras.forEach(chatWithExtras => {
+      const projectId = chatWithExtras.projectId;
+      const existingChats = chatsMap.get(projectId) || [];
+      existingChats.push(chatWithExtras);
+      chatsMap.set(projectId, existingChats);
+    });
+
+    return chatsMap;
   }
 
   private toDomain(chatDoc: any): Chat {

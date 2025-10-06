@@ -296,7 +296,9 @@ export class ChatController {
         @Param('projectId') projectId: string,
         @Request() req: AuthenticatedRequest,
         @Query('page') page?: string,
-        @Query('per_page') perPage?: string
+        @Query('per_page') perPage?: string,
+        @Query('created_at') createdAt?: string,
+        @Query('sort') sort?: 'asc' | 'desc'
     ) {
         const user = await this.userRepository.findById(req.user.userId);
         if (!user) {
@@ -314,7 +316,7 @@ export class ChatController {
             projectId,
             req.user.userId,
             paginationParams.page,
-            paginationParams.perPage
+            paginationParams.perPage,
         );
 
         // Фильтруем чаты по правам доступа и добавляем статус прочтения для последнего сообщения
@@ -431,7 +433,9 @@ export class ChatController {
         @Param('id') chatId: string,
         @Request() req: AuthenticatedRequest,
         @Query('page') page?: string,
-        @Query('per_page') perPage?: string
+        @Query('per_page') perPage?: string,
+        @Query('created_at') createdAt?: string,
+        @Query('sort') sort?: 'asc' | 'desc'
     ) {
         const chat = await this.chatRepository.findById(chatId);
         if (!chat) {

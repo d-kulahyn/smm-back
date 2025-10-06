@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { ChatService } from '../services/chat.service';
+import { ChatRepository, ChatWithExtras } from '../../domain/repositories/chat.repository';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { Project } from '../../domain/entities/project.entity';
+import { Chat } from '../../domain/entities/chat.entity';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { PaginatedResult } from '../../shared/interfaces/pagination.interface';
 
@@ -10,7 +11,7 @@ import { PaginatedResult } from '../../shared/interfaces/pagination.interface';
 export class PrismaProjectRepository implements ProjectRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly chatService: ChatService,
+    @Inject('CHAT_REPOSITORY') private readonly chatRepository: ChatRepository,
   ) {}
 
   async findById(id: string): Promise<Project | null> {
@@ -240,11 +241,12 @@ export class PrismaProjectRepository implements ProjectRepository {
     const totalPages = Math.ceil(total / perPage);
 
     const projectIds = projects.map(p => p.id);
-    const chatsMap = await this.getProjectChatsMap(projectIds);
+    // Используем новый метод для получения чатов с unreadCount и lastMessage
+    const chatsMap = await this.getProjectChatsMapWithExtras(projectIds, userId);
 
     const projectsWithRelations = projects.map(project => {
       const chats = chatsMap.get(project.id) || [];
-      return this.toDomainWithRelations(project, chats);
+      return this.toDomainWithRelationsWithExtras(project, chats);
     });
 
     return {
@@ -260,15 +262,55 @@ export class PrismaProjectRepository implements ProjectRepository {
     };
   }
 
-  private async getProjectChats(projectId: string): Promise<any[]> {
-    return this.chatService.findByProjectId(projectId);
+  private async getProjectChats(projectId: string): Promise<Chat[]> {
+    return this.chatRepository.findByProjectId(projectId);
   }
 
-  private async getProjectChatsMap(projectIds: string[]): Promise<Map<string, any[]>> {
-    return this.chatService.findByProjectIds(projectIds);
+  private async getProjectChatsMap(projectIds: string[]): Promise<Map<string, Chat[]>> {
+    return this.chatRepository.findByProjectIds(projectIds);
   }
 
-  private toDomainWithRelations(project: any, chats: any[] = []): Project {
+  private async getProjectChatsMapWithExtras(projectIds: string[], userId: string): Promise<Map<string, ChatWithExtras[]>> {
+    return this.chatRepository.findByProjectIdsWithExtras(projectIds, userId);
+  }
+
+  private toDomainWithRelations(project: any, chats: Chat[] = []): Project {
+    const domainProject = new Project(
+      project.id,
+      project.name,
+      project.ownerId,
+      project.description,
+      project.status as ProjectStatus,
+      project.startDate,
+      project.endDate,
+      project.budget ? Number(project.budget) : undefined,
+      project.avatar,
+      project.color,
+      project.metadata,
+      project.createdAt,
+      project.updatedAt,
+    );
+
+    if (project.tasks) {
+      domainProject.setTasks(project.tasks);
+    }
+
+    if (project.members) {
+      domainProject.setMembers(project.members);
+    }
+
+    if (project.invitations) {
+      domainProject.setInvitations(project.invitations);
+    }
+
+    if (chats) {
+      domainProject.setChats(chats);
+    }
+
+    return domainProject;
+  }
+
+  private toDomainWithRelationsWithExtras(project: any, chats: ChatWithExtras[] = []): Project {
     const domainProject = new Project(
       project.id,
       project.name,
