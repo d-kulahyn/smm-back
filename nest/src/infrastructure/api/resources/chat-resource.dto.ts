@@ -1,4 +1,5 @@
 import { Chat } from '../../../domain/entities/chat.entity';
+import { ChatWithExtras } from '../../../domain/repositories/chat.repository';
 import { MessageResource } from './message-resource.dto';
 
 export class ChatResource {
@@ -35,6 +36,17 @@ export class ChatResource {
 
   static collection(chats: Chat[]): ChatResource[] {
     return chats.map(chat => ChatResource.fromEntity(chat));
+  }
+
+  static fromEntityWithExtras(chat: ChatWithExtras): ChatResource {
+    const chatResource = new ChatResource(chat);
+    chatResource.unreadCount = chat.unreadCount;
+    chatResource.lastMessage = chat.lastMessage ? MessageResource.fromEntity(chat.lastMessage) : undefined;
+    return chatResource;
+  }
+
+  static collectionWithExtras(chats: ChatWithExtras[]): ChatResource[] {
+    return chats.map(chat => ChatResource.fromEntityWithExtras(chat));
   }
 
   withMembersCount(count: number): ChatResource {

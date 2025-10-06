@@ -102,7 +102,10 @@ export class MongoMessageRepository implements MessageRepository {
     const readIds = readMessageIds.map(read => read.messageId);
 
     const messages = await this.messageModel
-      .find({ _id: { $nin: readIds } })
+      .find({
+        senderId: { $ne: userId },
+        _id: { $nin: readIds }
+      })
       .exec();
 
     return messages.map(this.toDomain);
@@ -116,9 +119,10 @@ export class MongoMessageRepository implements MessageRepository {
 
     const readIds = readMessageIds.map(read => read.messageId);
 
-    return await this.messageModel.countDocuments({
-      chatId,
-      _id: { $nin: readIds }
+    return this.messageModel.countDocuments({
+        chatId,
+        senderId: {$ne: userId},
+        _id: {$nin: readIds}
     });
   }
 

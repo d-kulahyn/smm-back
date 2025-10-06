@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ChatRepository } from '../../domain/repositories/chat.repository';
+import { ChatRepository, ChatWithExtras } from '../../domain/repositories/chat.repository';
 import { Chat } from '../../domain/entities/chat.entity';
+import { MessageRepository } from '../../domain/repositories/message.repository';
 import { Chat as ChatDocument, ChatDocument as ChatDoc } from '../database/schemas/chat.schema';
 
 @Injectable()
 export class MongoChatRepository implements ChatRepository {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<ChatDoc>,
+    @Inject('MESSAGE_REPOSITORY') private messageRepository: MessageRepository,
   ) {}
 
   async findById(id: string): Promise<Chat | null> {
@@ -129,6 +131,52 @@ export class MongoChatRepository implements ChatRepository {
 
   async delete(id: string): Promise<void> {
     await this.chatModel.findByIdAndDelete(id).exec();
+  }
+
+  async findByProjectIdPaginatedWithExtras(projectId: string, userId: string, page: number, limit: number): Promise<{
+    data: ChatWithExtras[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const [chats, total] = await Promise.all([
+      this.chatModel
+        .find({ projectId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.chatModel.countDocuments({ projectId })
+    ]);
+
+    // Получаем дополнительные данные для каждого чата
+    const chatsWithExtras: ChatWithExtras[] = await Promise.all(
+      chats.map(async (chatDoc) => {
+        const chat = this.toDomain(chatDoc);
+
+        // Параллельно получаем количество непрочитанных сообщений и последнее сообщение
+        const [unreadCount, lastMessage] = await Promise.all([
+          this.messageRepository.countUnreadMessages(chat.id, userId),
+          this.messageRepository.findLastMessageByChatId(chat.id)
+        ]);
+
+        // Создаем объект с дополнительными данными
+        return {
+          ...chat,
+          unreadCount,
+          lastMessage
+        } as ChatWithExtras;
+      })
+    );
+
+    return {
+      data: chatsWithExtras,
+      total,
+      page,
+      limit,
+    };
   }
 
   private toDomain(chatDoc: any): Chat {

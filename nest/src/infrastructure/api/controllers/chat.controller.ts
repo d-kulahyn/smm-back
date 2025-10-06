@@ -309,26 +309,25 @@ export class ChatController {
 
         const paginationParams = PaginationParamsDto.fromQuery(page, perPage);
 
-        const paginatedResult = await this.chatRepository.findByProjectIdPaginated(
+        // Используем новый оптимизированный метод, который возвращает чаты с дополнительными данными
+        const paginatedResult = await this.chatRepository.findByProjectIdPaginatedWithExtras(
             projectId,
+            req.user.userId,
             paginationParams.page,
             paginationParams.perPage
         );
 
-        // Filter chats by access rights and add unread count
+        // Фильтруем чаты по правам доступа и добавляем статус прочтения для последнего сообщения
         const filteredChats = [];
-        for (const chat of paginatedResult.data) {
-            if (await this.chatPolicy.view(user, chat)) {
-                // Get unread count for current user
-                const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
+        for (const chatWithExtras of paginatedResult.data) {
+            if (await this.chatPolicy.view(user, chatWithExtras)) {
+                // Создаем ChatResource из ChatWithExtras и добавляем статус прочтения для последнего сообщения
+                const chatResource = ChatResource.fromEntityWithExtras(chatWithExtras);
 
-                // Get last message for the chat
-                const lastMessage = await this.messageRepository.findLastMessageByChatId(chat.id);
-
-                // Create chat resource with unread count and last message
-                const chatResource = ChatResource.fromEntity(chat)
-                    .withUnreadCount(unreadCount)
-                    .withLastMessage(lastMessage ? MessageResource.fromEntity(lastMessage).withReadStatus(req.user.userId) : null);
+                // Добавляем статус прочтения для последнего сообщения, если оно есть
+                if (chatResource.lastMessage) {
+                    chatResource.lastMessage = chatResource.lastMessage.withReadStatus(req.user.userId);
+                }
 
                 filteredChats.push(chatResource);
             }
