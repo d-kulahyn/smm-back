@@ -19,20 +19,14 @@ export class MongoMessageRepository implements MessageRepository {
     return message ? this.toDomain(message) : null;
   }
 
-  async findByChatId(chatId: string, page: number, limit: number, createdAt?: string, sort?: 'asc' | 'desc'): Promise<{
+  async findByChatId(chatId: string, createdAt?: string, sort?: 'asc' | 'desc'): Promise<{
     data: Message[];
     total: number;
-    page: number;
-    limit: number;
   }> {
-    const skip = (page - 1) * limit;
-
     const [messages, total] = await Promise.all([
       this.messageModel
         .find({ chatId, createdAt:  sort === 'asc' && createdAt ? { $gt: new Date(createdAt) } : sort === 'desc' && createdAt ? { $lt: new Date(createdAt) } : {} })
         .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
         .exec(),
       this.messageModel.countDocuments({ chatId })
     ]);
@@ -40,8 +34,6 @@ export class MongoMessageRepository implements MessageRepository {
     return {
       data: messages.map(this.toDomain),
       total,
-      page,
-      limit,
     };
   }
 

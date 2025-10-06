@@ -296,9 +296,7 @@ export class ChatController {
         @Param('projectId') projectId: string,
         @Request() req: AuthenticatedRequest,
         @Query('page') page?: string,
-        @Query('per_page') perPage?: string,
-        @Query('created_at') createdAt?: string,
-        @Query('sort') sort?: 'asc' | 'desc'
+        @Query('per_page') perPage?: string
     ) {
         const user = await this.userRepository.findById(req.user.userId);
         if (!user) {
@@ -429,11 +427,8 @@ export class ChatController {
     @ApiResponse({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto })
     @ApiResponse({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto })
     async getMessages(
-        @Param('projectId') projectId: string,
         @Param('id') chatId: string,
         @Request() req: AuthenticatedRequest,
-        @Query('page') page?: string,
-        @Query('per_page') perPage?: string,
         @Query('created_at') createdAt?: string,
         @Query('sort') sort?: 'asc' | 'desc'
     ) {
@@ -451,12 +446,10 @@ export class ChatController {
             throw new AccessDeniedException('You do not have permission to view this chat');
         }
 
-        const paginationParams = PaginationParamsDto.fromQuery(page, perPage);
-
         const paginatedResult = await this.messageRepository.findByChatId(
             chatId,
-            paginationParams.page,
-            paginationParams.perPage
+            createdAt,
+            sort
         );
 
         // Add read status for each message for current user
@@ -467,11 +460,6 @@ export class ChatController {
         return {
             success: true,
             data: messagesWithReadStatus,
-            pagination: {
-                total: paginatedResult.total,
-                page: paginatedResult.page,
-                limit: paginatedResult.limit
-            }
         };
     }
 
