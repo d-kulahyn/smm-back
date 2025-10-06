@@ -121,6 +121,7 @@ export class ProjectPolicy {
   private isUserAssignedToProject(user: AuthUser, project: Project): boolean {
     // Здесь нужно проверить, является ли пользователь участником проекта
     // Можно сделать через members или через отдельный запрос к БД
+      console.log(project.members);
     if (project.members) {
       return project.members.some(member => member.userId === user.id);
     }

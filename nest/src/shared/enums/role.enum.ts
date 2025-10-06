@@ -18,6 +18,7 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.VIEW_OWN_PROJECTS,
     Permission.CREATE_PROJECTS,
     Permission.UPDATE_OWN_PROJECTS,
+    Permission.VIEW_ASSIGNED_PROJECTS,
     Permission.DELETE_OWN_PROJECTS,
     Permission.MANAGE_PROJECT_TASKS,
     Permission.CREATE_TASKS,
