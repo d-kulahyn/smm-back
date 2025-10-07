@@ -50,6 +50,20 @@ import {
     AccessDeniedException,
 } from '../../../shared/exceptions';
 
+export class MessageSenderResponseDto {
+    @ApiProperty({ example: 'clm1user123def456' })
+    id: string;
+
+    @ApiProperty({ example: 'John Doe' })
+    name: string;
+
+    @ApiProperty({ example: 'john.doe@example.com' })
+    email: string;
+
+    @ApiProperty({ example: 'https://example.com/avatar.jpg', nullable: true })
+    avatar?: string;
+}
+
 export class MessageResponseDto {
     @ApiProperty({ example: 'clm1msg123def456' })
     id: string;
@@ -74,6 +88,9 @@ export class MessageResponseDto {
 
     @ApiProperty({ example: true, description: 'Whether the message is read by current user' })
     isReadByCurrentUser?: boolean;
+
+    @ApiProperty({ type: MessageSenderResponseDto, description: 'Message sender information', nullable: true })
+    sender?: MessageSenderResponseDto;
 }
 
 export class ChatResponseDto {
@@ -422,13 +439,18 @@ export class ChatController {
         summary: 'Get chat messages',
         description: 'Retrieve paginated list of messages for a specific chat'
     })
+    @ApiQuery({ name: 'per_page', required: false, description: 'Number of items per page' })
+    @ApiQuery({ name: 'created_at', required: false, description: 'Filter messages by creation date' })
+    @ApiQuery({ name: 'sort', required: false, enum: ['asc', 'desc'], description: 'Sort order for messages' })
     @ApiResponse({ status: 200, description: 'Messages retrieved successfully', type: MessageListResponseDto })
     @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
     @ApiResponse({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto })
     @ApiResponse({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto })
     async getMessages(
+        @Param('projectId') projectId: string,
         @Param('id') chatId: string,
         @Request() req: AuthenticatedRequest,
+        @Query('per_page') perPage?: number,
         @Query('created_at') createdAt?: string,
         @Query('sort') sort?: 'asc' | 'desc'
     ) {
@@ -449,13 +471,24 @@ export class ChatController {
         const paginatedResult = await this.messageRepository.findByChatId(
             chatId,
             createdAt,
-            sort
+            sort,
+            perPage
         );
 
-        // Add read status for each message for current user
-        const messagesWithReadStatus = paginatedResult.data.map(message =>
-            MessageResource.fromEntity(message).withReadStatus(req.user.userId)
+        // Get unique sender IDs to fetch users in batch
+        const senderIds = [...new Set(paginatedResult.data.map(message => message.senderId))];
+        const senders = await Promise.all(
+            senderIds.map(id => this.userRepository.findById(id))
         );
+        const sendersMap = new Map(senders.filter(Boolean).map(user => [user.id, user]));
+
+        // Add read status and sender info for each message for current user
+        const messagesWithReadStatus = paginatedResult.data.map(message => {
+            const sender = sendersMap.get(message.senderId);
+            return MessageResource.fromEntity(message)
+                .withReadStatus(req.user.userId)
+                .withSender(sender);
+        });
 
         return {
             success: true,

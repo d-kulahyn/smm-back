@@ -1,4 +1,24 @@
 import { Message } from '../../../domain/entities/message.entity';
+import { User } from '../../../domain/entities/user.entity';
+
+// Простое представление пользователя для сообщения
+export class MessageSenderResource {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+
+  constructor(user: User) {
+    this.id = user.id;
+    this.name = user.name;
+    this.email = user.email;
+    this.avatar = user.avatar;
+  }
+
+  static fromEntity(user: User): MessageSenderResource {
+    return new MessageSenderResource(user);
+  }
+}
 
 export class MessageResource {
   id: string;
@@ -13,7 +33,8 @@ export class MessageResource {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  isReadByCurrentUser?: boolean; // Renamed from isRead for clarity
+  isReadByCurrentUser?: boolean;
+  sender?: MessageSenderResource; // Добавляем поле с информацией об отправителе
 
   constructor(message: Message) {
     this.id = message.id;
@@ -40,6 +61,11 @@ export class MessageResource {
 
   withReadStatus(userId: string): MessageResource {
     this.isReadByCurrentUser = this.readBy?.includes(userId);
+    return this;
+  }
+
+  withSender(user: User | null): MessageResource {
+    this.sender = user ? MessageSenderResource.fromEntity(user) : undefined;
     return this;
   }
 }
