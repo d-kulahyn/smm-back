@@ -340,7 +340,7 @@ export class ProjectController {
   })
   @ApiResponse({ status: 200, type: ProjectResponseDto })
   async show(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
-    const project = await this.projectRepository.findById(id);
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }
@@ -371,7 +371,7 @@ export class ProjectController {
     @Body() updateProjectDto: UpdateProjectDto,
     @Request() req: AuthenticatedRequest
   ) {
-    const project = await this.projectRepository.findById(id);
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }
@@ -404,7 +404,7 @@ export class ProjectController {
   })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   async destroy(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
-    const project = await this.projectRepository.findById(id);
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }
@@ -429,8 +429,8 @@ export class ProjectController {
     description: 'Change project status to on_hold'
   })
   @ApiResponse({ status: 200, type: ProjectResponseDto })
-  async complete(@Param('id') id: string) {
-    const completedProject = await this.completeProjectUseCase.execute(id);
+  async complete(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const completedProject = await this.completeProjectUseCase.execute(id, req.user.userId);
     return ProjectResource.fromEntity(completedProject);
   }
 
@@ -440,8 +440,8 @@ export class ProjectController {
     description: 'Change project status to on hold'
   })
   @ApiResponse({ status: 200, type: ProjectResponseDto })
-  async putOnHold(@Param('id') id: string) {
-    const project = await this.projectRepository.findById(id);
+  async putOnHold(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }
@@ -457,8 +457,8 @@ export class ProjectController {
     description: 'Change project status to cancelled'
   })
   @ApiResponse({ status: 200, type: ProjectResponseDto })
-  async cancel(@Param('id') id: string) {
-    const project = await this.projectRepository.findById(id);
+  async cancel(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }
@@ -474,8 +474,8 @@ export class ProjectController {
     description: 'Change project status to archived'
   })
   @ApiResponse({ status: 200, type: ProjectResponseDto })
-  async archive(@Param('id') id: string) {
-    const project = await this.projectRepository.findById(id);
+  async archive(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const project = await this.projectRepository.findById(id, req.user.userId);
     if (!project) {
       throw new Error('Project not found');
     }

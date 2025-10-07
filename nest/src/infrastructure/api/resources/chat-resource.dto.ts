@@ -16,6 +16,7 @@ export class ChatResource {
   membersCount?: number;
   unreadCount?: number;
   lastMessage?: MessageResource;
+    members?: any
 
   constructor(chat: Chat) {
     this.id = chat.id;
@@ -42,6 +43,7 @@ export class ChatResource {
     const chatResource = new ChatResource(chat);
     chatResource.unreadCount = chat.unreadCount;
     chatResource.lastMessage = chat.lastMessage ? MessageResource.fromEntity(chat.lastMessage) : undefined;
+    chatResource.members = chat.chatMembers ? chat.chatMembers : [];
     return chatResource;
   }
 

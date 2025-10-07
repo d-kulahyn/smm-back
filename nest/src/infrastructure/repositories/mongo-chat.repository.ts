@@ -1,16 +1,18 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ChatRepository, ChatWithExtras } from '../../domain/repositories/chat.repository';
-import { Chat } from '../../domain/entities/chat.entity';
-import { MessageRepository } from '../../domain/repositories/message.repository';
-import { Chat as ChatDocument, ChatDocument as ChatDoc } from '../database/schemas/chat.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model} from 'mongoose';
+import {ChatRepository, ChatWithExtras} from '../../domain/repositories/chat.repository';
+import {Chat} from '../../domain/entities/chat.entity';
+import {MessageRepository} from '../../domain/repositories/message.repository';
+import {ChatMemberRepository} from '../../domain/repositories/chat-member.repository';
+import {ChatDocument as ChatDoc} from '../database/schemas/chat.schema';
 
 @Injectable()
 export class MongoChatRepository implements ChatRepository {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<ChatDoc>,
     @Inject('MESSAGE_REPOSITORY') private messageRepository: MessageRepository,
+    @Inject('CHAT_MEMBER_REPOSITORY') private chatMemberRepository: ChatMemberRepository,
   ) {}
 
   async findById(id: string): Promise<Chat | null> {
@@ -18,9 +20,16 @@ export class MongoChatRepository implements ChatRepository {
     return chat ? this.toDomain(chat) : null;
   }
 
-  async findByProjectId(projectId: string): Promise<Chat[]> {
+    async findByIdWithExtras(id: string): Promise<ChatWithExtras | null> {
+        const chat = await this.chatModel.findById(id).exec();
+
+        return chat ? (await this.getExtraForChat([chat], '')[0]) : null;
+    }
+
+  async findByProjectId(projectId: string, userId: string): Promise<Chat[]> {
     const chats = await this.chatModel.find({ projectId }).exec();
-    return chats.map(this.toDomain);
+
+      return await this.getExtraForChat(chats, userId);
   }
 
   async findByProjectIds(projectIds: string[]): Promise<Map<string, Chat[]>> {
@@ -174,24 +183,7 @@ export class MongoChatRepository implements ChatRepository {
     ]);
 
     // Получаем дополнительные данные для каждого чата
-    const chatsWithExtras: ChatWithExtras[] = await Promise.all(
-      chats.map(async (chatDoc) => {
-        const chat = this.toDomain(chatDoc);
-
-        // Параллельно получаем количество непрочитанных сообщений и последнее сообщение
-        const [unreadCount, lastMessage] = await Promise.all([
-          this.messageRepository.countUnreadMessages(chat.id, userId),
-          this.messageRepository.findLastMessageByChatId(chat.id)
-        ]);
-
-        // Создаем объект с дополнительными данными
-        return {
-          ...chat,
-          unreadCount,
-          lastMessage
-        } as ChatWithExtras;
-      })
-    );
+    const chatsWithExtras: ChatWithExtras[] = await this.getExtraForChat(chats, userId);
 
     return {
       data: chatsWithExtras,
@@ -199,6 +191,29 @@ export class MongoChatRepository implements ChatRepository {
       page,
       limit,
     };
+  }
+
+  async getExtraForChat(chats: ChatDoc[], userId: string): Promise<Awaited<ChatWithExtras>[]> {
+      return await Promise.all(
+          chats.map(async (chatDoc) => {
+              const chat = this.toDomain(chatDoc);
+
+              // Параллельно получаем количество непрочитанных сообщений, последнее сообщение и участников чата
+              const [unreadCount, lastMessage, chatMembers] = await Promise.all([
+                  this.messageRepository.countUnreadMessages(chat.id, userId),
+                  this.messageRepository.findLastMessageByChatId(chat.id),
+                  this.chatMemberRepository.findByChatIdWithUsers(chat.id)
+              ]);
+
+              // Создаем объект с дополнительными данными
+              return {
+                  ...chat,
+                  unreadCount,
+                  lastMessage,
+                  chatMembers
+              } as ChatWithExtras;
+          })
+      );
   }
 
   async findByProjectIdsWithExtras(projectIds: string[], userId: string): Promise<Map<string, ChatWithExtras[]>> {
@@ -216,16 +231,18 @@ export class MongoChatRepository implements ChatRepository {
       chats.map(async (chatDoc) => {
         const chat = this.toDomain(chatDoc);
 
-        // Параллельно получаем количество непрочитанных сообщений и последнее сообщение
-        const [unreadCount, lastMessage] = await Promise.all([
+        // Параллельно получаем количество непрочитанных сообщений, последнее сообщение и участников чата
+        const [unreadCount, lastMessage, chatMembers] = await Promise.all([
           this.messageRepository.countUnreadMessages(chat.id, userId),
-          this.messageRepository.findLastMessageByChatId(chat.id)
+          this.messageRepository.findLastMessageByChatId(chat.id),
+          this.chatMemberRepository.findByChatIdWithUsers(chat.id)
         ]);
 
         return {
           ...chat,
           unreadCount,
-          lastMessage
+          lastMessage,
+          chatMembers
         } as ChatWithExtras;
       })
     );

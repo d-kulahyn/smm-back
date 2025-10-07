@@ -9,9 +9,6 @@ export class Message {
     public readonly type: MessageType,
     public readonly createdAt: Date = new Date(),
     public readonly updatedAt: Date = new Date(),
-    public readonly isRead: boolean = false,
-    public readonly readAt?: Date,
-    public readonly attachments?: string[],
     public readonly fileUrl?: string,
     public readonly readBy?: string[],
     public readonly isEdited: boolean = false,
@@ -27,6 +24,7 @@ export class Message {
     type: MessageType;
     attachments?: string[];
     fileUrl?: string;
+    readBy?: string[];
   }): Message {
     return new Message(
       params.id,
@@ -36,34 +34,9 @@ export class Message {
       params.type,
       new Date(),
       new Date(),
+      null,
+      params.readBy || [],
       false,
-      undefined,
-      params.attachments,
-      params.fileUrl,
-      [],
-      false,
-      undefined,
-      false
-    );
-  }
-
-  markAsRead(): Message {
-    return new Message(
-      this.id,
-      this.chatId,
-      this.senderId,
-      this.content,
-      this.type,
-      this.createdAt,
-      new Date(),
-      true,
-      new Date(),
-      this.attachments,
-      this.fileUrl,
-      this.readBy,
-      this.isEdited,
-      this.editedAt,
-      this.isDeleted
     );
   }
 }

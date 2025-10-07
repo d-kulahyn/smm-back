@@ -1,7 +1,8 @@
-import {Injectable} from '@nestjs/common';
+import {Injectable, Inject} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import {Model} from 'mongoose';
 import {MessageRepository} from '../../domain/repositories/message.repository';
+import {ChatMemberRepository} from '../../domain/repositories/chat-member.repository';
 import {Message} from '../../domain/entities/message.entity';
 import {MessageType} from '../../domain/enums/message-type.enum';
 import {Message as MessageSchema, MessageDocument} from '../database/schemas/message.schema';
@@ -157,7 +158,8 @@ export class MongoMessageRepository implements MessageRepository {
             doc.type || MessageType.TEXT,
             doc.fileUrl || null,
             doc.createdAt,
-            doc.updatedAt
+            doc.updatedAt,
+            doc.readBy || [],
         );
     }
 

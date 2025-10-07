@@ -14,7 +14,7 @@ export class PrismaProjectRepository implements ProjectRepository {
     @Inject('CHAT_REPOSITORY') private readonly chatRepository: ChatRepository,
   ) {}
 
-  async findById(id: string): Promise<Project | null> {
+  async findById(id: string, userId: string): Promise<Project | null> {
     const project = await this.prisma.project.findUnique({
       where: { id },
       include: {
@@ -74,7 +74,7 @@ export class PrismaProjectRepository implements ProjectRepository {
 
     if (!project) return null;
 
-    const chats = await this.getProjectChats(id);
+    const chats = await this.getProjectChats(id, userId);
 
     return this.toDomainWithRelations(project, chats);
   }
@@ -261,8 +261,8 @@ export class PrismaProjectRepository implements ProjectRepository {
     };
   }
 
-  private async getProjectChats(projectId: string): Promise<Chat[]> {
-    return this.chatRepository.findByProjectId(projectId);
+  private async getProjectChats(projectId: string, userId: string): Promise<Chat[]> {
+    return this.chatRepository.findByProjectId(projectId, userId);
   }
 
   private async getProjectChatsMap(projectIds: string[]): Promise<Map<string, Chat[]>> {

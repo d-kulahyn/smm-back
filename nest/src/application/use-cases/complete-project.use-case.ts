@@ -9,8 +9,8 @@ export class CompleteProjectUseCase {
     private readonly projectRepository: ProjectRepository
   ) {}
 
-  async execute(projectId: string): Promise<Project> {
-    const project = await this.projectRepository.findById(projectId);
+  async execute(projectId: string, userId: string): Promise<Project> {
+    const project = await this.projectRepository.findById(projectId, userId);
     if (!project) {
       throw new Error('Project not found');
     }

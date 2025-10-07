@@ -411,7 +411,7 @@ export class ChatController {
         @Param('id') id: string,
         @Request() req: AuthenticatedRequest
     ) {
-        const chat = await this.chatRepository.findById(id);
+        const chat = await this.chatRepository.findByIdWithExtras(id);
         if (!chat) {
             throw new ResourceNotFoundException('Chat', id);
         }
@@ -425,12 +425,11 @@ export class ChatController {
             throw new AccessDeniedException('You do not have permission to view this chat');
         }
 
-        // Get unread count for current user
-        const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
+        const chatResource = ChatResource.fromEntityWithExtras(chat);
 
         return {
             success: true,
-            data: ChatResource.fromEntity(chat).withUnreadCount(unreadCount)
+            data: chatResource
         };
     }
 

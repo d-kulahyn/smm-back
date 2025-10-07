@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ChatMemberRepository } from '../../domain/repositories/chat-member.repository';
-import { ChatMember } from '../../domain/entities/chat-member.entity';
-import { ChatMember as ChatMemberSchema, ChatMemberDocument } from '../database/schemas/chat-member.schema';
+import {Inject, Injectable} from '@nestjs/common';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model} from 'mongoose';
+import {ChatMemberRepository, ChatMemberWithUser} from '../../domain/repositories/chat-member.repository';
+import {ChatMember} from '../../domain/entities/chat-member.entity';
+import {UserRepository} from '../../domain/repositories/user.repository';
+import {ChatMember as ChatMemberSchema, ChatMemberDocument} from '../database/schemas/chat-member.schema';
 
 @Injectable()
 export class MongoChatMemberRepository implements ChatMemberRepository {
   constructor(
     @InjectModel(ChatMemberSchema.name) private chatMemberModel: Model<ChatMemberDocument>,
+    @Inject('USER_REPOSITORY') private userRepository: UserRepository,
   ) {}
 
   async findById(id: string): Promise<ChatMember | null> {
@@ -21,6 +23,29 @@ export class MongoChatMemberRepository implements ChatMemberRepository {
       .find({ chatId, isActive: true })
       .exec();
     return members.map(this.toDomain);
+  }
+
+  async findByChatIdWithUsers(chatId: string): Promise<ChatMemberWithUser[]> {
+    const members = await this.chatMemberModel
+      .find({ chatId, isActive: true })
+      .exec();
+
+    // Параллельно загружаем данные пользователей для всех участников
+      return await Promise.all(
+        members.map(async (memberDoc) => {
+            const chatMember = this.toDomain(memberDoc);
+            const user = await this.userRepository.findById(memberDoc.userId);
+
+            if (!user) {
+                throw new Error(`User not found: ${memberDoc.userId}`);
+            }
+
+            return {
+                ...chatMember,
+                user: {id: user.id, name: user.name, email: user.email, avatar: user.avatar}
+            } as ChatMemberWithUser;
+        })
+    );
   }
 
   async findByUserId(userId: string): Promise<ChatMember[]> {
