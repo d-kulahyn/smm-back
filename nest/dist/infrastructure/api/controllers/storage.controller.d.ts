@@ -1,49 +1,8 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../../../shared';
 import { ChunkedFileService } from '../../../application/services/chunked-file.service';
-export declare class CreateFileDto {
-    originalName: string;
-    mimeType: string;
-    size: number;
-    entityType: string;
-    entityId: string;
-    totalChunks: number;
-}
-export declare class ChunkUploadDto {
-    chunkIndex: number;
-}
-export declare class FileCreateResponseDto {
-    fileId: string;
-    filename: string;
-    uploadUrl: string;
-    isComplete: boolean;
-    chunksUploaded: number;
-    totalChunks?: number;
-}
-export declare class ChunkUploadResponseDto {
-    fileId: string;
-    chunksUploaded: number;
-    isComplete: boolean;
-    message: string;
-    chunkIndex: number;
-}
-export declare class ChunkInfoResponseDto {
-    fileId: string;
-    totalChunks?: number;
-    uploadedChunks: number;
-    isComplete: boolean;
-    missingChunks?: number[];
-}
-export declare class FileCompleteResponseDto {
-    fileId: string;
-    isComplete: boolean;
-    downloadUrl: string;
-    message: string;
-}
-export declare class EntityFilesResponseDto {
-    files: FileCreateResponseDto[];
-    total: number;
-}
+import { CreateFileDto } from '../requests';
+import { FileCreateResponseDto, ChunkUploadResponseDto, ChunkInfoResponseDto, FileCompleteResponseDto, EntityFilesResponseDto } from '../responses';
 export declare class StorageController {
     private readonly chunkedFileService;
     private readonly uploadPath;

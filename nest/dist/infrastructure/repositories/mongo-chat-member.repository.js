@@ -19,8 +19,9 @@ const mongoose_2 = require("mongoose");
 const chat_member_entity_1 = require("../../domain/entities/chat-member.entity");
 const chat_member_schema_1 = require("../database/schemas/chat-member.schema");
 let MongoChatMemberRepository = class MongoChatMemberRepository {
-    constructor(chatMemberModel) {
+    constructor(chatMemberModel, userRepository) {
         this.chatMemberModel = chatMemberModel;
+        this.userRepository = userRepository;
     }
     async findById(id) {
         const member = await this.chatMemberModel.findById(id).exec();
@@ -31,6 +32,22 @@ let MongoChatMemberRepository = class MongoChatMemberRepository {
             .find({ chatId, isActive: true })
             .exec();
         return members.map(this.toDomain);
+    }
+    async findByChatIdWithUsers(chatId) {
+        const members = await this.chatMemberModel
+            .find({ chatId, isActive: true })
+            .exec();
+        return await Promise.all(members.map(async (memberDoc) => {
+            const chatMember = this.toDomain(memberDoc);
+            const user = await this.userRepository.findById(memberDoc.userId);
+            if (!user) {
+                throw new Error(`User not found: ${memberDoc.userId}`);
+            }
+            return {
+                ...chatMember,
+                user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar }
+            };
+        }));
     }
     async findByUserId(userId) {
         const members = await this.chatMemberModel
@@ -88,6 +105,7 @@ exports.MongoChatMemberRepository = MongoChatMemberRepository;
 exports.MongoChatMemberRepository = MongoChatMemberRepository = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(chat_member_schema_1.ChatMember.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(1, (0, common_1.Inject)('USER_REPOSITORY')),
+    __metadata("design:paramtypes", [mongoose_2.Model, Object])
 ], MongoChatMemberRepository);
 //# sourceMappingURL=mongo-chat-member.repository.js.map

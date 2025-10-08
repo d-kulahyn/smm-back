@@ -25,14 +25,36 @@ import { SendProjectInvitationUseCase } from '../../../application/use-cases/sen
 import { AcceptProjectInvitationUseCase } from '../../../application/use-cases/accept-project-invitation.use-case';
 import { DeclineProjectInvitationUseCase } from '../../../application/use-cases/decline-project-invitation.use-case';
 import { PrismaProjectInvitationRepository } from '../../repositories/prisma-project-invitation.repository';
+import { PrismaUserRepository } from '../../repositories/prisma-user.repository';
+import { AuthenticatedRequest } from "../../../shared";
+
+// Request DTOs
 import {
   SendProjectInvitationDto,
-  SendProjectInvitationUseCaseDto,
-  AcceptProjectInvitationUseCaseDto,
   PaginationDto
-} from '../dto/project-invitation.dto';
-import { PrismaUserRepository } from '../../repositories/prisma-user.repository';
-import {AuthenticatedRequest} from "../../../shared";
+} from '../requests';
+
+// Response DTOs
+import {
+  ProjectInvitationResponseDto,
+  SendInvitationResponseDto,
+  InvitationListResponseDto,
+  ErrorResponseDto
+} from '../responses';
+
+// Use Case DTOs - временно оставляем здесь, так как они используются только в бизнес-логике
+class SendProjectInvitationUseCaseDto {
+  projectId: string;
+  invitedBy: string;
+  invitedEmail?: string;
+  role: any;
+  permissions?: string[];
+}
+
+class AcceptProjectInvitationUseCaseDto {
+  token: string;
+  userId: string;
+}
 
 @ApiTags('Project Invitations')
 @Controller()

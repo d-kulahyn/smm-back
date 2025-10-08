@@ -36,7 +36,7 @@ class ChatMessageSentEvent extends base_event_1.BaseEvent {
         };
     }
     getBroadcastChannels() {
-        const memberChannels = this.chatMembers.map(userId => `socket.chats.${this.chatId}.${userId}`);
+        const memberChannels = this.chatMembers.map(userId => `socket.projects.${this.projectId}.${userId}`);
         return [...memberChannels];
     }
     getBroadcastTransports() {

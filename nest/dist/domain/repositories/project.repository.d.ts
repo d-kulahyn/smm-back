@@ -1,7 +1,7 @@
 import { Project } from '../entities/project.entity';
 import { PaginatedResult } from '../../shared/interfaces/pagination.interface';
 export interface ProjectRepository {
-    findById(id: string): Promise<Project | null>;
+    findById(id: string, userId: string): Promise<Project | null>;
     findByOwnerId(ownerId: string): Promise<Project[]>;
     findByMemberId(userId: string): Promise<Project[]>;
     findByUserIdPaginated(userId: string, page: number, perPage: number): Promise<PaginatedResult<Project>>;

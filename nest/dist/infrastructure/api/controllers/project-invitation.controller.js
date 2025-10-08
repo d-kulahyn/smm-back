@@ -20,8 +20,12 @@ const send_project_invitation_use_case_1 = require("../../../application/use-cas
 const accept_project_invitation_use_case_1 = require("../../../application/use-cases/accept-project-invitation.use-case");
 const decline_project_invitation_use_case_1 = require("../../../application/use-cases/decline-project-invitation.use-case");
 const prisma_project_invitation_repository_1 = require("../../repositories/prisma-project-invitation.repository");
-const project_invitation_dto_1 = require("../dto/project-invitation.dto");
 const prisma_user_repository_1 = require("../../repositories/prisma-user.repository");
+const requests_1 = require("../requests");
+class SendProjectInvitationUseCaseDto {
+}
+class AcceptProjectInvitationUseCaseDto {
+}
 let ProjectInvitationController = class ProjectInvitationController {
     constructor(invitationRepository, userRepository, sendInvitationUseCase, acceptInvitationUseCase, declineInvitationUseCase) {
         this.invitationRepository = invitationRepository;
@@ -46,7 +50,7 @@ let ProjectInvitationController = class ProjectInvitationController {
         };
     }
     async sendInvitation(projectId, dto, req) {
-        const invitationDto = new project_invitation_dto_1.SendProjectInvitationUseCaseDto();
+        const invitationDto = new SendProjectInvitationUseCaseDto();
         invitationDto.projectId = projectId;
         invitationDto.invitedBy = req.user.userId;
         invitationDto.invitedEmail = dto.email;
@@ -64,17 +68,13 @@ let ProjectInvitationController = class ProjectInvitationController {
                 permissions: result.invitation.permissions,
                 expiresAt: result.invitation.expiresAt
             },
-            links: {
-                accept: result.acceptUrl,
-                decline: result.declineUrl
-            },
             emailSent: !!dto.email
         };
     }
     async acceptInvitation(token, req) {
-        const acceptDto = new project_invitation_dto_1.AcceptProjectInvitationUseCaseDto();
+        const acceptDto = new AcceptProjectInvitationUseCaseDto();
         acceptDto.token = token;
-        acceptDto.userId = req.user.id;
+        acceptDto.userId = req.user.userId;
         return this.acceptInvitationUseCase.execute(acceptDto);
     }
     async declineInvitation(token) {
@@ -113,7 +113,7 @@ __decorate([
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, project_invitation_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [String, requests_1.PaginationDto]),
     __metadata("design:returntype", Promise)
 ], ProjectInvitationController.prototype, "getProjectInvitations", null);
 __decorate([
@@ -136,7 +136,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, project_invitation_dto_1.SendProjectInvitationDto, Object]),
+    __metadata("design:paramtypes", [String, requests_1.SendProjectInvitationDto, Object]),
     __metadata("design:returntype", Promise)
 ], ProjectInvitationController.prototype, "sendInvitation", null);
 __decorate([
@@ -195,7 +195,7 @@ __decorate([
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [project_invitation_dto_1.PaginationDto, Object]),
+    __metadata("design:paramtypes", [requests_1.PaginationDto, Object]),
     __metadata("design:returntype", Promise)
 ], ProjectInvitationController.prototype, "getMyInvitations", null);
 exports.ProjectInvitationController = ProjectInvitationController = __decorate([

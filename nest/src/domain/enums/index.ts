@@ -25,8 +25,10 @@ export enum InvitationStatus {
 
 export enum ProjectStatus {
   ACTIVE = 'active',
-  INACTIVE = 'inactive',
   COMPLETED = 'completed',
+  ON_HOLD = 'on_hold',
+  CANCELLED = 'cancelled',
+  ARCHIVED = 'archived',
 }
 
 export enum ChatStatus {
@@ -39,4 +41,10 @@ export enum MessageType {
   IMAGE = 'image',
   VIDEO = 'video',
   FILE = 'file',
+}
+
+export enum ChatMemberRole {
+  ADMIN = 'admin',
+  MEMBER = 'member',
+  MODERATOR = 'moderator'
 }

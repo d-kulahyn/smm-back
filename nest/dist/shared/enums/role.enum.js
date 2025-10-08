@@ -19,6 +19,7 @@ exports.RolePermissions = {
         permission_enum_1.Permission.VIEW_OWN_PROJECTS,
         permission_enum_1.Permission.CREATE_PROJECTS,
         permission_enum_1.Permission.UPDATE_OWN_PROJECTS,
+        permission_enum_1.Permission.VIEW_ASSIGNED_PROJECTS,
         permission_enum_1.Permission.DELETE_OWN_PROJECTS,
         permission_enum_1.Permission.MANAGE_PROJECT_TASKS,
         permission_enum_1.Permission.CREATE_TASKS,

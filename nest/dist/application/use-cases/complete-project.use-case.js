@@ -18,8 +18,8 @@ let CompleteProjectUseCase = class CompleteProjectUseCase {
     constructor(projectRepository) {
         this.projectRepository = projectRepository;
     }
-    async execute(projectId) {
-        const project = await this.projectRepository.findById(projectId);
+    async execute(projectId, userId) {
+        const project = await this.projectRepository.findById(projectId, userId);
         if (!project) {
             throw new Error('Project not found');
         }

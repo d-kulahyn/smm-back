@@ -15,122 +15,27 @@ import {
 import {Response} from 'express';
 import {join} from 'path';
 import {existsSync} from 'fs';
-import {ApiTags, ApiOperation, ApiResponse, ApiParam, ApiProperty, ApiBearerAuth, ApiConsumes} from '@nestjs/swagger';
+import {ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiConsumes} from '@nestjs/swagger';
 import {FileInterceptor} from '@nestjs/platform-express';
-import {IsString, IsNumber, IsOptional, IsUUID} from 'class-validator';
 import {JwtAuthGuard} from '../../../shared/guards/jwt-auth.guard';
 import {AuthenticatedRequest, PermissionsGuard} from '../../../shared';
 import {ChunkedFileService} from '../../../application/services/chunked-file.service';
 
-// DTOs для чанковой загрузки
-export class CreateFileDto {
-    @ApiProperty({description: 'Original filename', example: 'document.pdf'})
-    @IsString()
-    originalName: string;
-
-    @ApiProperty({description: 'MIME type', example: 'application/pdf'})
-    @IsString()
-    mimeType: string;
-
-    @ApiProperty({description: 'File size in bytes', example: 1024000})
-    @IsNumber()
-    size: number;
-
-    @ApiProperty({description: 'Entity type to attach file to', example: 'project'})
-    @IsString()
-    entityType: string;
-
-    @ApiProperty({description: 'Entity ID to attach file to', example: 'clm1project123456'})
-    @IsUUID()
-    entityId: string;
-
-    @ApiProperty({description: 'Total number of chunks (required for parallel uploads)', example: 10})
-    @IsNumber()
-    totalChunks: number;
-}
-
-export class ChunkUploadDto {
-    @ApiProperty({description: 'Chunk index (0-based)', example: 0})
-    @IsNumber()
-    chunkIndex: number;
-}
+// Request DTOs
+import {
+    CreateFileDto,
+    ChunkUploadDto
+} from '../requests';
 
 // Response DTOs
-export class FileCreateResponseDto {
-    @ApiProperty({example: 'clm1file123456'})
-    fileId: string;
-
-    @ApiProperty({example: 'document.pdf'})
-    filename: string;
-
-    @ApiProperty({example: '/storage/chunked/1696420398754-abc123-document.pdf'})
-    uploadUrl: string;
-
-    @ApiProperty({example: false})
-    isComplete: boolean;
-
-    @ApiProperty({example: 0})
-    chunksUploaded: number;
-
-    @ApiProperty({example: 10})
-    totalChunks?: number;
-}
-
-export class ChunkUploadResponseDto {
-    @ApiProperty({example: 'clm1file123456'})
-    fileId: string;
-
-    @ApiProperty({example: 5})
-    chunksUploaded: number;
-
-    @ApiProperty({example: false})
-    isComplete: boolean;
-
-    @ApiProperty({example: 'Chunk uploaded successfully'})
-    message: string;
-
-    @ApiProperty({example: 0})
-    chunkIndex: number;
-}
-
-export class ChunkInfoResponseDto {
-    @ApiProperty({example: 'clm1file123456'})
-    fileId: string;
-
-    @ApiProperty({example: 10})
-    totalChunks?: number;
-
-    @ApiProperty({example: 7})
-    uploadedChunks: number;
-
-    @ApiProperty({example: false})
-    isComplete: boolean;
-
-    @ApiProperty({example: [7, 8, 9], type: [Number]})
-    missingChunks?: number[];
-}
-
-export class FileCompleteResponseDto {
-    @ApiProperty({example: 'clm1file123456'})
-    fileId: string;
-
-    @ApiProperty({example: true})
-    isComplete: boolean;
-
-    @ApiProperty({example: '/storage/chunked/1696420398754-abc123-document.pdf'})
-    downloadUrl: string;
-
-    @ApiProperty({example: 'File upload completed successfully'})
-    message: string;
-}
-
-export class EntityFilesResponseDto {
-    @ApiProperty({type: [FileCreateResponseDto]})
-    files: FileCreateResponseDto[];
-
-    @ApiProperty({example: 3})
-    total: number;
-}
+import {
+    FileCreateResponseDto,
+    ChunkUploadResponseDto,
+    ChunkInfoResponseDto,
+    FileCompleteResponseDto,
+    EntityFilesResponseDto,
+    ErrorResponseDto
+} from '../responses';
 
 @ApiTags('Storage')
 @Controller('storage')
@@ -574,7 +479,15 @@ export class StorageController {
     ): Promise<ChunkInfoResponseDto> {
         try {
             const chunkInfo = await this.chunkedFileService.getChunkInfo(fileId);
-            return chunkInfo;
+
+            // Маппим поля для соответствия DTO
+            return {
+                fileId: chunkInfo.fileId,
+                totalChunks: chunkInfo.totalChunks,
+                chunksUploaded: chunkInfo.uploadedChunks || 0, // маппим uploadedChunks в chunksUploaded
+                uploadedChunkIndexes: chunkInfo.uploadedChunkIndexes || [],
+                isComplete: chunkInfo.isComplete
+            };
         } catch (error) {
             if (error.message === 'File not found') {
                 throw new NotFoundException('File not found');

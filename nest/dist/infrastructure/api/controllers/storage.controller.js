@@ -12,159 +12,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StorageController = exports.EntityFilesResponseDto = exports.FileCompleteResponseDto = exports.ChunkInfoResponseDto = exports.ChunkUploadResponseDto = exports.FileCreateResponseDto = exports.ChunkUploadDto = exports.CreateFileDto = void 0;
+exports.StorageController = void 0;
 const common_1 = require("@nestjs/common");
 const path_1 = require("path");
 const fs_1 = require("fs");
 const swagger_1 = require("@nestjs/swagger");
 const platform_express_1 = require("@nestjs/platform-express");
-const class_validator_1 = require("class-validator");
 const jwt_auth_guard_1 = require("../../../shared/guards/jwt-auth.guard");
+const shared_1 = require("../../../shared");
 const chunked_file_service_1 = require("../../../application/services/chunked-file.service");
-class CreateFileDto {
-}
-exports.CreateFileDto = CreateFileDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Original filename', example: 'document.pdf' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateFileDto.prototype, "originalName", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'MIME type', example: 'application/pdf' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateFileDto.prototype, "mimeType", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'File size in bytes', example: 1024000 }),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateFileDto.prototype, "size", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Entity type to attach file to', example: 'project' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateFileDto.prototype, "entityType", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Entity ID to attach file to', example: 'clm1project123456' }),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], CreateFileDto.prototype, "entityId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Total number of chunks (required for parallel uploads)', example: 10 }),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateFileDto.prototype, "totalChunks", void 0);
-class ChunkUploadDto {
-}
-exports.ChunkUploadDto = ChunkUploadDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Chunk index (0-based)', example: 0 }),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], ChunkUploadDto.prototype, "chunkIndex", void 0);
-class FileCreateResponseDto {
-}
-exports.FileCreateResponseDto = FileCreateResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1file123456' }),
-    __metadata("design:type", String)
-], FileCreateResponseDto.prototype, "fileId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'document.pdf' }),
-    __metadata("design:type", String)
-], FileCreateResponseDto.prototype, "filename", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '/storage/chunked/1696420398754-abc123-document.pdf' }),
-    __metadata("design:type", String)
-], FileCreateResponseDto.prototype, "uploadUrl", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: false }),
-    __metadata("design:type", Boolean)
-], FileCreateResponseDto.prototype, "isComplete", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 0 }),
-    __metadata("design:type", Number)
-], FileCreateResponseDto.prototype, "chunksUploaded", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 10 }),
-    __metadata("design:type", Number)
-], FileCreateResponseDto.prototype, "totalChunks", void 0);
-class ChunkUploadResponseDto {
-}
-exports.ChunkUploadResponseDto = ChunkUploadResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1file123456' }),
-    __metadata("design:type", String)
-], ChunkUploadResponseDto.prototype, "fileId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 5 }),
-    __metadata("design:type", Number)
-], ChunkUploadResponseDto.prototype, "chunksUploaded", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: false }),
-    __metadata("design:type", Boolean)
-], ChunkUploadResponseDto.prototype, "isComplete", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Chunk uploaded successfully' }),
-    __metadata("design:type", String)
-], ChunkUploadResponseDto.prototype, "message", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 0 }),
-    __metadata("design:type", Number)
-], ChunkUploadResponseDto.prototype, "chunkIndex", void 0);
-class ChunkInfoResponseDto {
-}
-exports.ChunkInfoResponseDto = ChunkInfoResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1file123456' }),
-    __metadata("design:type", String)
-], ChunkInfoResponseDto.prototype, "fileId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 10 }),
-    __metadata("design:type", Number)
-], ChunkInfoResponseDto.prototype, "totalChunks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 7 }),
-    __metadata("design:type", Number)
-], ChunkInfoResponseDto.prototype, "uploadedChunks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: false }),
-    __metadata("design:type", Boolean)
-], ChunkInfoResponseDto.prototype, "isComplete", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: [7, 8, 9], type: [Number] }),
-    __metadata("design:type", Array)
-], ChunkInfoResponseDto.prototype, "missingChunks", void 0);
-class FileCompleteResponseDto {
-}
-exports.FileCompleteResponseDto = FileCompleteResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1file123456' }),
-    __metadata("design:type", String)
-], FileCompleteResponseDto.prototype, "fileId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], FileCompleteResponseDto.prototype, "isComplete", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '/storage/chunked/1696420398754-abc123-document.pdf' }),
-    __metadata("design:type", String)
-], FileCompleteResponseDto.prototype, "downloadUrl", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'File upload completed successfully' }),
-    __metadata("design:type", String)
-], FileCompleteResponseDto.prototype, "message", void 0);
-class EntityFilesResponseDto {
-}
-exports.EntityFilesResponseDto = EntityFilesResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: [FileCreateResponseDto] }),
-    __metadata("design:type", Array)
-], EntityFilesResponseDto.prototype, "files", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 3 }),
-    __metadata("design:type", Number)
-], EntityFilesResponseDto.prototype, "total", void 0);
+const requests_1 = require("../requests");
+const responses_1 = require("../responses");
 let StorageController = class StorageController {
     constructor(chunkedFileService) {
         this.chunkedFileService = chunkedFileService;
@@ -343,7 +201,13 @@ let StorageController = class StorageController {
     async getChunkInfo(fileId, req) {
         try {
             const chunkInfo = await this.chunkedFileService.getChunkInfo(fileId);
-            return chunkInfo;
+            return {
+                fileId: chunkInfo.fileId,
+                totalChunks: chunkInfo.totalChunks,
+                chunksUploaded: chunkInfo.uploadedChunks || 0,
+                uploadedChunkIndexes: chunkInfo.uploadedChunkIndexes || [],
+                isComplete: chunkInfo.isComplete
+            };
         }
         catch (error) {
             if (error.message === 'File not found') {
@@ -375,8 +239,6 @@ let StorageController = class StorageController {
 exports.StorageController = StorageController;
 __decorate([
     (0, common_1.Post)('create'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Create empty file for chunked upload',
         description: 'Create an empty file with metadata for chunked upload'
@@ -384,7 +246,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'File created successfully',
-        type: FileCreateResponseDto
+        type: responses_1.FileCreateResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -393,13 +255,11 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [CreateFileDto, Object]),
+    __metadata("design:paramtypes", [requests_1.CreateFileDto, Object]),
     __metadata("design:returntype", Promise)
 ], StorageController.prototype, "createFile", null);
 __decorate([
     (0, common_1.Post)('chunked/:fileId'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Upload file chunk',
         description: 'Upload a chunk of a file (for large files). Send file data in "chunk" field.'
@@ -413,7 +273,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Chunk uploaded successfully',
-        type: ChunkUploadResponseDto
+        type: responses_1.ChunkUploadResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -440,8 +300,6 @@ __decorate([
 ], StorageController.prototype, "uploadFileChunk", null);
 __decorate([
     (0, common_1.Post)('upload/:fileId'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Upload file chunk (flexible)',
         description: 'Upload a chunk of a file with flexible field name. Accepts any file field name.'
@@ -455,7 +313,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Chunk uploaded successfully',
-        type: ChunkUploadResponseDto
+        type: responses_1.ChunkUploadResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -474,8 +332,6 @@ __decorate([
 ], StorageController.prototype, "uploadFileChunkFlexible", null);
 __decorate([
     (0, common_1.Post)('complete/:fileId'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Complete file upload',
         description: 'Complete the upload of a chunked file'
@@ -488,7 +344,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'File upload completed successfully',
-        type: FileCompleteResponseDto
+        type: responses_1.FileCompleteResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -553,7 +409,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Files retrieved successfully',
-        type: EntityFilesResponseDto
+        type: responses_1.EntityFilesResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 404,
@@ -574,8 +430,6 @@ __decorate([
 ], StorageController.prototype, "getFilesByEntity", null);
 __decorate([
     (0, common_1.Post)('chunk/:fileId/:chunkIndex'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Upload file chunk with index',
         description: 'Upload a specific chunk by index for parallel uploads. Chunks can be uploaded in any order.'
@@ -594,7 +448,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Chunk uploaded successfully',
-        type: ChunkUploadResponseDto
+        type: responses_1.ChunkUploadResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
@@ -622,8 +476,6 @@ __decorate([
 ], StorageController.prototype, "uploadFileChunkWithIndex", null);
 __decorate([
     (0, common_1.Get)('info/:fileId'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Get chunk upload info',
         description: 'Get information about chunk upload progress including missing chunks'
@@ -636,7 +488,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Chunk info retrieved successfully',
-        type: ChunkInfoResponseDto
+        type: responses_1.ChunkInfoResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 404,
@@ -651,6 +503,8 @@ __decorate([
 exports.StorageController = StorageController = __decorate([
     (0, swagger_1.ApiTags)('Storage'),
     (0, common_1.Controller)('storage'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, shared_1.PermissionsGuard),
+    (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [chunked_file_service_1.ChunkedFileService])
 ], StorageController);
 //# sourceMappingURL=storage.controller.js.map

@@ -29,22 +29,27 @@ let MongoMessageRepository = class MongoMessageRepository {
         const message = await this.messageModel.findById(id).exec();
         return message ? this.toDomain(message) : null;
     }
-    async findByChatId(chatId, page, limit) {
-        const skip = (page - 1) * limit;
+    async findByChatId(chatId, createdAt, sort, per_page = 10) {
+        const filter = { chatId };
+        if (createdAt && sort) {
+            if (sort === 'asc') {
+                filter.createdAt = { $gt: new Date(createdAt) };
+            }
+            else if (sort === 'desc') {
+                filter.createdAt = { $lt: new Date(createdAt) };
+            }
+        }
         const [messages, total] = await Promise.all([
             this.messageModel
-                .find({ chatId })
+                .find(filter)
+                .limit(per_page)
                 .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
                 .exec(),
             this.messageModel.countDocuments({ chatId })
         ]);
         return {
             data: messages.map(this.toDomain),
             total,
-            page,
-            limit,
         };
     }
     async create(message) {
@@ -90,7 +95,10 @@ let MongoMessageRepository = class MongoMessageRepository {
             .exec();
         const readIds = readMessageIds.map(read => read.messageId);
         const messages = await this.messageModel
-            .find({ _id: { $nin: readIds } })
+            .find({
+            senderId: { $ne: userId },
+            _id: { $nin: readIds }
+        })
             .exec();
         return messages.map(this.toDomain);
     }
@@ -100,8 +108,9 @@ let MongoMessageRepository = class MongoMessageRepository {
             .select('messageId')
             .exec();
         const readIds = readMessageIds.map(read => read.messageId);
-        return await this.messageModel.countDocuments({
+        return this.messageModel.countDocuments({
             chatId,
+            senderId: { $ne: userId },
             _id: { $nin: readIds }
         });
     }
@@ -112,8 +121,15 @@ let MongoMessageRepository = class MongoMessageRepository {
     async deleteManyByChatId(chatId) {
         await this.messageModel.deleteMany({ chatId }).exec();
     }
+    async findLastMessageByChatId(chatId) {
+        const message = await this.messageModel
+            .findOne({ chatId })
+            .sort({ createdAt: -1 })
+            .exec();
+        return message ? this.toDomain(message) : null;
+    }
     toDomain(doc) {
-        return new message_entity_1.Message(doc._id.toString(), doc.chatId, doc.senderId, doc.content, doc.type || message_type_enum_1.MessageType.TEXT, doc.fileUrl || null, doc.createdAt, doc.updatedAt);
+        return new message_entity_1.Message(doc._id.toString(), doc.chatId, doc.senderId, doc.content, doc.type || message_type_enum_1.MessageType.TEXT, doc.fileUrl || null, doc.createdAt, doc.updatedAt, doc.readBy || []);
     }
     toDocument(message) {
         return {

@@ -12,274 +12,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TaskController = exports.ErrorResponseDto = exports.MessageResponseDto = exports.TaskStatsResponseDto = exports.TaskCreateResponseDto = exports.TaskListResponseDto = exports.TaskResponseDto = exports.CreateTaskReminderDto = exports.UpdateTaskDto = exports.CreateTaskDto = void 0;
+exports.TaskController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const class_validator_1 = require("class-validator");
 const jwt_auth_guard_1 = require("../../../shared/guards/jwt-auth.guard");
 const shared_1 = require("../../../shared");
 const create_task_use_case_1 = require("../../../application/use-cases/create-task.use-case");
 const enums_1 = require("../../../domain/enums");
 const pagination_params_dto_1 = require("../resources/pagination-params.dto");
 const task_resource_dto_1 = require("../resources/task-resource.dto");
-class CreateTaskDto {
-}
-exports.CreateTaskDto = CreateTaskDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task title', example: 'Complete project documentation' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "title", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task description', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Project ID where task belongs' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "project_id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: enums_1.TaskPriority, description: 'Task priority', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(enums_1.TaskPriority),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "priority", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: enums_1.TaskStatus, description: 'Task status', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(enums_1.TaskStatus),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task due date', required: false, type: 'string', format: 'date-time' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "dueDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User ID to assign task to', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "assignedTo", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional notes', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateTaskDto.prototype, "notes", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Reminder time in hours before the due date', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], CreateTaskDto.prototype, "reminderBeforeHours", void 0);
-class UpdateTaskDto {
-}
-exports.UpdateTaskDto = UpdateTaskDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task title', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "title", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task description', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: enums_1.TaskPriority, description: 'Task priority', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(enums_1.TaskPriority),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "priority", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: enums_1.TaskStatus, description: 'Task status', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(enums_1.TaskStatus),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Task due date', required: false, type: 'string', format: 'date-time' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "dueDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User ID to assign task to', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "assignedTo", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Additional notes', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateTaskDto.prototype, "notes", void 0);
-class CreateTaskReminderDto {
-}
-exports.CreateTaskReminderDto = CreateTaskReminderDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'When to remind', type: 'string', format: 'date-time' }),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], CreateTaskReminderDto.prototype, "remindAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Reminder message', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateTaskReminderDto.prototype, "message", void 0);
-class TaskResponseDto {
-}
-exports.TaskResponseDto = TaskResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1abc123def456' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Complete project documentation' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "title", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Write comprehensive docs for the project', nullable: true }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'pending' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'high' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "priority", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1project123456' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "project_id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1user123456', nullable: true }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "assigned_to", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-12-31', nullable: true }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "due_date", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: null, nullable: true }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "completed_at", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Additional notes', nullable: true }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "notes", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: false }),
-    __metadata("design:type", Boolean)
-], TaskResponseDto.prototype, "is_completed", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: false }),
-    __metadata("design:type", Boolean)
-], TaskResponseDto.prototype, "is_overdue", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "created_at", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], TaskResponseDto.prototype, "updated_at", void 0);
-class TaskListResponseDto {
-}
-exports.TaskListResponseDto = TaskListResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], TaskListResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: [TaskResponseDto] }),
-    __metadata("design:type", Array)
-], TaskListResponseDto.prototype, "data", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        type: 'object',
-        properties: {
-            total: { type: 'number', example: 25 },
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 10 }
-        }
-    }),
-    __metadata("design:type", Object)
-], TaskListResponseDto.prototype, "pagination", void 0);
-class TaskCreateResponseDto {
-}
-exports.TaskCreateResponseDto = TaskCreateResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], TaskCreateResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Task created successfully' }),
-    __metadata("design:type", String)
-], TaskCreateResponseDto.prototype, "message", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: TaskResponseDto }),
-    __metadata("design:type", TaskResponseDto)
-], TaskCreateResponseDto.prototype, "data", void 0);
-class TaskStatsResponseDto {
-}
-exports.TaskStatsResponseDto = TaskStatsResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 25 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "total_tasks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 10 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "completed_tasks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 12 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "pending_tasks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 3 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "in_progress_tasks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 2 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "overdue_tasks", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 40 }),
-    __metadata("design:type", Number)
-], TaskStatsResponseDto.prototype, "completion_rate", void 0);
-class MessageResponseDto {
-}
-exports.MessageResponseDto = MessageResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Task updated successfully' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "message", void 0);
-class ErrorResponseDto {
-}
-exports.ErrorResponseDto = ErrorResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 400 }),
-    __metadata("design:type", Number)
-], ErrorResponseDto.prototype, "statusCode", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Bad Request' }),
-    __metadata("design:type", String)
-], ErrorResponseDto.prototype, "error", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Validation failed' }),
-    __metadata("design:type", String)
-], ErrorResponseDto.prototype, "message", void 0);
+const requests_1 = require("../requests");
+const responses_1 = require("../responses");
 let TaskController = class TaskController {
     constructor(createTaskUseCase, taskPolicy, taskRepository, userRepository) {
         this.createTaskUseCase = createTaskUseCase;
@@ -531,9 +274,9 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'assigned_to', required: false, type: String, description: 'Filter by assigned user ID' }),
     (0, swagger_1.ApiQuery)({ name: 'overdue', required: false, type: Boolean, description: 'Filter overdue tasks' }),
     (0, swagger_1.ApiQuery)({ name: 'search', required: false, type: String, description: 'Search in task title and description' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Tasks retrieved successfully', type: TaskListResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view tasks', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Tasks retrieved successfully', type: responses_1.TaskListResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view tasks', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('per_page')),
@@ -554,14 +297,14 @@ __decorate([
         summary: 'Create a new task',
         description: 'Create a new task with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Task created successfully', type: TaskCreateResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Project ID is required or invalid data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create tasks', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Task created successfully', type: responses_1.TaskCreateResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Project ID is required or invalid data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create tasks', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [CreateTaskDto, Object]),
+    __metadata("design:paramtypes", [requests_1.CreateTaskDto, Object]),
     __metadata("design:returntype", Promise)
 ], TaskController.prototype, "store", null);
 __decorate([
@@ -570,10 +313,10 @@ __decorate([
         summary: 'Get task details',
         description: 'Retrieve detailed task information with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task details retrieved successfully', type: TaskResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task details retrieved successfully', type: responses_1.TaskResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -586,16 +329,16 @@ __decorate([
         summary: 'Update task',
         description: 'Update task with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task updated successfully', type: TaskResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to update this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task updated successfully', type: responses_1.TaskResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to update this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, UpdateTaskDto, Object]),
+    __metadata("design:paramtypes", [String, requests_1.UpdateTaskDto, Object]),
     __metadata("design:returntype", Promise)
 ], TaskController.prototype, "update", null);
 __decorate([
@@ -604,10 +347,10 @@ __decorate([
         summary: 'Delete task',
         description: 'Delete task with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task deleted successfully', type: MessageResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to delete this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task deleted successfully', type: responses_1.MessageResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to delete this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -621,11 +364,11 @@ __decorate([
         summary: 'Change task status',
         description: 'Change task status with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task status changed successfully', type: TaskResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid status', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to change task status', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task status changed successfully', type: responses_1.TaskResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid status', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to change task status', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
@@ -639,11 +382,11 @@ __decorate([
         summary: 'Assign task to user',
         description: 'Assign task with authorization checks'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task assigned successfully', type: TaskResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid user ID', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to assign this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task assigned successfully', type: responses_1.TaskResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid user ID', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to assign this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('userId')),
     __param(2, (0, common_1.Request)()),
@@ -677,10 +420,10 @@ __decorate([
             }
         }
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Task must have a due date', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create reminders for this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Task must have a due date', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create reminders for this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('taskId')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
@@ -712,7 +455,7 @@ __decorate([
             }
         }
     }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -724,8 +467,8 @@ __decorate([
         summary: 'Get tasks assigned to current user',
         description: 'Retrieve all tasks assigned to the current user'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Assigned tasks retrieved successfully', type: TaskListResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Assigned tasks retrieved successfully', type: responses_1.TaskListResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('per_page')),
@@ -750,7 +493,7 @@ __decorate([
             }
         }
     }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -762,11 +505,11 @@ __decorate([
         summary: 'Change task priority',
         description: 'Change the priority of a specific task'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task priority changed successfully', type: TaskResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid priority', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to change priority of this task', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Task priority changed successfully', type: responses_1.TaskResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid priority', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to change priority of this task', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Task not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),

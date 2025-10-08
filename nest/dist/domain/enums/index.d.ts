@@ -34,3 +34,8 @@ export declare enum MessageType {
     VIDEO = "video",
     FILE = "file"
 }
+export declare enum ChatMemberRole {
+    ADMIN = "admin",
+    MEMBER = "member",
+    MODERATOR = "moderator"
+}

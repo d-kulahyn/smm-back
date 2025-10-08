@@ -12,10 +12,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChatController = exports.MarkMessagesAsReadDto = exports.AddUserToChatDto = exports.SendMessageDto = exports.CreateChatDto = exports.ErrorResponseDto = exports.MessageDto = exports.ChatCreateResponseDto = exports.MessageCreateResponseDto = exports.MessageListResponseDto = exports.ChatListResponseDto = exports.ChatMemberResponseDto = exports.MessageResponseDto = exports.ChatResponseDto = void 0;
+exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const class_validator_1 = require("class-validator");
 const platform_express_1 = require("@nestjs/platform-express");
 const jwt_auth_guard_1 = require("../../../shared/guards/jwt-auth.guard");
 const shared_1 = require("../../../shared");
@@ -24,271 +23,19 @@ const send_message_use_case_1 = require("../../../application/use-cases/send-mes
 const add_user_to_chat_use_case_1 = require("../../../application/use-cases/add-user-to-chat.use-case");
 const remove_user_from_chat_use_case_1 = require("../../../application/use-cases/remove-user-from-chat.use-case");
 const mark_messages_as_read_use_case_1 = require("../../../application/use-cases/mark-messages-as-read.use-case");
+const prisma_service_1 = require("../../database/prisma.service");
 const shared_2 = require("../../../shared");
-const chat_status_enum_1 = require("../../../domain/enums/chat-status.enum");
 const message_type_enum_1 = require("../../../domain/enums/message-type.enum");
-const chat_member_entity_1 = require("../../../domain/entities/chat-member.entity");
 const pagination_params_dto_1 = require("../resources/pagination-params.dto");
 const chat_resource_dto_1 = require("../resources/chat-resource.dto");
 const message_resource_dto_1 = require("../resources/message-resource.dto");
 const chat_member_resource_dto_1 = require("../resources/chat-member-resource.dto");
 const shared_3 = require("../../../shared");
 const exceptions_1 = require("../../../shared/exceptions");
-class ChatResponseDto {
-}
-exports.ChatResponseDto = ChatResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1abc123def456' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Project Discussion' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Chat for project coordination', nullable: true }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'active' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1project123456' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "projectId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1creator123456' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "createdBy", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "createdAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], ChatResponseDto.prototype, "updatedAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 5, description: 'Number of unread messages for current user' }),
-    __metadata("design:type", Number)
-], ChatResponseDto.prototype, "unreadCount", void 0);
-class MessageResponseDto {
-}
-exports.MessageResponseDto = MessageResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1msg123def456' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Hello everyone!' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "content", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'text' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "type", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1chat123456' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "chatId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1sender123456' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "senderId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'file-path.jpg', nullable: true }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "fileUrl", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], MessageResponseDto.prototype, "createdAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true, description: 'Whether the message is read by current user' }),
-    __metadata("design:type", Boolean)
-], MessageResponseDto.prototype, "isReadByCurrentUser", void 0);
-class ChatMemberResponseDto {
-}
-exports.ChatMemberResponseDto = ChatMemberResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1member123456' }),
-    __metadata("design:type", String)
-], ChatMemberResponseDto.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1chat123456' }),
-    __metadata("design:type", String)
-], ChatMemberResponseDto.prototype, "chatId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'clm1user123456' }),
-    __metadata("design:type", String)
-], ChatMemberResponseDto.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'member' }),
-    __metadata("design:type", String)
-], ChatMemberResponseDto.prototype, "role", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-01-01T00:00:00.000Z' }),
-    __metadata("design:type", String)
-], ChatMemberResponseDto.prototype, "joinedAt", void 0);
-class ChatListResponseDto {
-}
-exports.ChatListResponseDto = ChatListResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], ChatListResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: [ChatResponseDto] }),
-    __metadata("design:type", Array)
-], ChatListResponseDto.prototype, "data", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        type: 'object',
-        properties: {
-            total: { type: 'number', example: 5 },
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 10 }
-        }
-    }),
-    __metadata("design:type", Object)
-], ChatListResponseDto.prototype, "pagination", void 0);
-class MessageListResponseDto {
-}
-exports.MessageListResponseDto = MessageListResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], MessageListResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: [MessageResponseDto] }),
-    __metadata("design:type", Array)
-], MessageListResponseDto.prototype, "data", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        type: 'object',
-        properties: {
-            total: { type: 'number', example: 50 },
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 20 }
-        }
-    }),
-    __metadata("design:type", Object)
-], MessageListResponseDto.prototype, "pagination", void 0);
-class MessageCreateResponseDto {
-}
-exports.MessageCreateResponseDto = MessageCreateResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], MessageCreateResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Message sent successfully' }),
-    __metadata("design:type", String)
-], MessageCreateResponseDto.prototype, "message", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: MessageResponseDto }),
-    __metadata("design:type", MessageResponseDto)
-], MessageCreateResponseDto.prototype, "data", void 0);
-class ChatCreateResponseDto {
-}
-exports.ChatCreateResponseDto = ChatCreateResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
-    __metadata("design:type", Boolean)
-], ChatCreateResponseDto.prototype, "success", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Chat created successfully' }),
-    __metadata("design:type", String)
-], ChatCreateResponseDto.prototype, "message", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ type: ChatResponseDto }),
-    __metadata("design:type", ChatResponseDto)
-], ChatCreateResponseDto.prototype, "data", void 0);
-class MessageDto {
-}
-exports.MessageDto = MessageDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Operation completed successfully' }),
-    __metadata("design:type", String)
-], MessageDto.prototype, "message", void 0);
-class ErrorResponseDto {
-}
-exports.ErrorResponseDto = ErrorResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 400 }),
-    __metadata("design:type", Number)
-], ErrorResponseDto.prototype, "statusCode", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Bad Request' }),
-    __metadata("design:type", String)
-], ErrorResponseDto.prototype, "error", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Validation failed' }),
-    __metadata("design:type", String)
-], ErrorResponseDto.prototype, "message", void 0);
-class CreateChatDto {
-}
-exports.CreateChatDto = CreateChatDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Chat name', example: 'Project Discussion' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateChatDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Chat description', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateChatDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: chat_status_enum_1.ChatStatus, description: 'Chat status', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(chat_status_enum_1.ChatStatus),
-    __metadata("design:type", String)
-], CreateChatDto.prototype, "status", void 0);
-class SendMessageDto {
-}
-exports.SendMessageDto = SendMessageDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Message content' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], SendMessageDto.prototype, "content", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: message_type_enum_1.MessageType, description: 'Message type', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(message_type_enum_1.MessageType),
-    __metadata("design:type", String)
-], SendMessageDto.prototype, "type", void 0);
-class AddUserToChatDto {
-}
-exports.AddUserToChatDto = AddUserToChatDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User ID to add to chat' }),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], AddUserToChatDto.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: chat_member_entity_1.ChatMemberRole, description: 'User role in chat', required: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(chat_member_entity_1.ChatMemberRole),
-    __metadata("design:type", String)
-], AddUserToChatDto.prototype, "role", void 0);
-class MarkMessagesAsReadDto {
-}
-exports.MarkMessagesAsReadDto = MarkMessagesAsReadDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Array of message IDs to mark as read',
-        example: ['clm1msg123def456', 'clm1msg789ghi012'],
-        type: [String]
-    }),
-    (0, class_validator_1.IsUUID)('4', { each: true }),
-    __metadata("design:type", Array)
-], MarkMessagesAsReadDto.prototype, "messageIds", void 0);
+const requests_1 = require("../requests");
+const responses_1 = require("../responses");
 let ChatController = class ChatController {
-    constructor(createChatUseCase, sendMessageUseCase, addUserToChatUseCase, removeUserFromChatUseCase, markMessageAsReadUseCase, markAllMessagesAsReadUseCase, markMultipleMessagesAsReadUseCase, fileService, chatPolicy, chatRepository, messageRepository, chatMemberRepository, userRepository) {
+    constructor(createChatUseCase, sendMessageUseCase, addUserToChatUseCase, removeUserFromChatUseCase, markMessageAsReadUseCase, markAllMessagesAsReadUseCase, markMultipleMessagesAsReadUseCase, fileService, chatPolicy, chatRepository, messageRepository, chatMemberRepository, userRepository, prismaService) {
         this.createChatUseCase = createChatUseCase;
         this.sendMessageUseCase = sendMessageUseCase;
         this.addUserToChatUseCase = addUserToChatUseCase;
@@ -302,6 +49,7 @@ let ChatController = class ChatController {
         this.messageRepository = messageRepository;
         this.chatMemberRepository = chatMemberRepository;
         this.userRepository = userRepository;
+        this.prismaService = prismaService;
     }
     async index(projectId, req, page, perPage) {
         const user = await this.userRepository.findById(req.user.userId);
@@ -312,12 +60,14 @@ let ChatController = class ChatController {
             throw new exceptions_1.AccessDeniedException('You do not have permission to view chats');
         }
         const paginationParams = pagination_params_dto_1.PaginationParamsDto.fromQuery(page, perPage);
-        const paginatedResult = await this.chatRepository.findByProjectIdPaginated(projectId, paginationParams.page, paginationParams.perPage);
+        const paginatedResult = await this.chatRepository.findByProjectIdPaginatedWithExtras(projectId, req.user.userId, paginationParams.page, paginationParams.perPage);
         const filteredChats = [];
-        for (const chat of paginatedResult.data) {
-            if (await this.chatPolicy.view(user, chat)) {
-                const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
-                const chatResource = chat_resource_dto_1.ChatResource.fromEntity(chat).withUnreadCount(unreadCount);
+        for (const chatWithExtras of paginatedResult.data) {
+            if (await this.chatPolicy.view(user, chatWithExtras)) {
+                const chatResource = chat_resource_dto_1.ChatResource.fromEntityWithExtras(chatWithExtras);
+                if (chatResource.lastMessage) {
+                    chatResource.lastMessage = chatResource.lastMessage.withReadStatus(req.user.userId);
+                }
                 filteredChats.push(chatResource);
             }
         }
@@ -332,12 +82,9 @@ let ChatController = class ChatController {
         };
     }
     async store(projectId, createChatDto, req) {
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new exceptions_1.ResourceNotFoundException('User', req.user.userId);
-        }
-        if (!this.chatPolicy.create(user)) {
-            throw new exceptions_1.AccessDeniedException('You do not have permission to create chats');
+        const canCreateInProject = await this.chatPolicy.canCreateChatInProject(req.user.userId, projectId);
+        if (!canCreateInProject) {
+            throw new exceptions_1.AccessDeniedException('You do not have permission to create chats in this project');
         }
         const chat = await this.createChatUseCase.execute({
             projectId,
@@ -352,7 +99,7 @@ let ChatController = class ChatController {
         };
     }
     async show(projectId, id, req) {
-        const chat = await this.chatRepository.findById(id);
+        const chat = await this.chatRepository.findByIdWithExtras(id);
         if (!chat) {
             throw new exceptions_1.ResourceNotFoundException('Chat', id);
         }
@@ -363,13 +110,13 @@ let ChatController = class ChatController {
         if (!await this.chatPolicy.view(user, chat)) {
             throw new exceptions_1.AccessDeniedException('You do not have permission to view this chat');
         }
-        const unreadCount = await this.messageRepository.countUnreadMessages(chat.id, req.user.userId);
+        const chatResource = chat_resource_dto_1.ChatResource.fromEntityWithExtras(chat);
         return {
             success: true,
-            data: chat_resource_dto_1.ChatResource.fromEntity(chat).withUnreadCount(unreadCount)
+            data: chatResource
         };
     }
-    async getMessages(projectId, chatId, req, page, perPage) {
+    async getMessages(projectId, chatId, req, perPage, createdAt, sort) {
         const chat = await this.chatRepository.findById(chatId);
         if (!chat) {
             throw new exceptions_1.ResourceNotFoundException('Chat not found');
@@ -381,16 +128,23 @@ let ChatController = class ChatController {
         if (!await this.chatPolicy.view(user, chat)) {
             throw new exceptions_1.AccessDeniedException('You do not have permission to view this chat');
         }
-        const paginationParams = pagination_params_dto_1.PaginationParamsDto.fromQuery(page, perPage);
-        const paginatedResult = await this.messageRepository.findByChatId(chatId, paginationParams.page, paginationParams.perPage);
-        const messagesWithReadStatus = paginatedResult.data.map(message => message_resource_dto_1.MessageResource.fromEntity(message).withReadStatus(req.user.userId));
+        const paginatedResult = await this.messageRepository.findByChatId(chatId, createdAt, sort, perPage);
+        const senderIds = [...new Set(paginatedResult.data.map(message => message.senderId))];
+        const senders = await Promise.all(senderIds.map(id => this.userRepository.findById(id)));
+        const sendersMap = new Map(senders.filter(Boolean).map(user => [user.id, user]));
+        const messagesWithReadStatus = paginatedResult.data.map(message => {
+            const sender = sendersMap.get(message.senderId);
+            return message_resource_dto_1.MessageResource.fromEntity(message)
+                .withReadStatus(req.user.userId)
+                .withSender(sender);
+        });
         return {
             success: true,
             data: messagesWithReadStatus,
             pagination: {
-                total: paginatedResult.total,
-                page: paginatedResult.page,
-                limit: paginatedResult.limit
+                total: 0,
+                page: 1,
+                limit: 10
             }
         };
     }
@@ -436,16 +190,13 @@ let ChatController = class ChatController {
         };
     }
     async addUserToChat(projectId, chatId, addUserDto, req) {
-        const chat = await this.chatRepository.findById(chatId);
-        if (!chat) {
-            throw new exceptions_1.ResourceNotFoundException('Chat not found');
+        const validation = await this.chatPolicy.validateUserForChatAddition(addUserDto.userId, chatId);
+        if (!validation.isValid) {
+            throw new exceptions_1.ResourceNotFoundException(validation.reason);
         }
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new exceptions_1.ResourceNotFoundException('User', req.user.userId);
-        }
-        if (!await this.chatPolicy.canAddMembers(chatId, req.user.userId)) {
-            throw new exceptions_1.AccessDeniedException('You do not have permission to add members to this chat');
+        const canAddMember = await this.chatPolicy.canAddMembersToProjectChat(chatId, req.user.userId, addUserDto.userId, projectId);
+        if (!canAddMember) {
+            throw new exceptions_1.AccessDeniedException('You cannot add this user to the chat. User must be a project member and you must have appropriate permissions.');
         }
         const chatMember = await this.addUserToChatUseCase.execute({
             chatId,
@@ -464,12 +215,13 @@ let ChatController = class ChatController {
         if (!chat) {
             throw new exceptions_1.ResourceNotFoundException('Chat not found');
         }
-        const user = await this.userRepository.findById(req.user.userId);
-        if (!user) {
-            throw new exceptions_1.ResourceNotFoundException('User', req.user.userId);
+        const validation = await this.chatPolicy.validateUserForChatRemoval(userId, chatId);
+        if (!validation.isValid) {
+            throw new exceptions_1.ResourceNotFoundException(validation.reason);
         }
-        if (!await this.chatPolicy.canRemoveMembers(chatId, req.user.userId)) {
-            throw new exceptions_1.AccessDeniedException('You do not have permission to remove members from this chat');
+        const canRemove = await this.chatPolicy.canRemoveMemberFromChat(chatId, req.user.userId, userId);
+        if (!canRemove) {
+            throw new exceptions_1.AccessDeniedException('You do not have permission to remove this user from the chat');
         }
         await this.removeUserFromChatUseCase.execute({
             chatId,
@@ -571,10 +323,10 @@ __decorate([
         summary: 'Get project chats',
         description: 'Retrieve paginated list of chats for a specific project'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Chats retrieved successfully', type: ChatListResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view chats', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Chats retrieved successfully', type: responses_1.ChatListResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view chats', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Query)('page')),
@@ -590,16 +342,16 @@ __decorate([
         summary: 'Create a new chat',
         description: 'Create a new chat for a specific project'
     }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Chat created successfully', type: ChatCreateResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create chats', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Chat created successfully', type: responses_1.ChatCreateResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to create chats', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, CreateChatDto, Object]),
+    __metadata("design:paramtypes", [String, requests_1.CreateChatDto, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "store", null);
 __decorate([
@@ -608,10 +360,10 @@ __decorate([
         summary: 'Get chat details',
         description: 'Retrieve detailed chat information'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Chat details retrieved successfully', type: ChatResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Chat details retrieved successfully', type: responses_1.ChatResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Request)()),
@@ -625,17 +377,21 @@ __decorate([
         summary: 'Get chat messages',
         description: 'Retrieve paginated list of messages for a specific chat'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Messages retrieved successfully', type: MessageListResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiQuery)({ name: 'per_page', required: false, description: 'Number of items per page' }),
+    (0, swagger_1.ApiQuery)({ name: 'created_at', required: false, description: 'Filter messages by creation date' }),
+    (0, swagger_1.ApiQuery)({ name: 'sort', required: false, enum: ['asc', 'desc'], description: 'Sort order for messages' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Messages retrieved successfully', type: responses_1.MessageListResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Request)()),
-    __param(3, (0, common_1.Query)('page')),
-    __param(4, (0, common_1.Query)('per_page')),
+    __param(3, (0, common_1.Query)('per_page')),
+    __param(4, (0, common_1.Query)('created_at')),
+    __param(5, (0, common_1.Query)('sort')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object, String, String]),
+    __metadata("design:paramtypes", [String, String, Object, Number, String, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getMessages", null);
 __decorate([
@@ -646,18 +402,18 @@ __decorate([
     }),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Message sent successfully', type: MessageCreateResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to send messages', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Message sent successfully', type: responses_1.MessageCreateResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to send messages', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __param(3, (0, common_1.Request)()),
     __param(4, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, SendMessageDto, Object, Object]),
+    __metadata("design:paramtypes", [String, String, requests_1.SendMessageDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "sendMessage", null);
 __decorate([
@@ -670,18 +426,18 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'User added to chat successfully',
-        type: ChatMemberResponseDto
+        type: responses_1.ChatMemberResponseDto
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to add members', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to add members', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __param(3, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, AddUserToChatDto, Object]),
+    __metadata("design:paramtypes", [String, String, requests_1.AddUserToChatDto, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "addUserToChat", null);
 __decorate([
@@ -691,10 +447,10 @@ __decorate([
         summary: 'Remove user from chat',
         description: 'Remove a user from the chat'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User removed from chat successfully', type: MessageDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to remove members', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User removed from chat successfully', type: responses_1.MessageResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to remove members', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Param)('userId')),
@@ -712,11 +468,11 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Chat members retrieved successfully',
-        type: [ChatMemberResponseDto]
+        type: [responses_1.ChatMemberResponseDto]
     }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to view this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Request)()),
@@ -730,10 +486,10 @@ __decorate([
         summary: 'Mark message as read',
         description: 'Mark a specific message as read by the current user'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Message marked as read', type: MessageDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Message marked as read', type: responses_1.MessageResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Param)('messageId')),
@@ -748,10 +504,10 @@ __decorate([
         summary: 'Mark all messages as read',
         description: 'Mark all messages in the chat as read by the current user'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'All messages marked as read', type: MessageDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'All messages marked as read', type: responses_1.MessageResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Request)()),
@@ -765,17 +521,17 @@ __decorate([
         summary: 'Mark multiple messages as read',
         description: 'Mark multiple messages as read by the current user'
     }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Messages marked as read', type: MessageDto }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: ErrorResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Messages marked as read', type: responses_1.MessageResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input data', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - No permission to access this chat', type: responses_1.ErrorResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Chat or User not found', type: responses_1.ErrorResponseDto }),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __param(3, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, MarkMessagesAsReadDto, Object]),
+    __metadata("design:paramtypes", [String, String, requests_1.MarkMessagesAsReadDto, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "markMultipleMessagesAsRead", null);
 exports.ChatController = ChatController = __decorate([
@@ -795,6 +551,6 @@ exports.ChatController = ChatController = __decorate([
         mark_messages_as_read_use_case_1.MarkAllMessagesAsReadUseCase,
         mark_messages_as_read_use_case_1.MarkMultipleMessagesAsReadUseCase,
         shared_3.FileService,
-        shared_2.ChatPolicy, Object, Object, Object, Object])
+        shared_2.ChatPolicy, Object, Object, Object, Object, prisma_service_1.PrismaService])
 ], ChatController);
 //# sourceMappingURL=chat.controller.js.map

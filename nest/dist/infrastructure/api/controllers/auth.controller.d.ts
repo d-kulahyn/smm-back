@@ -9,69 +9,7 @@ import { SendConfirmationCodeUseCase } from '../../../application/use-cases/send
 import { SocialAuthUseCase } from '../../../application/use-cases/social-auth.use-case';
 import { UserRepository } from '../../../domain/repositories/user.repository';
 import { RedisService } from '../../services/redis.service';
-export declare class RegisterDto {
-    email: string;
-    password: string;
-    name?: string;
-    firebase_cloud_messaging_token?: string;
-}
-export declare class LoginDto {
-    email: string;
-    password: string;
-}
-export declare class ResetPasswordDto {
-    email: string;
-}
-export declare class ConfirmEmailDto {
-    code: string;
-}
-export declare class SocialAuthDto {
-    access_token: string;
-}
-export declare class RegisterResponseDto {
-    success: boolean;
-    message: string;
-    data: {
-        userId: string;
-        email: string;
-        name: string;
-        code: string;
-    };
-}
-export declare class LoginResponseDto {
-    success: boolean;
-    access_token: string;
-    user: {
-        id: string;
-        email: string;
-        name: string;
-        avatar: string | null;
-        role: string;
-        permissions: string[];
-        isActive: boolean;
-        emailVerifiedAt: string | null;
-    };
-}
-export declare class MessageResponseDto {
-    message: string;
-}
-export declare class ErrorResponseDto {
-    statusCode: number;
-    error: string;
-    message: string;
-}
-export declare class UserProfileResponseDto {
-    id: string;
-    email: string;
-    name: string;
-    avatar: string | null;
-    role: string;
-    permissions: string[];
-    isActive: boolean;
-    emailVerifiedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-}
+import { RegisterDto, LoginDto, ResetPasswordDto, ConfirmEmailDto, SocialAuthDto } from '../requests';
 export declare class AuthController {
     private readonly createUserUseCase;
     private readonly loginUserUseCase;

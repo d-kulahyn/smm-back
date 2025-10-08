@@ -34,6 +34,9 @@ let AcceptProjectInvitationUseCase = class AcceptProjectInvitationUseCase {
         if (invitation.expiresAt < new Date()) {
             throw new common_1.BadRequestException('Invitation has expired');
         }
+        if (invitation.invitedBy === dto.userId) {
+            throw new common_1.BadRequestException('You cannot accept an invitation you sent to yourself');
+        }
         const existingMember = await this.prisma.projectMember.findUnique({
             where: {
                 projectId_userId: {

@@ -12,7 +12,7 @@ export interface ChatWithExtras extends Chat {
 export interface ChatRepository {
     findById(id: string): Promise<Chat | null>;
 
-    findByIdWithExtras(id: string): Promise<ChatWithExtras | null>;
+    findByIdWithExtras(id: string, userId: string): Promise<ChatWithExtras | null>;
 
     findByUserId(userId: string): Promise<Chat[]>;
 

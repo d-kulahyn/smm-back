@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageType = exports.ChatStatus = exports.ProjectStatus = exports.InvitationStatus = exports.ProjectRole = exports.TaskPriority = exports.TaskStatus = void 0;
+exports.ChatMemberRole = exports.MessageType = exports.ChatStatus = exports.ProjectStatus = exports.InvitationStatus = exports.ProjectRole = exports.TaskPriority = exports.TaskStatus = void 0;
 var TaskStatus;
 (function (TaskStatus) {
     TaskStatus["pending"] = "pending";
@@ -44,4 +44,10 @@ var MessageType;
     MessageType["VIDEO"] = "video";
     MessageType["FILE"] = "file";
 })(MessageType || (exports.MessageType = MessageType = {}));
+var ChatMemberRole;
+(function (ChatMemberRole) {
+    ChatMemberRole["ADMIN"] = "admin";
+    ChatMemberRole["MEMBER"] = "member";
+    ChatMemberRole["MODERATOR"] = "moderator";
+})(ChatMemberRole || (exports.ChatMemberRole = ChatMemberRole = {}));
 //# sourceMappingURL=index.js.map

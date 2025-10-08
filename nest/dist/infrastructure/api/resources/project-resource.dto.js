@@ -27,7 +27,7 @@ class ProjectResource {
         this.tasks = project.tasks ? task_resource_dto_1.TaskResource.collection(project.tasks) : [];
         this.members = project.members ? project_member_resource_dto_1.ProjectMemberResource.collection(project.members) : [];
         this.invitations = project.invitations ? project_invitation_resource_dto_1.ProjectInvitationResource.collection(project.invitations) : [];
-        this.chats = project.chats ? chat_resource_dto_1.ChatResource.collection(project.chats) : [];
+        this.chats = project.chats ? chat_resource_dto_1.ChatResource.collectionWithExtras(project.chats) : [];
     }
     static fromEntity(project) {
         return new ProjectResource(project);

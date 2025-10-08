@@ -12,8 +12,7 @@ import {
     BadRequestException,
     Inject
 } from '@nestjs/common';
-import {ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse, ApiProperty} from '@nestjs/swagger';
-import {IsEmail, IsString, MinLength, IsOptional} from 'class-validator';
+import {ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse} from '@nestjs/swagger';
 import {JwtService} from '@nestjs/jwt';
 import {AuthenticatedRequest} from '../../../shared';
 import {CreateUserUseCase} from '../../../application/use-cases/create-user.use-case';
@@ -29,159 +28,21 @@ import {Role, RolePermissions} from '../../../shared';
 import {RedisService} from '../../services/redis.service';
 import {ResourceNotFoundException} from '../../../shared/exceptions';
 
-export class RegisterDto {
-    @ApiProperty({ description: 'User email', example: 'user@example.com' })
-    @IsEmail()
-    email: string;
+import {
+    RegisterDto,
+    LoginDto,
+    ResetPasswordDto,
+    ConfirmEmailDto,
+    SocialAuthDto
+} from '../requests';
 
-    @ApiProperty({ description: 'User password', minLength: 6, example: 'password123' })
-    @IsString()
-    @MinLength(6)
-    password: string;
-
-    @ApiProperty({ description: 'User name', required: false, example: 'John Doe' })
-    @IsOptional()
-    @IsString()
-    name?: string;
-
-    @ApiProperty({ description: 'Firebase Cloud Messaging token', required: false })
-    @IsOptional()
-    @IsString()
-    firebase_cloud_messaging_token?: string;
-}
-
-export class LoginDto {
-    @ApiProperty({ description: 'User email', example: 'user@example.com' })
-    @IsEmail()
-    email: string;
-
-    @ApiProperty({ description: 'User password', example: 'password123' })
-    @IsString()
-    password: string;
-}
-
-export class ResetPasswordDto {
-    @ApiProperty({ description: 'User email for password reset', example: 'user@example.com' })
-    @IsEmail()
-    email: string;
-}
-
-export class ConfirmEmailDto {
-    @ApiProperty({ description: 'Email confirmation code', example: 'A1B2C3' })
-    @IsString()
-    code: string;
-}
-
-export class SocialAuthDto {
-    @ApiProperty({ description: 'Social provider access token', example: 'ya29.a0AfH6SMB...' })
-    @IsString()
-    access_token: string;
-}
-
-// Response DTOs для Swagger документации
-export class RegisterResponseDto {
-    @ApiProperty({ example: true })
-    success: boolean;
-
-    @ApiProperty({ example: 'Registration successful. Please check your email for verification code.' })
-    message: string;
-
-    @ApiProperty({
-        type: 'object',
-        properties: {
-            userId: { type: 'string', example: 'clm1abc123def456' },
-            email: { type: 'string', example: 'user@example.com' },
-            name: { type: 'string', example: 'John Doe' },
-            code: { type: 'string', example: 'A1B2C3' }
-        }
-    })
-    data: {
-        userId: string;
-        email: string;
-        name: string;
-        code: string;
-    };
-}
-
-export class LoginResponseDto {
-    @ApiProperty({ example: true })
-    success: boolean;
-
-    @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
-    access_token: string;
-
-    @ApiProperty({
-        type: 'object',
-        properties: {
-            id: { type: 'string', example: 'clm1abc123def456' },
-            email: { type: 'string', example: 'user@example.com' },
-            name: { type: 'string', example: 'John Doe' },
-            avatar: { type: 'string', nullable: true, example: null },
-            role: { type: 'string', example: 'CLIENT' },
-            permissions: { type: 'array', items: { type: 'string' } },
-            isActive: { type: 'boolean', example: true },
-            emailVerifiedAt: { type: 'string', nullable: true, example: null }
-        }
-    })
-    user: {
-        id: string;
-        email: string;
-        name: string;
-        avatar: string | null;
-        role: string;
-        permissions: string[];
-        isActive: boolean;
-        emailVerifiedAt: string | null;
-    };
-}
-
-export class MessageResponseDto {
-    @ApiProperty({ example: 'Operation completed successfully' })
-    message: string;
-}
-
-export class ErrorResponseDto {
-    @ApiProperty({ example: 400 })
-    statusCode: number;
-
-    @ApiProperty({ example: 'Bad Request' })
-    error: string;
-
-    @ApiProperty({ example: 'Validation failed' })
-    message: string;
-}
-
-export class UserProfileResponseDto {
-    @ApiProperty({ example: 'clm1abc123def456' })
-    id: string;
-
-    @ApiProperty({ example: 'user@example.com' })
-    email: string;
-
-    @ApiProperty({ example: 'John Doe' })
-    name: string;
-
-    @ApiProperty({ example: null, nullable: true })
-    avatar: string | null;
-
-    @ApiProperty({ example: 'CLIENT' })
-    role: string;
-
-    @ApiProperty({ type: 'array', items: { type: 'string' } })
-    permissions: string[];
-
-    @ApiProperty({ example: true })
-    isActive: boolean;
-
-    @ApiProperty({ example: null, nullable: true })
-    emailVerifiedAt: string | null;
-
-    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-    createdAt: string;
-
-    @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-    updatedAt: string;
-}
+import {
+    RegisterResponseDto,
+    LoginResponseDto,
+    MessageResponseDto,
+    ErrorResponseDto,
+    UserProfileResponseDto
+} from '../responses';
 
 @ApiTags('Authentication')
 @Controller('auth')

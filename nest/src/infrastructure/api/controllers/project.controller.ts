@@ -15,8 +15,7 @@ import {
   Patch,
   ForbiddenException
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiQuery, ApiProperty, ApiResponse } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsNumber, IsDateString } from 'class-validator';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../shared';
@@ -34,186 +33,21 @@ import { PaginationParamsDto } from '../resources/pagination-params.dto';
 import { ProjectResource } from '../resources/project-resource.dto';
 import { FileService } from '../../../shared';
 
-// Response DTOs для Swagger документации
-export class ProjectResponseDto {
-  @ApiProperty({ example: 'clm1abc123def456' })
-  id: string;
+// Request DTOs
+import {
+  CreateProjectDto,
+  UpdateProjectDto
+} from '../requests';
 
-  @ApiProperty({ example: 'My Project' })
-  name: string;
-
-  @ApiProperty({ example: 'Project description', nullable: true })
-  description: string | null;
-
-  @ApiProperty({ example: 'active' })
-  status: string;
-
-  @ApiProperty({ example: 'clm1owner123456' })
-  ownerId: string;
-
-  @ApiProperty({ example: '2024-01-01', nullable: true })
-  startDate: string | null;
-
-  @ApiProperty({ example: '2024-12-31', nullable: true })
-  endDate: string | null;
-
-  @ApiProperty({ example: 10000, nullable: true })
-  budget: number | null;
-
-  @ApiProperty({ example: 'avatar.jpg', nullable: true })
-  avatar: string | null;
-
-  @ApiProperty({ example: '#FF5733', nullable: true })
-  color: string | null;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  createdAt: string;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  updatedAt: string;
-}
-
-export class ProjectListResponseDto {
-  @ApiProperty({ example: true })
-  success: boolean;
-
-  @ApiProperty({ type: [ProjectResponseDto] })
-  data: ProjectResponseDto[];
-
-  @ApiProperty({
-    type: 'object',
-    properties: {
-      total: { type: 'number', example: 25 },
-      page: { type: 'number', example: 1 },
-      limit: { type: 'number', example: 10 },
-      totalPages: { type: 'number', example: 3 }
-    }
-  })
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
-export class ProjectCreateResponseDto {
-  @ApiProperty({ example: true })
-  success: boolean;
-
-  @ApiProperty({ example: 'Project created successfully' })
-  message: string;
-
-  @ApiProperty({ type: ProjectResponseDto })
-  data: ProjectResponseDto;
-}
-
-export class ProjectStatsResponseDto {
-  @ApiProperty({ example: 5 })
-  totalProjects: number;
-
-  @ApiProperty({ example: 3 })
-  activeProjects: number;
-
-  @ApiProperty({ example: 1 })
-  completedProjects: number;
-
-  @ApiProperty({ example: 1 })
-  onHoldProjects: number;
-
-  @ApiProperty({ example: 15 })
-  totalTasks: number;
-
-  @ApiProperty({ example: 8 })
-  completedTasks: number;
-
-  @ApiProperty({ example: 7 })
-  pendingTasks: number;
-}
-
-export class MessageResponseDto {
-  @ApiProperty({ example: 'Operation completed successfully' })
-  message: string;
-}
-
-export class ErrorResponseDto {
-  @ApiProperty({ example: 400 })
-  statusCode: number;
-
-  @ApiProperty({ example: 'Bad Request' })
-  error: string;
-
-  @ApiProperty({ example: 'Validation failed' })
-  message: string;
-}
-
-export class CreateProjectDto {
-  @ApiProperty({ description: 'Project name', example: 'My Project' })
-  @IsString()
-  name: string;
-
-  @ApiProperty({ description: 'Project description', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({ enum: ProjectStatus, description: 'Project status' })
-  @IsEnum(ProjectStatus)
-  status: ProjectStatus;
-
-  @ApiProperty({ description: 'Project start date', required: false, type: 'string', format: 'date' })
-  @IsOptional()
-  @IsDateString()
-  startDate?: string;
-
-  @ApiProperty({ description: 'Project end date', required: false, type: 'string', format: 'date' })
-  @IsOptional()
-  @IsDateString()
-  endDate?: string;
-
-  @ApiProperty({ description: 'Project budget', required: false })
-  @IsOptional()
-  @IsNumber()
-  budget?: number;
-
-  @ApiProperty({ description: 'Project color', required: false })
-  @IsOptional()
-  @IsString()
-  color?: string;
-
-  @ApiProperty({ type: 'string', format: 'binary', description: 'Project avatar image', required: false })
-  avatar?: any;
-}
-
-export class UpdateProjectDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsEnum(ProjectStatus)
-  status?: ProjectStatus;
-
-  @IsOptional()
-  @IsDateString()
-  startDate?: string;
-
-  @IsOptional()
-  @IsDateString()
-  endDate?: string;
-
-  @IsOptional()
-  @IsNumber()
-  budget?: number;
-
-  @IsOptional()
-  @IsString()
-  color?: string;
-}
+// Response DTOs
+import {
+  ProjectResponseDto,
+  ProjectListResponseDto,
+  ProjectCreateResponseDto,
+  ProjectStatsResponseDto,
+  MessageResponseDto,
+  ErrorResponseDto
+} from '../responses';
 
 @ApiTags('projects')
 @Controller('projects')

@@ -74,6 +74,7 @@ exports.ChatModule = ChatModule = __decorate([
                 useClass: prisma_user_repository_1.PrismaUserRepository,
             },
         ],
+        exports: [exports.CHAT_REPOSITORY],
     })
 ], ChatModule);
 //# sourceMappingURL=chat.module.js.map

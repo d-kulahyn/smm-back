@@ -20,10 +20,10 @@ export class MongoChatRepository implements ChatRepository {
     return chat ? this.toDomain(chat) : null;
   }
 
-    async findByIdWithExtras(id: string): Promise<ChatWithExtras | null> {
+    async findByIdWithExtras(id: string, userId: string): Promise<ChatWithExtras | null> {
         const chat = await this.chatModel.findById(id).exec();
 
-        return chat ? (await this.getExtraForChat([chat], '')[0]) : null;
+        return chat ? (await this.getExtraForChat([chat], userId)).pop() : null;
     }
 
   async findByProjectId(projectId: string, userId: string): Promise<Chat[]> {

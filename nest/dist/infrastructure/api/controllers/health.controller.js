@@ -9,70 +9,29 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HealthController = exports.HealthResponseDto = void 0;
+exports.HealthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-class HealthResponseDto {
-}
-exports.HealthResponseDto = HealthResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'ok' }),
-    __metadata("design:type", String)
-], HealthResponseDto.prototype, "status", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2024-10-04T10:21:42.177Z' }),
-    __metadata("design:type", String)
-], HealthResponseDto.prototype, "timestamp", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 125.960380934 }),
-    __metadata("design:type", Number)
-], HealthResponseDto.prototype, "uptime", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        type: 'object',
-        properties: {
-            rss: { type: 'number', example: 131166208 },
-            heapTotal: { type: 'number', example: 45330432 },
-            heapUsed: { type: 'number', example: 39939072 },
-            external: { type: 'number', example: 20819384 },
-            arrayBuffers: { type: 'number', example: 18320745 }
-        }
-    }),
-    __metadata("design:type", Object)
-], HealthResponseDto.prototype, "memory", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'v22.20.0' }),
-    __metadata("design:type", String)
-], HealthResponseDto.prototype, "version", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'development' }),
-    __metadata("design:type", String)
-], HealthResponseDto.prototype, "environment", void 0);
+const responses_1 = require("../responses");
 let HealthController = class HealthController {
     constructor() {
         console.log('HealthController');
     }
     check() {
-        console.log('Health check endpoint');
+        const memoryUsage = process.memoryUsage();
         return {
             status: 'ok',
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
-            memory: process.memoryUsage(),
+            memory: {
+                rss: memoryUsage.rss,
+                heapTotal: memoryUsage.heapTotal,
+                heapUsed: memoryUsage.heapUsed,
+                external: memoryUsage.external,
+                arrayBuffers: memoryUsage.arrayBuffers
+            },
             version: process.version,
             environment: process.env.NODE_ENV || 'development'
-        };
-    }
-    ready() {
-        return {
-            status: 'ready',
-            timestamp: new Date().toISOString()
-        };
-    }
-    live() {
-        return {
-            status: 'alive',
-            timestamp: new Date().toISOString()
         };
     }
 };
@@ -85,55 +44,13 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Health check successful',
-        type: HealthResponseDto
+        description: 'Application health status',
+        type: responses_1.HealthResponseDto
     }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", responses_1.HealthResponseDto)
 ], HealthController.prototype, "check", null);
-__decorate([
-    (0, common_1.Get)('ready'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Readiness check',
-        description: 'Check if the application is ready to serve requests'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Application is ready',
-        schema: {
-            type: 'object',
-            properties: {
-                status: { type: 'string' },
-                timestamp: { type: 'string' }
-            }
-        }
-    }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], HealthController.prototype, "ready", null);
-__decorate([
-    (0, common_1.Get)('live'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Liveness check',
-        description: 'Check if the application is alive'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Application is alive',
-        schema: {
-            type: 'object',
-            properties: {
-                status: { type: 'string' },
-                timestamp: { type: 'string' }
-            }
-        }
-    }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], HealthController.prototype, "live", null);
 exports.HealthController = HealthController = __decorate([
     (0, swagger_1.ApiTags)('Health'),
     (0, common_1.Controller)('health'),

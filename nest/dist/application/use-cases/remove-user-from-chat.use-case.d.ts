@@ -1,5 +1,4 @@
 import { ChatMemberRepository } from '../../domain/repositories/chat-member.repository';
-import { ChatRepository } from '../../domain/repositories/chat.repository';
 export interface RemoveUserFromChatDto {
     chatId: string;
     userId: string;
@@ -7,7 +6,6 @@ export interface RemoveUserFromChatDto {
 }
 export declare class RemoveUserFromChatUseCase {
     private readonly chatMemberRepository;
-    private readonly chatRepository;
-    constructor(chatMemberRepository: ChatMemberRepository, chatRepository: ChatRepository);
+    constructor(chatMemberRepository: ChatMemberRepository);
     execute(dto: RemoveUserFromChatDto): Promise<void>;
 }

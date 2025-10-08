@@ -8,18 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaProjectRepository = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../database/prisma.service");
-const chat_service_1 = require("../services/chat.service");
 const project_entity_1 = require("../../domain/entities/project.entity");
 let PrismaProjectRepository = class PrismaProjectRepository {
-    constructor(prisma, chatService) {
+    constructor(prisma, chatRepository) {
         this.prisma = prisma;
-        this.chatService = chatService;
+        this.chatRepository = chatRepository;
     }
-    async findById(id) {
+    async findById(id, userId) {
         const project = await this.prisma.project.findUnique({
             where: { id },
             include: {
@@ -78,7 +80,7 @@ let PrismaProjectRepository = class PrismaProjectRepository {
         });
         if (!project)
             return null;
-        const chats = await this.getProjectChats(id);
+        const chats = await this.getProjectChats(id, userId);
         return this.toDomainWithRelations(project, chats);
     }
     async findByOwnerId(ownerId) {
@@ -106,7 +108,6 @@ let PrismaProjectRepository = class PrismaProjectRepository {
         return projects.map(this.toDomain);
     }
     async create(project) {
-        console.log(project.ownerId);
         const created = await this.prisma.project.create({
             data: {
                 id: project.id,
@@ -230,10 +231,10 @@ let PrismaProjectRepository = class PrismaProjectRepository {
         });
         const totalPages = Math.ceil(total / perPage);
         const projectIds = projects.map(p => p.id);
-        const chatsMap = await this.getProjectChatsMap(projectIds);
+        const chatsMap = await this.getProjectChatsMapWithExtras(projectIds, userId);
         const projectsWithRelations = projects.map(project => {
             const chats = chatsMap.get(project.id) || [];
-            return this.toDomainWithRelations(project, chats);
+            return this.toDomainWithRelationsWithExtras(project, chats);
         });
         return {
             data: projectsWithRelations,
@@ -247,13 +248,32 @@ let PrismaProjectRepository = class PrismaProjectRepository {
             },
         };
     }
-    async getProjectChats(projectId) {
-        return this.chatService.findByProjectId(projectId);
+    async getProjectChats(projectId, userId) {
+        return this.chatRepository.findByProjectId(projectId, userId);
     }
     async getProjectChatsMap(projectIds) {
-        return this.chatService.findByProjectIds(projectIds);
+        return this.chatRepository.findByProjectIds(projectIds);
+    }
+    async getProjectChatsMapWithExtras(projectIds, userId) {
+        return this.chatRepository.findByProjectIdsWithExtras(projectIds, userId);
     }
     toDomainWithRelations(project, chats = []) {
+        const domainProject = new project_entity_1.Project(project.id, project.name, project.ownerId, project.description, project.status, project.startDate, project.endDate, project.budget ? Number(project.budget) : undefined, project.avatar, project.color, project.metadata, project.createdAt, project.updatedAt);
+        if (project.tasks) {
+            domainProject.setTasks(project.tasks);
+        }
+        if (project.members) {
+            domainProject.setMembers(project.members);
+        }
+        if (project.invitations) {
+            domainProject.setInvitations(project.invitations);
+        }
+        if (chats) {
+            domainProject.setChats(chats);
+        }
+        return domainProject;
+    }
+    toDomainWithRelationsWithExtras(project, chats = []) {
         const domainProject = new project_entity_1.Project(project.id, project.name, project.ownerId, project.description, project.status, project.startDate, project.endDate, project.budget ? Number(project.budget) : undefined, project.avatar, project.color, project.metadata, project.createdAt, project.updatedAt);
         if (project.tasks) {
             domainProject.setTasks(project.tasks);
@@ -276,7 +296,7 @@ let PrismaProjectRepository = class PrismaProjectRepository {
 exports.PrismaProjectRepository = PrismaProjectRepository;
 exports.PrismaProjectRepository = PrismaProjectRepository = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        chat_service_1.ChatService])
+    __param(1, (0, common_1.Inject)('CHAT_REPOSITORY')),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, Object])
 ], PrismaProjectRepository);
 //# sourceMappingURL=prisma-project.repository.js.map

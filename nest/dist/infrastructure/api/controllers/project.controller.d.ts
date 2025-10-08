@@ -5,74 +5,9 @@ import { CompleteProjectUseCase } from '../../../application/use-cases/complete-
 import { GetProjectStatsUseCase } from '../../../application/use-cases/get-project-stats.use-case';
 import { ProjectRepository } from '../../../domain/repositories/project.repository';
 import { UserRepository } from '../../../domain/repositories/user.repository';
-import { ProjectStatus } from '../../../domain/enums/project-status.enum';
 import { ProjectResource } from '../resources/project-resource.dto';
 import { FileService } from '../../../shared';
-export declare class ProjectResponseDto {
-    id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    ownerId: string;
-    startDate: string | null;
-    endDate: string | null;
-    budget: number | null;
-    avatar: string | null;
-    color: string | null;
-    createdAt: string;
-    updatedAt: string;
-}
-export declare class ProjectListResponseDto {
-    success: boolean;
-    data: ProjectResponseDto[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-    };
-}
-export declare class ProjectCreateResponseDto {
-    success: boolean;
-    message: string;
-    data: ProjectResponseDto;
-}
-export declare class ProjectStatsResponseDto {
-    totalProjects: number;
-    activeProjects: number;
-    completedProjects: number;
-    onHoldProjects: number;
-    totalTasks: number;
-    completedTasks: number;
-    pendingTasks: number;
-}
-export declare class MessageResponseDto {
-    message: string;
-}
-export declare class ErrorResponseDto {
-    statusCode: number;
-    error: string;
-    message: string;
-}
-export declare class CreateProjectDto {
-    name: string;
-    description?: string;
-    status: ProjectStatus;
-    startDate?: string;
-    endDate?: string;
-    budget?: number;
-    color?: string;
-    avatar?: any;
-}
-export declare class UpdateProjectDto {
-    name?: string;
-    description?: string;
-    status?: ProjectStatus;
-    startDate?: string;
-    endDate?: string;
-    budget?: number;
-    color?: string;
-}
+import { CreateProjectDto, UpdateProjectDto } from '../requests';
 export declare class ProjectController {
     private readonly createProjectUseCase;
     private readonly completeProjectUseCase;
@@ -112,8 +47,8 @@ export declare class ProjectController {
         success: boolean;
         message: string;
     }>;
-    complete(id: string): Promise<ProjectResource>;
-    putOnHold(id: string): Promise<ProjectResource>;
-    cancel(id: string): Promise<ProjectResource>;
-    archive(id: string): Promise<ProjectResource>;
+    complete(id: string, req: AuthenticatedRequest): Promise<ProjectResource>;
+    putOnHold(id: string, req: AuthenticatedRequest): Promise<ProjectResource>;
+    cancel(id: string, req: AuthenticatedRequest): Promise<ProjectResource>;
+    archive(id: string, req: AuthenticatedRequest): Promise<ProjectResource>;
 }

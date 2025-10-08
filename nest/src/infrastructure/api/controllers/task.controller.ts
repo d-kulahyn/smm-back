@@ -13,8 +13,7 @@ import {
   Patch,
   ForbiddenException
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiProperty, ApiQuery, ApiResponse } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsDateString, IsUUID } from 'class-validator';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
 import {
   PermissionsGuard,
@@ -31,211 +30,22 @@ import { PaginationParamsDto } from '../resources/pagination-params.dto';
 import { TaskResource } from '../resources/task-resource.dto';
 import { ResourceNotFoundException, AccessDeniedException } from '../../../shared/exceptions';
 
-export class CreateTaskDto {
-  @ApiProperty({ description: 'Task title', example: 'Complete project documentation' })
-  @IsString()
-  title: string;
+// Request DTOs
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  CreateTaskReminderDto
+} from '../requests';
 
-  @ApiProperty({ description: 'Task description', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({ description: 'Project ID where task belongs' })
-  @IsString()
-  project_id: string;
-
-  @ApiProperty({ enum: TaskPriority, description: 'Task priority', required: false })
-  @IsOptional()
-  @IsEnum(TaskPriority)
-  priority?: TaskPriority;
-
-  @ApiProperty({ enum: TaskStatus, description: 'Task status', required: false })
-  @IsOptional()
-  @IsEnum(TaskStatus)
-  status?: TaskStatus;
-
-  @ApiProperty({ description: 'Task due date', required: false, type: 'string', format: 'date-time' })
-  @IsOptional()
-  @IsDateString()
-  dueDate?: string;
-
-  @ApiProperty({ description: 'User ID to assign task to', required: false })
-  @IsOptional()
-  @IsUUID()
-  assignedTo?: string;
-
-  @ApiProperty({ description: 'Additional notes', required: false })
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @ApiProperty({ description: 'Reminder time in hours before the due date', required: false })
-  @IsOptional()
-  reminderBeforeHours?: number;
-}
-
-export class UpdateTaskDto {
-  @ApiProperty({ description: 'Task title', required: false })
-  @IsOptional()
-  @IsString()
-  title?: string;
-
-  @ApiProperty({ description: 'Task description', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({ enum: TaskPriority, description: 'Task priority', required: false })
-  @IsOptional()
-  @IsEnum(TaskPriority)
-  priority?: TaskPriority;
-
-  @ApiProperty({ enum: TaskStatus, description: 'Task status', required: false })
-  @IsOptional()
-  @IsEnum(TaskStatus)
-  status?: TaskStatus;
-
-  @ApiProperty({ description: 'Task due date', required: false, type: 'string', format: 'date-time' })
-  @IsOptional()
-  @IsDateString()
-  dueDate?: string;
-
-  @ApiProperty({ description: 'User ID to assign task to', required: false })
-  @IsOptional()
-  @IsUUID()
-  assignedTo?: string;
-
-  @ApiProperty({ description: 'Additional notes', required: false })
-  @IsOptional()
-  @IsString()
-  notes?: string;
-}
-
-export class CreateTaskReminderDto {
-  @ApiProperty({ description: 'When to remind', type: 'string', format: 'date-time' })
-  @IsDateString()
-  remindAt: string;
-
-  @ApiProperty({ description: 'Reminder message', required: false })
-  @IsOptional()
-  @IsString()
-  message?: string;
-}
-
-// Response DTOs для Swagger документации
-export class TaskResponseDto {
-  @ApiProperty({ example: 'clm1abc123def456' })
-  id: string;
-
-  @ApiProperty({ example: 'Complete project documentation' })
-  title: string;
-
-  @ApiProperty({ example: 'Write comprehensive docs for the project', nullable: true })
-  description: string | null;
-
-  @ApiProperty({ example: 'pending' })
-  status: string;
-
-  @ApiProperty({ example: 'high' })
-  priority: string;
-
-  @ApiProperty({ example: 'clm1project123456' })
-  project_id: string;
-
-  @ApiProperty({ example: 'clm1user123456', nullable: true })
-  assigned_to: string | null;
-
-  @ApiProperty({ example: '2024-12-31', nullable: true })
-  due_date: string | null;
-
-  @ApiProperty({ example: null, nullable: true })
-  completed_at: string | null;
-
-  @ApiProperty({ example: 'Additional notes', nullable: true })
-  notes: string | null;
-
-  @ApiProperty({ example: false })
-  is_completed: boolean;
-
-  @ApiProperty({ example: false })
-  is_overdue: boolean;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  created_at: string;
-
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  updated_at: string;
-}
-
-export class TaskListResponseDto {
-  @ApiProperty({ example: true })
-  success: boolean;
-
-  @ApiProperty({ type: [TaskResponseDto] })
-  data: TaskResponseDto[];
-
-  @ApiProperty({
-    type: 'object',
-    properties: {
-      total: { type: 'number', example: 25 },
-      page: { type: 'number', example: 1 },
-      limit: { type: 'number', example: 10 }
-    }
-  })
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-  };
-}
-
-export class TaskCreateResponseDto {
-  @ApiProperty({ example: true })
-  success: boolean;
-
-  @ApiProperty({ example: 'Task created successfully' })
-  message: string;
-
-  @ApiProperty({ type: TaskResponseDto })
-  data: TaskResponseDto;
-}
-
-export class TaskStatsResponseDto {
-  @ApiProperty({ example: 25 })
-  total_tasks: number;
-
-  @ApiProperty({ example: 10 })
-  completed_tasks: number;
-
-  @ApiProperty({ example: 12 })
-  pending_tasks: number;
-
-  @ApiProperty({ example: 3 })
-  in_progress_tasks: number;
-
-  @ApiProperty({ example: 2 })
-  overdue_tasks: number;
-
-  @ApiProperty({ example: 40 })
-  completion_rate: number;
-}
-
-export class MessageResponseDto {
-  @ApiProperty({ example: 'Task updated successfully' })
-  message: string;
-}
-
-export class ErrorResponseDto {
-  @ApiProperty({ example: 400 })
-  statusCode: number;
-
-  @ApiProperty({ example: 'Bad Request' })
-  error: string;
-
-  @ApiProperty({ example: 'Validation failed' })
-  message: string;
-}
+// Response DTOs
+import {
+  TaskResponseDto,
+  TaskListResponseDto,
+  TaskCreateResponseDto,
+  TaskStatsResponseDto,
+  MessageResponseDto,
+  ErrorResponseDto
+} from '../responses';
 
 @ApiTags('tasks')
 @Controller('tasks')

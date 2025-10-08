@@ -8,94 +8,13 @@ import { ChatRepository } from '../../../domain/repositories/chat.repository';
 import { MessageRepository } from '../../../domain/repositories/message.repository';
 import { ChatMemberRepository } from '../../../domain/repositories/chat-member.repository';
 import { UserRepository } from '../../../domain/repositories/user.repository';
+import { PrismaService } from '../../database/prisma.service';
 import { ChatPolicy } from '../../../shared';
-import { ChatStatus } from '../../../domain/enums/chat-status.enum';
-import { MessageType } from '../../../domain/enums/message-type.enum';
-import { ChatMemberRole } from '../../../domain/entities/chat-member.entity';
 import { ChatResource } from '../resources/chat-resource.dto';
 import { MessageResource } from '../resources/message-resource.dto';
 import { ChatMemberResource } from '../resources/chat-member-resource.dto';
 import { FileService } from '../../../shared';
-export declare class ChatResponseDto {
-    id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    projectId: string;
-    createdBy: string;
-    createdAt: string;
-    updatedAt: string;
-    unreadCount?: number;
-}
-export declare class MessageResponseDto {
-    id: string;
-    content: string;
-    type: string;
-    chatId: string;
-    senderId: string;
-    fileUrl: string | null;
-    createdAt: string;
-    isReadByCurrentUser?: boolean;
-}
-export declare class ChatMemberResponseDto {
-    id: string;
-    chatId: string;
-    userId: string;
-    role: string;
-    joinedAt: string;
-}
-export declare class ChatListResponseDto {
-    success: boolean;
-    data: ChatResponseDto[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-    };
-}
-export declare class MessageListResponseDto {
-    success: boolean;
-    data: MessageResponseDto[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-    };
-}
-export declare class MessageCreateResponseDto {
-    success: boolean;
-    message: string;
-    data: MessageResponseDto;
-}
-export declare class ChatCreateResponseDto {
-    success: boolean;
-    message: string;
-    data: ChatResponseDto;
-}
-export declare class MessageDto {
-    message: string;
-}
-export declare class ErrorResponseDto {
-    statusCode: number;
-    error: string;
-    message: string;
-}
-export declare class CreateChatDto {
-    name: string;
-    description?: string;
-    status?: ChatStatus;
-}
-export declare class SendMessageDto {
-    content: string;
-    type?: MessageType;
-}
-export declare class AddUserToChatDto {
-    userId: string;
-    role?: ChatMemberRole;
-}
-export declare class MarkMessagesAsReadDto {
-    messageIds: string[];
-}
+import { CreateChatDto, SendMessageDto, AddUserToChatDto, MarkMessagesAsReadDto } from '../requests';
 export declare class ChatController {
     private readonly createChatUseCase;
     private readonly sendMessageUseCase;
@@ -110,7 +29,8 @@ export declare class ChatController {
     private readonly messageRepository;
     private readonly chatMemberRepository;
     private readonly userRepository;
-    constructor(createChatUseCase: CreateChatUseCase, sendMessageUseCase: SendMessageUseCase, addUserToChatUseCase: AddUserToChatUseCase, removeUserFromChatUseCase: RemoveUserFromChatUseCase, markMessageAsReadUseCase: MarkMessageAsReadUseCase, markAllMessagesAsReadUseCase: MarkAllMessagesAsReadUseCase, markMultipleMessagesAsReadUseCase: MarkMultipleMessagesAsReadUseCase, fileService: FileService, chatPolicy: ChatPolicy, chatRepository: ChatRepository, messageRepository: MessageRepository, chatMemberRepository: ChatMemberRepository, userRepository: UserRepository);
+    private readonly prismaService;
+    constructor(createChatUseCase: CreateChatUseCase, sendMessageUseCase: SendMessageUseCase, addUserToChatUseCase: AddUserToChatUseCase, removeUserFromChatUseCase: RemoveUserFromChatUseCase, markMessageAsReadUseCase: MarkMessageAsReadUseCase, markAllMessagesAsReadUseCase: MarkAllMessagesAsReadUseCase, markMultipleMessagesAsReadUseCase: MarkMultipleMessagesAsReadUseCase, fileService: FileService, chatPolicy: ChatPolicy, chatRepository: ChatRepository, messageRepository: MessageRepository, chatMemberRepository: ChatMemberRepository, userRepository: UserRepository, prismaService: PrismaService);
     index(projectId: string, req: AuthenticatedRequest, page?: string, perPage?: string): Promise<{
         success: boolean;
         data: any[];
@@ -129,7 +49,7 @@ export declare class ChatController {
         success: boolean;
         data: ChatResource;
     }>;
-    getMessages(projectId: string, chatId: string, req: AuthenticatedRequest, page?: string, perPage?: string): Promise<{
+    getMessages(projectId: string, chatId: string, req: AuthenticatedRequest, perPage?: number, createdAt?: string, sort?: 'asc' | 'desc'): Promise<{
         success: boolean;
         data: MessageResource[];
         pagination: {

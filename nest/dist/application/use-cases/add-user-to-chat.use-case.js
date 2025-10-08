@@ -15,28 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AddUserToChatUseCase = void 0;
 const common_1 = require("@nestjs/common");
 const chat_member_entity_1 = require("../../domain/entities/chat-member.entity");
-const exceptions_1 = require("../../shared/exceptions");
-const uuid_1 = require("uuid");
+const uuid = require("uuid");
 let AddUserToChatUseCase = class AddUserToChatUseCase {
-    constructor(chatMemberRepository, chatRepository) {
+    constructor(chatMemberRepository) {
         this.chatMemberRepository = chatMemberRepository;
-        this.chatRepository = chatRepository;
     }
     async execute(dto) {
-        const chat = await this.chatRepository.findById(dto.chatId);
-        if (!chat) {
-            throw new exceptions_1.ResourceNotFoundException('Chat', dto.chatId);
-        }
-        const adderMember = await this.chatMemberRepository.findByChatAndUser(dto.chatId, dto.addedBy);
-        if (!adderMember || (adderMember.role !== chat_member_entity_1.ChatMemberRole.ADMIN && adderMember.role !== chat_member_entity_1.ChatMemberRole.MODERATOR)) {
-            throw new exceptions_1.AccessDeniedException('You do not have permission to add users to this chat');
-        }
-        const existingMember = await this.chatMemberRepository.findByChatAndUser(dto.chatId, dto.userId);
-        if (existingMember) {
-            throw new exceptions_1.BusinessException('User is already a member of this chat', 'USER_ALREADY_MEMBER');
-        }
         const chatMember = chat_member_entity_1.ChatMember.create({
-            id: (0, uuid_1.v4)(),
+            id: uuid.v4(),
             chatId: dto.chatId,
             userId: dto.userId,
             role: dto.role || chat_member_entity_1.ChatMemberRole.MEMBER,
@@ -48,7 +34,6 @@ exports.AddUserToChatUseCase = AddUserToChatUseCase;
 exports.AddUserToChatUseCase = AddUserToChatUseCase = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)('CHAT_MEMBER_REPOSITORY')),
-    __param(1, (0, common_1.Inject)('CHAT_REPOSITORY')),
-    __metadata("design:paramtypes", [Object, Object])
+    __metadata("design:paramtypes", [Object])
 ], AddUserToChatUseCase);
 //# sourceMappingURL=add-user-to-chat.use-case.js.map

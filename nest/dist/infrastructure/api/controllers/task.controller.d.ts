@@ -4,76 +4,7 @@ import { TaskRepository } from '../../../domain/repositories/task.repository';
 import { UserRepository } from '../../../domain/repositories/user.repository';
 import { TaskPriority, TaskStatus } from '../../../domain/enums';
 import { TaskResource } from '../resources/task-resource.dto';
-export declare class CreateTaskDto {
-    title: string;
-    description?: string;
-    project_id: string;
-    priority?: TaskPriority;
-    status?: TaskStatus;
-    dueDate?: string;
-    assignedTo?: string;
-    notes?: string;
-    reminderBeforeHours?: number;
-}
-export declare class UpdateTaskDto {
-    title?: string;
-    description?: string;
-    priority?: TaskPriority;
-    status?: TaskStatus;
-    dueDate?: string;
-    assignedTo?: string;
-    notes?: string;
-}
-export declare class CreateTaskReminderDto {
-    remindAt: string;
-    message?: string;
-}
-export declare class TaskResponseDto {
-    id: string;
-    title: string;
-    description: string | null;
-    status: string;
-    priority: string;
-    project_id: string;
-    assigned_to: string | null;
-    due_date: string | null;
-    completed_at: string | null;
-    notes: string | null;
-    is_completed: boolean;
-    is_overdue: boolean;
-    created_at: string;
-    updated_at: string;
-}
-export declare class TaskListResponseDto {
-    success: boolean;
-    data: TaskResponseDto[];
-    pagination: {
-        total: number;
-        page: number;
-        limit: number;
-    };
-}
-export declare class TaskCreateResponseDto {
-    success: boolean;
-    message: string;
-    data: TaskResponseDto;
-}
-export declare class TaskStatsResponseDto {
-    total_tasks: number;
-    completed_tasks: number;
-    pending_tasks: number;
-    in_progress_tasks: number;
-    overdue_tasks: number;
-    completion_rate: number;
-}
-export declare class MessageResponseDto {
-    message: string;
-}
-export declare class ErrorResponseDto {
-    statusCode: number;
-    error: string;
-    message: string;
-}
+import { CreateTaskDto, UpdateTaskDto } from '../requests';
 export declare class TaskController {
     private readonly createTaskUseCase;
     private readonly taskPolicy;
