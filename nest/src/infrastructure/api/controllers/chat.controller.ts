@@ -259,6 +259,7 @@ export class ChatController {
 
         const paginatedResult = await this.messageRepository.findByChatId(
             chatId,
+            req.user.userId,
             createdAt,
             sort,
             perPage

@@ -23,11 +23,12 @@ export class MongoMessageRepository implements MessageRepository {
         return this.toDomain(message, readBy[id] || []);
     }
 
-    async findByChatId(chatId: string, createdAt?: string, sort?: 'asc' | 'desc', per_page: number = 10): Promise<{
+    async findByChatId(chatId: string, userId?: string, createdAt?: string, sort?: 'asc' | 'desc', per_page: number = 10): Promise<{
         data: Message[];
         total: number;
     }> {
-        const filter: any = {chatId};
+        let filter: any = {chatId};
+        let sortCriteria: any = {createdAt: -1};
 
         if (createdAt && sort) {
             if (sort === 'asc') {
@@ -35,13 +36,28 @@ export class MongoMessageRepository implements MessageRepository {
             } else if (sort === 'desc') {
                 filter.createdAt = {$lt: new Date(createdAt)};
             }
+        } else if (!createdAt && !sort && userId) {
+            const readMessageIds = await this.messageReadModel
+                .find({userId})
+                .select('messageId')
+                .exec();
+
+            const readIds = readMessageIds.map(read => read.messageId);
+
+            filter = {
+                chatId,
+                senderId: {$ne: userId},
+                _id: {$nin: readIds}
+            };
+
+            sortCriteria = {createdAt: 1};
         }
 
         const [messages, total] = await Promise.all([
             this.messageModel
                 .find(filter)
                 .limit(per_page)
-                .sort({createdAt: -1})
+                .sort(sortCriteria)
                 .exec(),
             this.messageModel.countDocuments({chatId})
         ]);
