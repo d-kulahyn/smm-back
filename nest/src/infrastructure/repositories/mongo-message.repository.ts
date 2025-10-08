@@ -1,8 +1,7 @@
-import {Injectable, Inject} from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import {Model} from 'mongoose';
 import {MessageRepository} from '../../domain/repositories/message.repository';
-import {ChatMemberRepository} from '../../domain/repositories/chat-member.repository';
 import {Message} from '../../domain/entities/message.entity';
 import {MessageType} from '../../domain/enums/message-type.enum';
 import {Message as MessageSchema, MessageDocument} from '../database/schemas/message.schema';
@@ -18,7 +17,10 @@ export class MongoMessageRepository implements MessageRepository {
 
     async findById(id: string): Promise<Message | null> {
         const message = await this.messageModel.findById(id).exec();
-        return message ? this.toDomain(message) : null;
+        if (!message) return null;
+
+        const readBy = await this.getReadByUsers([id]);
+        return this.toDomain(message, readBy[id] || []);
     }
 
     async findByChatId(chatId: string, createdAt?: string, sort?: 'asc' | 'desc', per_page: number = 10): Promise<{
@@ -44,8 +46,11 @@ export class MongoMessageRepository implements MessageRepository {
             this.messageModel.countDocuments({chatId})
         ]);
 
+        const messageIds = messages.map(msg => msg._id.toString());
+        const readByData = await this.getReadByUsers(messageIds);
+
         return {
-            data: messages.map(this.toDomain),
+            data: messages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || [])),
             total,
         };
     }
@@ -53,14 +58,16 @@ export class MongoMessageRepository implements MessageRepository {
     async create(message: Message): Promise<Message> {
         const createdMessage = new this.messageModel(this.toDocument(message));
         const savedMessage = await createdMessage.save();
-        return this.toDomain(savedMessage);
+        const readBy = await this.getReadByUsers([savedMessage._id.toString()]);
+        return this.toDomain(savedMessage, readBy[savedMessage._id.toString()] || []);
     }
 
     async update(id: string, updates: Partial<Message>): Promise<Message> {
         const updatedMessage = await this.messageModel
             .findByIdAndUpdate(id, updates, {new: true})
             .exec();
-        return this.toDomain(updatedMessage);
+        const readBy = await this.getReadByUsers([id]);
+        return this.toDomain(updatedMessage, readBy[id] || []);
     }
 
     async delete(id: string): Promise<void> {
@@ -113,7 +120,10 @@ export class MongoMessageRepository implements MessageRepository {
             })
             .exec();
 
-        return messages.map(this.toDomain);
+        const messageIds = messages.map(msg => msg._id.toString());
+        const readByData = await this.getReadByUsers(messageIds);
+
+        return messages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || []));
     }
 
     async countUnreadMessages(chatId: string, userId: string): Promise<number> {
@@ -133,7 +143,9 @@ export class MongoMessageRepository implements MessageRepository {
 
     async findByIdIn(ids: string[]): Promise<Message[]> {
         const messages = await this.messageModel.find({_id: {$in: ids}}).exec();
-        return messages.map(this.toDomain);
+        const readByData = await this.getReadByUsers(ids);
+
+        return messages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || []));
     }
 
     async deleteManyByChatId(chatId: string): Promise<void> {
@@ -146,10 +158,31 @@ export class MongoMessageRepository implements MessageRepository {
             .sort({createdAt: -1})
             .exec();
 
-        return message ? this.toDomain(message) : null;
+        if (!message) return null;
+
+        const readBy = await this.getReadByUsers([message._id.toString()]);
+        return this.toDomain(message, readBy[message._id.toString()] || []);
     }
 
-    private toDomain(doc: any): Message {
+    private async getReadByUsers(messageIds: string[]): Promise<{[messageId: string]: string[]}> {
+        const readRecords = await this.messageReadModel
+            .find({messageId: {$in: messageIds}})
+            .select('messageId userId')
+            .exec();
+
+        const readByMap: {[messageId: string]: string[]} = {};
+
+        readRecords.forEach(record => {
+            if (!readByMap[record.messageId]) {
+                readByMap[record.messageId] = [];
+            }
+            readByMap[record.messageId].push(record.userId);
+        });
+
+        return readByMap;
+    }
+
+    private toDomain(doc: any, readBy: string[] = []): Message {
         return new Message(
             doc._id.toString(),
             doc.chatId,
@@ -159,7 +192,7 @@ export class MongoMessageRepository implements MessageRepository {
             doc.fileUrl || null,
             doc.createdAt,
             doc.updatedAt,
-            doc.readBy || [],
+            readBy,
         );
     }
 
