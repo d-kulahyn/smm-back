@@ -60,7 +60,7 @@ export class MessageResource {
   }
 
   withReadStatus(userId: string): MessageResource {
-    this.isReadByCurrentUser = this.readBy?.includes(userId);
+    this.isReadByCurrentUser = this.readBy?.includes(userId) || userId === this.senderId;
     return this;
   }
 
