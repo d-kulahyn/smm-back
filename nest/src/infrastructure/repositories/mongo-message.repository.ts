@@ -30,33 +30,90 @@ export class MongoMessageRepository implements MessageRepository {
         let filter: any = {chatId};
         let sortCriteria: any = {createdAt: -1};
 
+        const limit = Math.max(1, Math.min(100, Number(per_page) || 10));
+
         if (createdAt && sort) {
             if (sort === 'asc') {
                 filter.createdAt = {$gt: new Date(createdAt)};
             } else if (sort === 'desc') {
                 filter.createdAt = {$lt: new Date(createdAt)};
             }
+
+            const [messages, total] = await Promise.all([
+                this.messageModel
+                    .find(filter)
+                    .limit(limit)
+                    .sort(sortCriteria)
+                    .exec(),
+                this.messageModel.countDocuments({chatId})
+            ]);
+
+            const messageIds = messages.map(msg => msg._id.toString());
+            const readByData = await this.getReadByUsers(messageIds);
+
+            return {
+                data: messages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || [])),
+                total,
+            };
         } else if (!createdAt && !sort && userId) {
+
             const readMessageIds = await this.messageReadModel
-                .find({userId})
+                .find({userId, chatId})
+                .limit(limit)
                 .select('messageId')
                 .exec();
 
             const readIds = readMessageIds.map(read => read.messageId);
 
-            filter = {
-                chatId,
-                senderId: {$ne: userId},
-                _id: {$nin: readIds}
-            };
+            const messages = await this.messageModel.aggregate([
+                {
+                    $match: {chatId}
+                },
+                {
+                    $addFields: {
+                        isRead: {
+                            $cond: {
+                                if: {$in: ["$_id", readIds]},
+                                then: 1,
+                                else: 0
+                            }
+                        },
+                        isOwnMessage: {
+                            $cond: {
+                                if: {$eq: ["$senderId", userId]},
+                                then: 1,
+                                else: 0
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        isRead: 1,        // Сначала непрочитанные (0), потом прочитанные (1)
+                        createdAt: -1     // Внутри каждой группы сортируем по времени (новые сначала)
+                    }
+                },
+                {
+                    $limit: limit
+                }
+            ]).exec();
 
-            sortCriteria = {createdAt: 1};
+            const total = await this.messageModel.countDocuments({chatId});
+
+            const messageIds = messages.map(msg => msg._id.toString());
+            const readByData = await this.getReadByUsers(messageIds);
+
+            return {
+                data: messages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || [])),
+                total,
+            };
         }
 
+        // Обычный запрос без фильтров
         const [messages, total] = await Promise.all([
             this.messageModel
                 .find(filter)
-                .limit(per_page)
+                .limit(limit)
                 .sort(sortCriteria)
                 .exec(),
             this.messageModel.countDocuments({chatId})
