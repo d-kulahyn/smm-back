@@ -56,31 +56,41 @@ export class MongoMessageRepository implements MessageRepository {
                 total,
             };
         } else if (!createdAt && !sort && userId) {
-
-            const readMessageIds = await this.messageReadModel
-                .find({userId, chatId})
-                .limit(limit)
-                .select('messageId')
-                .exec();
-
-            const readIds = readMessageIds.map(read => read.messageId);
-
             const messages = await this.messageModel.aggregate([
                 {
                     $match: {chatId}
                 },
                 {
+                    $lookup: {
+                        from: 'messagereads',
+                        let: { messageId: '$_id', targetUserId: userId },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ['$messageId', '$$messageId'] },
+                                            { $eq: ['$userId', '$$targetUserId'] }
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        as: 'readInfo'
+                    }
+                },
+                {
                     $addFields: {
                         isRead: {
                             $cond: {
-                                if: {$in: ["$_id", readIds]},
+                                if: { $gt: [{ $size: '$readInfo' }, 0] },
                                 then: 1,
                                 else: 0
                             }
                         },
                         isOwnMessage: {
                             $cond: {
-                                if: {$eq: ["$senderId", userId]},
+                                if: { $eq: ['$senderId', userId] },
                                 then: 1,
                                 else: 0
                             }
@@ -90,11 +100,16 @@ export class MongoMessageRepository implements MessageRepository {
                 {
                     $sort: {
                         isRead: 1,        // Сначала непрочитанные (0), потом прочитанные (1)
-                        createdAt: -1     // Внутри каждой группы сортируем по времени (новые сначала)
+                        createdAt: 1      // Внутри каждой группы сортируем по времени (старые сначала)
                     }
                 },
                 {
                     $limit: limit
+                },
+                {
+                    $project: {
+                        readInfo: 0  // Исключаем временное поле из результата
+                    }
                 }
             ]).exec();
 
