@@ -61,7 +61,7 @@ export class MongoMessageRepository implements MessageRepository {
             if (lastReadMessage) {
                 filter.createdAt = {$gt: new Date(createdAt)};
             }
-            const messages = await this.messageModel.find({chatId: chatId, ...filter});
+            const messages = await this.messageModel.find({chatId: chatId, ...filter}).limit(limit).exec();
 
             const total = await this.messageModel.countDocuments({chatId});
 
