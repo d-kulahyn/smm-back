@@ -56,62 +56,12 @@ export class MongoMessageRepository implements MessageRepository {
                 total,
             };
         } else if (!createdAt && !sort && userId) {
-            const messages = await this.messageModel.aggregate([
-                {
-                    $match: {chatId}
-                },
-                {
-                    $lookup: {
-                        from: 'messagereads',
-                        let: { messageId: '$_id', targetUserId: userId },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ['$messageId', '$$messageId'] },
-                                            { $eq: ['$userId', '$$targetUserId'] }
-                                        ]
-                                    }
-                                }
-                            }
-                        ],
-                        as: 'readInfo'
-                    }
-                },
-                {
-                    $addFields: {
-                        isRead: {
-                            $cond: {
-                                if: { $gt: [{ $size: '$readInfo' }, 0] },
-                                then: 1,
-                                else: 0
-                            }
-                        },
-                        isOwnMessage: {
-                            $cond: {
-                                if: { $eq: ['$senderId', userId] },
-                                then: 1,
-                                else: 0
-                            }
-                        }
-                    }
-                },
-                {
-                    $sort: {
-                        isRead: 1,        // Сначала непрочитанные (0), потом прочитанные (1)
-                        // createdAt: -1      // Внутри каждой группы сортируем по времени (старые сначала)
-                    }
-                },
-                {
-                    $limit: limit
-                },
-                {
-                    $project: {
-                        readInfo: 0  // Исключаем временное поле из результата
-                    }
-                }
-            ]).exec();
+            const lastReadMessage = await this.messageReadModel.findOne({userId: userId, chatId: chatId}).exec();
+            const filter: any =  {};
+            if (lastReadMessage) {
+                filter.createdAt = {$gt: new Date(createdAt)};
+            }
+            const messages = await this.messageModel.find({chatId: chatId, ...filter});
 
             const total = await this.messageModel.countDocuments({chatId});
 
