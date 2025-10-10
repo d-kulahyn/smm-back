@@ -126,22 +126,28 @@ export class MongoMessageRepository implements MessageRepository {
     }
 
     async markAsRead(messageId: string, userId: string, chatId: string): Promise<void> {
-        const message = await this.messageModel.findOne({_id: messageId}).exec();
-        await this.messageReadModel.findOneAndUpdate(
-            {messageId, userId, chatId},
-            {
-                $set: {
-                    readAt: new Date()
+        try {
+            const message = await this.messageModel.findOne({_id: messageId}).exec();
+            await this.messageReadModel.findOneAndUpdate(
+                {messageId, userId, chatId},
+                {
+                    $set: {
+                        readAt: new Date()
+                    },
+                    $setOnInsert: {
+                        messageId,
+                        userId,
+                        chatId,
+                        messageCreatedAt: message.createdAt
+                    }
                 },
-                $setOnInsert: {
-                    messageId,
-                    userId,
-                    chatId,
-                    messageCreatedAt: new Date(message.createdAt)
-                }
-            },
-            {upsert: true}
-        ).exec();
+                {upsert: true}
+            ).exec();
+        } catch (error) {
+            if (error.code !== 11000) {
+                throw error;
+            }
+        }
     }
 
     async markAllAsRead(chatId: string, userId: string): Promise<void> {
@@ -182,7 +188,21 @@ export class MongoMessageRepository implements MessageRepository {
         }));
 
         if (operations.length > 0) {
-            await this.messageReadModel.bulkWrite(operations);
+            try {
+                await this.messageReadModel.bulkWrite(operations, { ordered: false });
+            } catch (error) {
+                // Если это MongoBulkWriteError с дублированными ключами, проверяем детали
+                if (error.name === 'MongoBulkWriteError') {
+                    // Проверяем, есть ли ошибки отличные от дублирования ключей
+                    const nonDuplicateErrors = error.writeErrors?.filter(err => err.code !== 11000) || [];
+                    if (nonDuplicateErrors.length > 0) {
+                        throw error; // Есть другие ошибки, пробрасываем их
+                    }
+                    // Все ошибки связаны с дублированием ключей - игнорируем
+                } else {
+                    throw error; // Другой тип ошибки - пробрасываем
+                }
+            }
         }
     }
 

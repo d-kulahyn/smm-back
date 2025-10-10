@@ -557,14 +557,14 @@ export class ChatController {
             throw new AccessDeniedException('You do not have permission to access this chat');
         }
 
-        await this.markAllMessagesAsReadUseCase.execute({
+        const messages = await this.markAllMessagesAsReadUseCase.execute({
             chatId,
             userId: req.user.userId,
         });
 
         return {
             success: true,
-            message: 'All messages marked as read'
+            data: MessageResource.collection(messages, req.user.userId)
         };
     }
 

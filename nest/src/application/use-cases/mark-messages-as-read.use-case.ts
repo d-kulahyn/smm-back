@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { ChatMemberRepository } from '../../domain/repositories/chat-member.repository';
 import { ResourceNotFoundException, AccessDeniedException } from '../../shared/exceptions';
+import {Message} from "../../domain/entities/message.entity";
 
 export interface MarkMessageAsReadDto {
   messageId: string;
@@ -54,14 +55,14 @@ export class MarkAllMessagesAsReadUseCase {
     private readonly chatMemberRepository: ChatMemberRepository,
   ) {}
 
-  async execute(dto: MarkAllMessagesAsReadDto): Promise<void> {
+  async execute(dto: MarkAllMessagesAsReadDto): Promise<Message[]> {
     // Check if user is member of the chat
     const isMember = await this.chatMemberRepository.isUserInChat(dto.chatId, dto.userId);
     if (!isMember) {
       throw new AccessDeniedException('You are not a member of this chat');
     }
 
-    await this.messageRepository.markAllAsRead(dto.chatId, dto.userId);
+    return await this.messageRepository.markAllAsRead(dto.chatId, dto.userId);
   }
 }
 

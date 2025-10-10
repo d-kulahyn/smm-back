@@ -1,5 +1,6 @@
 import { Message } from '../../../domain/entities/message.entity';
 import { User } from '../../../domain/entities/user.entity';
+import {userInfo} from "node:os";
 
 // Простое представление пользователя для сообщения
 export class MessageSenderResource {
@@ -55,8 +56,8 @@ export class MessageResource {
     return new MessageResource(message);
   }
 
-  static collection(messages: Message[]): MessageResource[] {
-    return messages.map(message => MessageResource.fromEntity(message));
+  static collection(messages: Message[], userId: string ): MessageResource[] {
+    return messages.map(message => MessageResource.fromEntity(message).withReadStatus(userId));
   }
 
   withReadStatus(userId: string): MessageResource {
