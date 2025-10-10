@@ -150,7 +150,7 @@ export class MongoMessageRepository implements MessageRepository {
         }
     }
 
-    async markAllAsRead(chatId: string, userId: string): Promise<void> {
+    async markAllAsRead(chatId: string, userId: string): Promise<Message[]> {
         const lastRead = await this.messageReadModel.findOne({userId, chatId}).sort({messageCreatedAt: -1}).exec();
         const filter: any = {chatId};
         if (lastRead) {
@@ -166,6 +166,12 @@ export class MongoMessageRepository implements MessageRepository {
 
             await this.markMultipleAsRead(domainMessages, userId, chatId);
         }
+
+        const messages = await this.messageModel.find({chatId}).limit(10).sort({createdAt: 1}).exec();
+        const messageIds = messages.map(msg => msg._id.toString());
+        const readByData = await this.getReadByUsers(messageIds);
+
+        return (messages).map(msg => this.toDomain(msg, readByData[msg._id.toString()] || []));
     }
 
     async markMultipleAsRead(messages: Message[], userId: string, chatId: string): Promise<void> {

@@ -17,7 +17,7 @@ export interface MessageRepository {
 
     markAsRead(messageId: string, userId: string, chatId: string): Promise<void>;
 
-    markAllAsRead(chatId: string, userId: string): Promise<void>;
+    markAllAsRead(chatId: string, userId: string): Promise<Message[]>;
 
     markMultipleAsRead(messages: Message[], userId: string, chatId: string): Promise<void>;
 
