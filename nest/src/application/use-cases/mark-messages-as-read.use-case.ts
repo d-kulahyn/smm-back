@@ -13,6 +13,7 @@ export interface MarkMessageAsReadDto {
 export interface MarkAllMessagesAsReadDto {
   chatId: string;
   userId: string;
+  limit: number
 }
 
 export interface MarkMultipleMessagesAsReadDto {
@@ -62,7 +63,7 @@ export class MarkAllMessagesAsReadUseCase {
       throw new AccessDeniedException('You are not a member of this chat');
     }
 
-    return await this.messageRepository.markAllAsRead(dto.chatId, dto.userId);
+    return await this.messageRepository.markAllAsRead(dto.chatId, dto.userId, dto.limit);
   }
 }
 

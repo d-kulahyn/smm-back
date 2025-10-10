@@ -541,6 +541,7 @@ export class ChatController {
     async markAllMessagesAsRead(
         @Param('projectId') projectId: string,
         @Param('id') chatId: string,
+        @Query('limit') limit: number,
         @Request() req: AuthenticatedRequest
     ) {
         const chat = await this.chatRepository.findByIdWithExtras(chatId, req.user.userId);
@@ -560,6 +561,7 @@ export class ChatController {
         const messages = await this.markAllMessagesAsReadUseCase.execute({
             chatId,
             userId: req.user.userId,
+            limit
         });
 
         return {
