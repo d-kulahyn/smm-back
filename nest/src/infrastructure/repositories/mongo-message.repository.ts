@@ -129,7 +129,7 @@ export class MongoMessageRepository implements MessageRepository {
         const message = await this.messageModel.findOne({_id: messageId}).exec();
         await this.messageReadModel.findOneAndUpdate(
             {messageId, userId, chatId},
-            {messageId, userId, readAt: new Date(), messageCreatedAt: new Date(message.createdAt)},
+            {messageId, userId, readAt: new Date(), messageCreatedAt: message.createdAt},
             {upsert: true}
         ).exec();
     }
@@ -152,7 +152,7 @@ export class MongoMessageRepository implements MessageRepository {
         const operations = messages.map(message => ({
             updateOne: {
                 filter: {messageId: message.id, userId, chatId},
-                update: {messageId: message.id, userId, chatId, readAt: new Date(), messageCreatedAt: new Date(message.createdAt)},
+                update: {messageId: message.id, userId, chatId, readAt: new Date(), messageCreatedAt: message.createdAt},
                 upsert: true
             }
         }));

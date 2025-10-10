@@ -17,6 +17,9 @@ export class MessageRead {
     @Prop({required: true})
     userId: string;
 
+    @Prop({required: true})
+    chatId: string;
+
     @Prop({required: true, default: () => new Date()})
     readAt: Date;
 
