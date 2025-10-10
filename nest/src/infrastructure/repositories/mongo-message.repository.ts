@@ -125,26 +125,40 @@ export class MongoMessageRepository implements MessageRepository {
         await this.messageModel.findByIdAndDelete(id).exec();
     }
 
-    async markAsRead(messageId: string, userId: string, chatId): Promise<void> {
+    async markAsRead(messageId: string, userId: string, chatId: string): Promise<void> {
         const message = await this.messageModel.findOne({_id: messageId}).exec();
         await this.messageReadModel.findOneAndUpdate(
             {messageId, userId, chatId},
-            {messageId, userId, readAt: new Date(), messageCreatedAt: message.createdAt},
+            {
+                $set: {
+                    readAt: new Date()
+                },
+                $setOnInsert: {
+                    messageId,
+                    userId,
+                    chatId,
+                    messageCreatedAt: message.createdAt
+                }
+            },
             {upsert: true}
         ).exec();
     }
 
     async markAllAsRead(chatId: string, userId: string): Promise<void> {
         const lastRead = await this.messageReadModel.findOne({userId, chatId}).sort({messageCreatedAt: -1}).exec();
-        const filter = {};
+        const filter: any = {chatId};
         if (lastRead) {
-            filter['createdAt'] = {$gt: new Date(lastRead.messageCreatedAt)};
+            filter.createdAt = {$gt: new Date(lastRead.messageCreatedAt)};
         }
-        const messages = await this.messageModel.find({chatId, ...filter}).exec();
+        const mongoMessages = await this.messageModel.find(filter).exec();
 
-        if (messages.length > 0) {
-            // @ts-ignore
-            await this.markMultipleAsRead(messages, userId, chatId);
+        if (mongoMessages.length > 0) {
+            // Конвертируем mongoose документы в доменные объекты
+            const messageIds = mongoMessages.map(msg => msg._id.toString());
+            const readByData = await this.getReadByUsers(messageIds);
+            const domainMessages = mongoMessages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || []));
+
+            await this.markMultipleAsRead(domainMessages, userId, chatId);
         }
     }
 
@@ -152,7 +166,17 @@ export class MongoMessageRepository implements MessageRepository {
         const operations = messages.map(message => ({
             updateOne: {
                 filter: {messageId: message.id, userId, chatId},
-                update: {messageId: message.id, userId, chatId, readAt: new Date(), messageCreatedAt: message.createdAt},
+                update: {
+                    $set: {
+                        readAt: new Date()
+                    },
+                    $setOnInsert: {
+                        messageId: message.id,
+                        userId,
+                        chatId,
+                        messageCreatedAt: message.createdAt
+                    }
+                },
                 upsert: true
             }
         }));
