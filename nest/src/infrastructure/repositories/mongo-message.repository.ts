@@ -100,7 +100,7 @@ export class MongoMessageRepository implements MessageRepository {
                 {
                     $sort: {
                         isRead: 1,        // Сначала непрочитанные (0), потом прочитанные (1)
-                        createdAt: -1      // Внутри каждой группы сортируем по времени (старые сначала)
+                        // createdAt: -1      // Внутри каждой группы сортируем по времени (старые сначала)
                     }
                 },
                 {
