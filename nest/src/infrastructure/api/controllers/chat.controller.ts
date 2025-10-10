@@ -520,6 +520,7 @@ export class ChatController {
         await this.markMessageAsReadUseCase.execute({
             messageId,
             userId: req.user.userId,
+            chatId
         });
 
         return {
@@ -600,6 +601,7 @@ export class ChatController {
         await this.markMultipleMessagesAsReadUseCase.execute({
             messageIds: markMessagesDto.messageIds,
             userId: req.user.userId,
+            chatId
         });
 
         return {

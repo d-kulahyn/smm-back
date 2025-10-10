@@ -56,16 +56,25 @@ export class MongoMessageRepository implements MessageRepository {
                 total,
             };
         } else if (!createdAt && !sort && userId) {
-            const lastReadMessage = await this.messageReadModel.findOne({userId: userId, chatId: chatId}).exec();
+            const lastReadMessage = await this.messageReadModel.findOne({userId, chatId}).sort({messageCreatedAt: -1}).exec();
             const filter: any =  {};
             let messages: any;
+
             if (lastReadMessage) {
-                console.log(lastReadMessage);
                 const lastMessage = await this.messageModel.findOne({_id: lastReadMessage.messageId}).exec();
                 filter.createdAt = {$gt: new Date(lastMessage.createdAt)};
-                messages = await this.messageModel.find({chatId: chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
+                messages = await this.messageModel.find({chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
+
+                if(messages.length < limit){
+                    const newMessagesFilter = {createdAt: {$lte: new Date(lastMessage.createdAt)},}
+
+                    const newMessages = await this.messageModel.find({chatId: chatId, ...newMessagesFilter}).limit(limit - messages.length).sort({createdAt: -1}).exec();
+                    messages = [...newMessages.reverse(), ...messages]
+                }
             } else {
-                messages = await this.messageModel.find({chatId: chatId}).limit(limit).sort({createdAt: -1}).exec();
+                const anyMyMsg = await this.messageModel.findOne({chatId: chatId, senderId: userId}).exec();
+                const newMessages = await this.messageModel.find({chatId: chatId}).limit(limit).sort({createdAt: anyMyMsg ? -1 : 1}).exec();
+                messages = anyMyMsg ? newMessages.reverse() : newMessages
             }
 
             const total = await this.messageModel.countDocuments({chatId});
@@ -79,7 +88,6 @@ export class MongoMessageRepository implements MessageRepository {
             };
         }
 
-        // Обычный запрос без фильтров
         const [messages, total] = await Promise.all([
             this.messageModel
                 .find(filter)
@@ -117,28 +125,34 @@ export class MongoMessageRepository implements MessageRepository {
         await this.messageModel.findByIdAndDelete(id).exec();
     }
 
-    async markAsRead(messageId: string, userId: string): Promise<void> {
+    async markAsRead(messageId: string, userId: string, chatId): Promise<void> {
+        const message = await this.messageModel.findOne({_id: messageId}).exec();
         await this.messageReadModel.findOneAndUpdate(
-            {messageId, userId},
-            {messageId, userId, readAt: new Date()},
+            {messageId, userId, chatId},
+            {messageId, userId, readAt: new Date(), messageCreatedAt: new Date(message.createdAt)},
             {upsert: true}
         ).exec();
     }
 
     async markAllAsRead(chatId: string, userId: string): Promise<void> {
-        const messages = await this.messageModel.find({chatId}).select('_id').exec();
-        const messageIds = messages.map(msg => msg._id.toString());
+        const lastRead = await this.messageReadModel.findOne({userId, chatId}).sort({messageCreatedAt: -1}).exec();
+        const filter = {};
+        if (lastRead) {
+            filter['createdAt'] = {$gt: new Date(lastRead.messageCreatedAt)};
+        }
+        const messages = await this.messageModel.find({chatId, ...filter}).exec();
 
-        if (messageIds.length > 0) {
-            await this.markMultipleAsRead(messageIds, userId);
+        if (messages.length > 0) {
+            // @ts-ignore
+            await this.markMultipleAsRead(messages, userId, chatId);
         }
     }
 
-    async markMultipleAsRead(messageIds: string[], userId: string): Promise<void> {
-        const operations = messageIds.map(messageId => ({
+    async markMultipleAsRead(messages: Message[], userId: string, chatId: string): Promise<void> {
+        const operations = messages.map(message => ({
             updateOne: {
-                filter: {messageId, userId},
-                update: {messageId, userId, readAt: new Date()},
+                filter: {messageId: message.id, userId, chatId},
+                update: {messageId: message.id, userId, chatId, readAt: new Date(), messageCreatedAt: new Date(message.createdAt)},
                 upsert: true
             }
         }));

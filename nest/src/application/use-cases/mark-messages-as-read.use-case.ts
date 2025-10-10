@@ -6,6 +6,7 @@ import { ResourceNotFoundException, AccessDeniedException } from '../../shared/e
 export interface MarkMessageAsReadDto {
   messageId: string;
   userId: string;
+  chatId: string;
 }
 
 export interface MarkAllMessagesAsReadDto {
@@ -16,6 +17,7 @@ export interface MarkAllMessagesAsReadDto {
 export interface MarkMultipleMessagesAsReadDto {
   messageIds: string[];
   userId: string;
+  chatId?: string;
 }
 
 @Injectable()
@@ -39,7 +41,7 @@ export class MarkMessageAsReadUseCase {
       throw new AccessDeniedException('You are not a member of this chat');
     }
 
-    await this.messageRepository.markAsRead(dto.messageId, dto.userId);
+    await this.messageRepository.markAsRead(dto.messageId, dto.userId, dto.chatId);
   }
 }
 
@@ -91,6 +93,6 @@ export class MarkMultipleMessagesAsReadUseCase {
       }
     }
 
-    await this.messageRepository.markMultipleAsRead(dto.messageIds, dto.userId);
+    await this.messageRepository.markMultipleAsRead(messages, dto.userId, dto.chatId);
   }
 }

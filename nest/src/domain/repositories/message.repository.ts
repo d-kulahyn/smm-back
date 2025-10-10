@@ -10,9 +10,9 @@ export interface MessageRepository {
   create(message: Message): Promise<Message>;
   update(id: string, updates: Partial<Message>): Promise<Message>;
   delete(id: string): Promise<void>;
-  markAsRead(messageId: string, userId: string): Promise<void>;
+  markAsRead(messageId: string, userId: string, chatId: string): Promise<void>;
   markAllAsRead(chatId: string, userId: string): Promise<void>;
-  markMultipleAsRead(messageIds: string[], userId: string): Promise<void>;
+  markMultipleAsRead(messages: Message[], userId: string, chatId: string): Promise<void>;
   findUnreadMessages(userId: string): Promise<Message[]>;
   countUnreadMessages(chatId: string, userId: string): Promise<number>;
   // Additional methods from MongoMessageRepository
