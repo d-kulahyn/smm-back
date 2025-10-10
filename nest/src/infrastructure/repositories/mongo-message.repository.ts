@@ -137,7 +137,7 @@ export class MongoMessageRepository implements MessageRepository {
                     messageId,
                     userId,
                     chatId,
-                    messageCreatedAt: message.createdAt
+                    messageCreatedAt: new Date(message.createdAt)
                 }
             },
             {upsert: true}
@@ -270,9 +270,9 @@ export class MongoMessageRepository implements MessageRepository {
             doc.senderId,
             doc.content,
             doc.type || MessageType.TEXT,
-            doc.fileUrl || null,
             doc.createdAt,
             doc.updatedAt,
+            null,
             readBy,
         );
     }
