@@ -58,11 +58,14 @@ export class MongoMessageRepository implements MessageRepository {
         } else if (!createdAt && !sort && userId) {
             const lastReadMessage = await this.messageReadModel.findOne({userId: userId, chatId: chatId}).exec();
             const filter: any =  {};
+            let messages: any;
             if (lastReadMessage) {
                 const lastMessage = await this.messageModel.findOne({_id: lastReadMessage.messageId}).exec();
                 filter.createdAt = {$gt: new Date(lastMessage.createdAt)};
+                messages = await this.messageModel.find({chatId: chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
+            } else {
+                messages = await this.messageModel.find({chatId: chatId}).limit(limit).sort({createdAt: -1}).exec();
             }
-            const messages = await this.messageModel.find({chatId: chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
 
             const total = await this.messageModel.countDocuments({chatId});
 
