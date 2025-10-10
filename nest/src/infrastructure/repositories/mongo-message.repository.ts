@@ -60,6 +60,7 @@ export class MongoMessageRepository implements MessageRepository {
             const filter: any =  {};
             let messages: any;
             if (lastReadMessage) {
+                console.log(lastReadMessage);
                 const lastMessage = await this.messageModel.findOne({_id: lastReadMessage.messageId}).exec();
                 filter.createdAt = {$gt: new Date(lastMessage.createdAt)};
                 messages = await this.messageModel.find({chatId: chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
