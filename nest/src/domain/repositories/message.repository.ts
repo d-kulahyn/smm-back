@@ -21,8 +21,6 @@ export interface MessageRepository {
 
     markMultipleAsRead(messages: Message[], userId: string, chatId: string): Promise<void>;
 
-    findUnreadMessages(userId: string): Promise<Message[]>;
-
     countUnreadMessages(chatId: string, userId: string): Promise<number>;
 
     // Additional methods from MongoMessageRepository

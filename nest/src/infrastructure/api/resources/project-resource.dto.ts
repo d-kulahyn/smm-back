@@ -6,10 +6,10 @@ import { ProjectInvitationResource } from './project-invitation-resource.dto';
 import { ChatResource } from './chat-resource.dto';
 
 export interface ProjectStats {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
+  total_tasks: number;
+  completed_tasks: number;
+  pending_tasks: number;
+  overdue_tasks: number;
 }
 
 export class ProjectResource {

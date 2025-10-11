@@ -2,10 +2,10 @@ import {Injectable, Inject} from '@nestjs/common';
 import {PrismaService} from '../../infrastructure/database/prisma.service';
 
 export interface ProjectStats {
-    totalTasks: number;
-    completedTasks: number;
-    pendingTasks: number;
-    overdueTasks: number;
+    total_tasks: number;
+    completed_tasks: number;
+    pending_tasks: number;
+    overdue_tasks: number;
 }
 
 @Injectable()
@@ -33,10 +33,10 @@ export class GetProjectStatsUseCase {
 
         detailedStats.forEach((stat: any) => {
             statsMap.set(stat.projectId, {
-                totalTasks: parseInt(stat.total_tasks) || 0,
-                completedTasks: parseInt(stat.completed_tasks) || 0,
-                pendingTasks: parseInt(stat.pending_tasks) || 0,
-                overdueTasks: parseInt(stat.overdue_tasks) || 0,
+                total_tasks: parseInt(stat.total_tasks) || 0,
+                completed_tasks: parseInt(stat.completed_tasks) || 0,
+                pending_tasks: parseInt(stat.pending_tasks) || 0,
+                overdue_tasks: parseInt(stat.overdue_tasks) || 0,
             });
         });
 
@@ -46,10 +46,10 @@ export class GetProjectStatsUseCase {
     async getForSingleProject(projectId: string): Promise<ProjectStats> {
         const statsMap = await this.execute([projectId]);
         return statsMap.get(projectId) || {
-            totalTasks: 0,
-            completedTasks: 0,
-            pendingTasks: 0,
-            overdueTasks: 0,
+            total_tasks: 0,
+            completed_tasks: 0,
+            pending_tasks: 0,
+            overdue_tasks: 0,
         };
     }
 }

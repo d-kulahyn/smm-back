@@ -1,10 +1,10 @@
 import { ProjectStatus } from '../enums/project-status.enum';
 
 export interface ProjectStatsDto {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
+  total_tasks: number;
+  completed_tasks: number;
+  pending_tasks: number;
+  overdue_tasks: number;
 }
 
 export class Project {

@@ -56,8 +56,11 @@ export class MongoMessageRepository implements MessageRepository {
                 total,
             };
         } else if (!createdAt && !sort && userId) {
-            const lastReadMessage = await this.messageReadModel.findOne({userId, chatId}).sort({messageCreatedAt: -1}).exec();
-            const filter: any =  {};
+            const lastReadMessage = await this.messageReadModel.findOne({
+                userId,
+                chatId
+            }).sort({messageCreatedAt: -1}).exec();
+            const filter: any = {};
             let messages: any;
 
             if (lastReadMessage) {
@@ -65,7 +68,7 @@ export class MongoMessageRepository implements MessageRepository {
                 filter.createdAt = {$gt: new Date(lastMessage.createdAt)};
                 messages = await this.messageModel.find({chatId, ...filter}).limit(limit).sort({createdAt: 1}).exec();
 
-                if(messages.length < limit){
+                if (messages.length < limit) {
                     const newMessagesFilter = {createdAt: {$lte: new Date(lastMessage.createdAt)},}
 
                     const newMessages = await this.messageModel.find({chatId: chatId, ...newMessagesFilter}).limit(limit - messages.length).sort({createdAt: -1}).exec();
@@ -159,7 +162,6 @@ export class MongoMessageRepository implements MessageRepository {
         const mongoMessages = await this.messageModel.find(filter).exec();
 
         if (mongoMessages.length > 0) {
-            // Конвертируем mongoose документы в доменные объекты
             const messageIds = mongoMessages.map(msg => msg._id.toString());
             const readByData = await this.getReadByUsers(messageIds);
             const domainMessages = mongoMessages.map(msg => this.toDomain(msg, readByData[msg._id.toString()] || []));
@@ -195,18 +197,15 @@ export class MongoMessageRepository implements MessageRepository {
 
         if (operations.length > 0) {
             try {
-                await this.messageReadModel.bulkWrite(operations, { ordered: false });
+                await this.messageReadModel.bulkWrite(operations, {ordered: false});
             } catch (error) {
-                // Если это MongoBulkWriteError с дублированными ключами, проверяем детали
                 if (error.name === 'MongoBulkWriteError') {
-                    // Проверяем, есть ли ошибки отличные от дублирования ключей
                     const nonDuplicateErrors = error.writeErrors?.filter(err => err.code !== 11000) || [];
                     if (nonDuplicateErrors.length > 0) {
-                        throw error; // Есть другие ошибки, пробрасываем их
+                        throw error;
                     }
-                    // Все ошибки связаны с дублированием ключей - игнорируем
                 } else {
-                    throw error; // Другой тип ошибки - пробрасываем
+                    throw error;
                 }
             }
         }
@@ -234,6 +233,26 @@ export class MongoMessageRepository implements MessageRepository {
     }
 
     async countUnreadMessages(chatId: string, userId: string): Promise<number> {
+        console.log(userId);
+        const unreadMessages = await this.messageModel.aggregate([
+            {$match: {chatId}},
+            {
+                $lookup: {
+                    from: 'messagereads',
+                    localField: '_id',
+                    foreignField: 'messageId',
+                    as: 'reads',
+                    pipeline: [
+                        {
+                            $match: {reads: {$size: 1}}
+                        }
+                    ]
+                }
+            }
+        ]).exec();
+
+        console.log(unreadMessages);
+
         const readMessageIds = await this.messageReadModel
             .find({userId})
             .select('messageId')
@@ -271,13 +290,13 @@ export class MongoMessageRepository implements MessageRepository {
         return this.toDomain(message, readBy[message._id.toString()] || []);
     }
 
-    private async getReadByUsers(messageIds: string[]): Promise<{[messageId: string]: string[]}> {
+    private async getReadByUsers(messageIds: string[]): Promise<{ [messageId: string]: string[] }> {
         const readRecords = await this.messageReadModel
             .find({messageId: {$in: messageIds}})
             .select('messageId userId')
             .exec();
 
-        const readByMap: {[messageId: string]: string[]} = {};
+        const readByMap: { [messageId: string]: string[] } = {};
 
         readRecords.forEach(record => {
             if (!readByMap[record.messageId]) {
