@@ -43,22 +43,8 @@ export class PrismaProjectRepository implements ProjectRepository {
         },
         invitations: {
           include: {
-            inviter: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              }
-            },
-            accepter: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              }
-            }
+            inviter: true,
+            accepter: true
           }
         },
         owner: {

@@ -1,5 +1,5 @@
 export class FileEntity {
-  constructor(
+    constructor(
     public readonly id: string,
     public readonly filename: string,
     public readonly originalName: string,
@@ -9,6 +9,7 @@ export class FileEntity {
     public readonly entityType: string, // 'project', 'task', 'message', etc.
     public readonly entityId: string,
     public readonly uploadedBy: string,
+    public readonly fileGroupId?: string, // Добавляем поддержку группы файлов
     public readonly isComplete: boolean = false,
     public readonly chunks: number = 0,
     public readonly totalChunks?: number,
@@ -26,6 +27,7 @@ export class FileEntity {
     entityType: string;
     entityId: string;
     uploadedBy: string;
+    fileGroupId?: string;
     totalChunks?: number;
   }): FileEntity {
     return new FileEntity(
@@ -38,6 +40,7 @@ export class FileEntity {
       params.entityType,
       params.entityId,
       params.uploadedBy,
+      params.fileGroupId,
       false, // isComplete
       0, // chunks
       params.totalChunks,
@@ -57,6 +60,7 @@ export class FileEntity {
       this.entityType,
       this.entityId,
       this.uploadedBy,
+      this.fileGroupId,
       this.totalChunks ? (this.chunks + 1) >= this.totalChunks : false,
       this.chunks + 1,
       this.totalChunks,
@@ -76,6 +80,7 @@ export class FileEntity {
       this.entityType,
       this.entityId,
       this.uploadedBy,
+      this.fileGroupId, // добавляем fileGroupId
       true,
       this.chunks,
       this.totalChunks,
@@ -101,5 +106,49 @@ export class FileEntity {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
+  }
+
+  belongsToGroup(): boolean {
+    return !!this.fileGroupId;
+  }
+
+  assignToGroup(fileGroupId: string): FileEntity {
+    return new FileEntity(
+      this.id,
+      this.filename,
+      this.originalName,
+      this.mimeType,
+      this.size,
+      this.uploadPath,
+      this.entityType,
+      this.entityId,
+      this.uploadedBy,
+      fileGroupId,
+      this.isComplete,
+      this.chunks,
+      this.totalChunks,
+      this.createdAt,
+      new Date()
+    );
+  }
+
+  removeFromGroup(): FileEntity {
+    return new FileEntity(
+      this.id,
+      this.filename,
+      this.originalName,
+      this.mimeType,
+      this.size,
+      this.uploadPath,
+      this.entityType,
+      this.entityId,
+      this.uploadedBy,
+      undefined,
+      this.isComplete,
+      this.chunks,
+      this.totalChunks,
+      this.createdAt,
+      new Date()
+    );
   }
 }

@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { FileGroupResponseDto } from './file-group-response.dto';
 
 export class FileCompleteResponseDto {
     @ApiProperty({ example: 'clm1file123456' })
@@ -12,4 +13,10 @@ export class FileCompleteResponseDto {
 
     @ApiProperty({ example: 'File upload completed successfully' })
     message: string;
+
+    @ApiPropertyOptional({
+        description: 'File group information if file belongs to a group',
+        type: FileGroupResponseDto
+    })
+    fileGroup?: FileGroupResponseDto;
 }

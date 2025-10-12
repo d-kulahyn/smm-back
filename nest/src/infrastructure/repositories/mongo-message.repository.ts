@@ -233,25 +233,34 @@ export class MongoMessageRepository implements MessageRepository {
     }
 
     async countUnreadMessages(chatId: string, userId: string): Promise<number> {
-        console.log(userId);
-        const unreadMessages = await this.messageModel.aggregate([
-            {$match: {chatId}},
-            {
-                $lookup: {
-                    from: 'messagereads',
-                    localField: '_id',
-                    foreignField: 'messageId',
-                    as: 'reads',
-                    pipeline: [
-                        {
-                            $match: {reads: {$size: 1}}
-                        }
-                    ]
-                }
-            }
-        ]).exec();
-
-        console.log(unreadMessages);
+        // console.log(userId);
+        // const unreadMessages = await this.messageModel.aggregate([
+        //     { $match: { chatId } },
+        //     {
+        //         $lookup: {
+        //             from: 'messagereads',
+        //             let: { msgId: '$_id' },
+        //             pipeline: [
+        //                 {
+        //                     $match: {
+        //                         $expr: {
+        //                             $and: [
+        //                                 { $eq: ['$messageId', '$$msgId'] },
+        //                                 { $eq: ['$userId', userId] }
+        //                             ]
+        //                         }
+        //                     }
+        //                 }
+        //             ],
+        //             as: 'reads'
+        //         }
+        //     },
+        //     {
+        //         $match: { reads: { $size: 1 } }
+        //     }
+        // ]).exec();
+        //
+        // console.log(unreadMessages);
 
         const readMessageIds = await this.messageReadModel
             .find({userId})

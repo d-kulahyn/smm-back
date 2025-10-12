@@ -2,6 +2,7 @@ import {
     Controller,
     Get,
     Post,
+    Delete,
     Param,
     Res,
     NotFoundException,
@@ -494,6 +495,159 @@ export class StorageController {
             }
             throw new BadRequestException(error.message || 'Failed to get chunk info');
         }
+    }
+
+    @Post('files/:fileId/assign-to-group')
+    @ApiOperation({
+        summary: 'Assign file to group',
+        description: 'Assign an existing file to a file group'
+    })
+    @ApiParam({
+        name: 'fileId',
+        description: 'File ID to assign to group',
+        example: 'clm1file123456'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'File assigned to group successfully',
+        type: FileCreateResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'File or file group not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'No permission to modify file or group',
+        type: ErrorResponseDto
+    })
+    async assignFileToGroup(
+        @Param('fileId') fileId: string,
+        @Body() body: { fileGroupId: string },
+        @Request() req: AuthenticatedRequest
+    ) {
+        const { AssignFileToGroupUseCase } = await import('../../../application/use-cases/manage-file-groups.use-case');
+        const assignFileToGroupUseCase = new AssignFileToGroupUseCase(
+            this.chunkedFileService['fileRepository'], // Accessing via service
+            null // Will be injected properly in real implementation
+        );
+
+        const updatedFile = await assignFileToGroupUseCase.execute({
+            fileId,
+            fileGroupId: body.fileGroupId,
+            userId: req.user.userId
+        });
+
+        return {
+            success: true,
+            message: 'File assigned to group successfully',
+            data: {
+                fileId: updatedFile.id,
+                filename: updatedFile.filename,
+                uploadUrl: updatedFile.uploadPath,
+                isComplete: updatedFile.isComplete,
+                chunksUploaded: updatedFile.chunks,
+                totalChunks: updatedFile.totalChunks
+            }
+        };
+    }
+
+    @Delete('files/:fileId/remove-from-group')
+    @ApiOperation({
+        summary: 'Remove file from group',
+        description: 'Remove a file from its current group'
+    })
+    @ApiParam({
+        name: 'fileId',
+        description: 'File ID to remove from group',
+        example: 'clm1file123456'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'File removed from group successfully',
+        type: FileCreateResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'File not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'No permission to modify file',
+        type: ErrorResponseDto
+    })
+    async removeFileFromGroup(
+        @Param('fileId') fileId: string,
+        @Request() req: AuthenticatedRequest
+    ) {
+        const { RemoveFileFromGroupUseCase } = await import('../../../application/use-cases/manage-file-groups.use-case');
+        const removeFileFromGroupUseCase = new RemoveFileFromGroupUseCase(
+            this.chunkedFileService['fileRepository'] // Accessing via service
+        );
+
+        const updatedFile = await removeFileFromGroupUseCase.execute({
+            fileId,
+            userId: req.user.userId
+        });
+
+        return {
+            success: true,
+            message: 'File removed from group successfully',
+            data: {
+                fileId: updatedFile.id,
+                filename: updatedFile.filename,
+                uploadUrl: updatedFile.uploadPath,
+                isComplete: updatedFile.isComplete,
+                chunksUploaded: updatedFile.chunks,
+                totalChunks: updatedFile.totalChunks
+            }
+        };
+    }
+
+    @Get('files/group/:groupId')
+    @ApiOperation({
+        summary: 'Get files by group',
+        description: 'Retrieve all files belonging to a specific file group'
+    })
+    @ApiParam({
+        name: 'groupId',
+        description: 'File group ID',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Files retrieved successfully',
+        type: EntityFilesResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'File group not found',
+        type: ErrorResponseDto
+    })
+    async getFilesByGroup(
+        @Param('groupId') groupId: string,
+        @Request() req: AuthenticatedRequest
+    ) {
+        const files = await this.chunkedFileService.getFilesByFileGroup(groupId);
+
+        return {
+            success: true,
+            data: files.map(file => ({
+                id: file.id,
+                filename: file.filename,
+                originalName: file.originalName,
+                mimeType: file.mimeType,
+                size: file.size,
+                uploadPath: file.uploadPath,
+                isComplete: file.isComplete,
+                chunks: file.chunks,
+                totalChunks: file.totalChunks,
+                createdAt: file.createdAt,
+                updatedAt: file.updatedAt
+            }))
+        };
     }
 
     private getMimeType(filename: string): string {

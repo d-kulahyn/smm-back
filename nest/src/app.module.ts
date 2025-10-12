@@ -11,6 +11,7 @@ import { ChatModule } from './infrastructure/modules/chat.module';
 import { ProjectInvitationModule } from './infrastructure/modules/project-invitation.module';
 import { HealthModule } from './infrastructure/modules/health.module';
 import { FileModule } from './infrastructure/modules/file.module';
+import { FileGroupModule } from './infrastructure/modules/file-group.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FileModule } from './infrastructure/modules/file.module';
     ProjectInvitationModule,
     HealthModule,
     FileModule,
+    FileGroupModule,
   ],
   controllers: [],
 })

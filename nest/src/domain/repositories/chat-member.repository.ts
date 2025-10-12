@@ -1,7 +1,6 @@
 import { ChatMember } from '../entities/chat-member.entity';
 import { User } from '../entities/user.entity';
 
-// Интерфейс для участника чата с данными пользователя
 export interface ChatMemberWithUser extends ChatMember {
   user: {id: string, name: string, email: string, avatar?: string};
 }

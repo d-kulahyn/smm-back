@@ -26,6 +26,18 @@ export class InMemoryFileRepository implements FileRepository {
     );
   }
 
+  async findByFileGroupId(fileGroupId: string): Promise<FileEntity[]> {
+    return Array.from(this.files.values()).filter(
+      file => file.fileGroupId === fileGroupId
+    );
+  }
+
+  async findByEntityIdWithGroups(entityType: string, entityId: string): Promise<FileEntity[]> {
+    return Array.from(this.files.values()).filter(
+      file => file.entityType === entityType && file.entityId === entityId
+    );
+  }
+
   async update(id: string, updates: Partial<FileEntity>): Promise<FileEntity> {
     const file = this.files.get(id);
     if (!file) {
@@ -42,6 +54,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityType,
       file.entityId,
       file.uploadedBy,
+      updates.fileGroupId ?? file.fileGroupId,
       updates.isComplete ?? file.isComplete,
       updates.chunks ?? file.chunks,
       file.totalChunks,
@@ -89,6 +102,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityType,
       file.entityId,
       file.uploadedBy,
+      file.fileGroupId, // добавляем fileGroupId
       isComplete,
       chunksCount,
       file.totalChunks,
@@ -116,6 +130,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityType,
       file.entityId,
       file.uploadedBy,
+      file.fileGroupId, // добавляем fileGroupId
       true, // isComplete
       file.chunks,
       file.totalChunks,
@@ -154,5 +169,27 @@ export class InMemoryFileRepository implements FileRepository {
   async isChunkUploaded(id: string, chunkIndex: number): Promise<boolean> {
     const chunks = this.uploadedChunks.get(id);
     return chunks ? chunks.has(chunkIndex) : false;
+  }
+
+  async assignToGroup(fileId: string, fileGroupId: string): Promise<FileEntity> {
+    const file = this.files.get(fileId);
+    if (!file) {
+      throw new Error('File not found');
+    }
+
+    const updatedFile = file.assignToGroup(fileGroupId);
+    this.files.set(fileId, updatedFile);
+    return updatedFile;
+  }
+
+  async removeFromGroup(fileId: string): Promise<FileEntity> {
+    const file = this.files.get(fileId);
+    if (!file) {
+      throw new Error('File not found');
+    }
+
+    const updatedFile = file.removeFromGroup();
+    this.files.set(fileId, updatedFile);
+    return updatedFile;
   }
 }

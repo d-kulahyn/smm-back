@@ -276,3 +276,49 @@ enum TaskPriority {
   high
   urgent
 }
+
+// Модели для файловой системы с группировкой
+model FileGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  entityType  String   // 'project', 'task', 'chat', 'user'
+  entityId    String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  files       File[]
+
+  // Уникальное имя группы в рамках одной сущности
+  @@unique([name, entityType, entityId])
+  @@index([entityType, entityId])
+  @@map("file_groups")
+}
+
+model File {
+  id           String    @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  uploadPath   String
+  entityType   String    // 'project', 'task', 'message', etc.
+  entityId     String
+  uploadedBy   String
+  fileGroupId  String?   // Опциональная связь с группой файлов
+  isComplete   Boolean   @default(false)
+  chunks       Int       @default(0)
+  totalChunks  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  fileGroup    FileGroup? @relation(fields: [fileGroupId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([fileGroupId])
+  @@index([uploadedBy])
+  @@map("files")
+}

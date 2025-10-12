@@ -20,6 +20,7 @@ export class ChunkedFileService {
         entityType: string;
         entityId: string;
         uploadedBy: string;
+        fileGroupId?: string;
         totalChunks?: number;
     }): Promise<FileEntity> {
         const fileId = uuidv4();
@@ -47,6 +48,7 @@ export class ChunkedFileService {
             entityType: params.entityType,
             entityId: params.entityId,
             uploadedBy: params.uploadedBy,
+            fileGroupId: params.fileGroupId,
             totalChunks: params.totalChunks,
         });
 
@@ -176,5 +178,17 @@ export class ChunkedFileService {
             missingChunks: missingChunks.length > 0 ? missingChunks : undefined,
             uploadedChunkIndexes,
         };
+    }
+
+    async getFilesByFileGroup(fileGroupId: string): Promise<FileEntity[]> {
+        return await this.fileRepository.findByFileGroupId(fileGroupId);
+    }
+
+    async assignFileToGroup(fileId: string, fileGroupId: string): Promise<FileEntity> {
+        return await this.fileRepository.assignToGroup(fileId, fileGroupId);
+    }
+
+    async removeFileFromGroup(fileId: string): Promise<FileEntity> {
+        return await this.fileRepository.removeFromGroup(fileId);
     }
 }
