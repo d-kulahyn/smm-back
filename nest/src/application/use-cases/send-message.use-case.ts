@@ -58,9 +58,7 @@ export class SendMessageUseCase {
 
         if (dto.projectId) {
             const allChatMembers = await this.chatMemberRepository.findByChatId(dto.chatId);
-            const chatMembers = allChatMembers
-                .filter(member => member.userId !== dto.senderId && member.isActive)
-                .map(member => member.userId);
+            const chatMembers = allChatMembers.map(member => member.userId);
 
             const event = new ChatMessageSentEvent(
                 createdMessage,
