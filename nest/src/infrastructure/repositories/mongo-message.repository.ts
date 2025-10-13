@@ -35,8 +35,10 @@ export class MongoMessageRepository implements MessageRepository {
         if (createdAt && sort) {
             if (sort === 'asc') {
                 filter.createdAt = {$gt: new Date(createdAt)};
+                sortCriteria.createdAt = 1;
             } else if (sort === 'desc') {
                 filter.createdAt = {$lt: new Date(createdAt)};
+                sortCriteria.createdAt = -1;
             }
 
             const [messages, total] = await Promise.all([
@@ -169,7 +171,7 @@ export class MongoMessageRepository implements MessageRepository {
             await this.markMultipleAsRead(domainMessages, userId, chatId);
         }
 
-        const messages = await this.messageModel.find({chatId}).limit(limit).sort({createdAt: 1}).exec();
+        const messages = await this.messageModel.find({chatId}).limit(limit).sort({createdAt: -1}).exec();
         const messageIds = messages.map(msg => msg._id.toString());
         const readByData = await this.getReadByUsers(messageIds);
 
