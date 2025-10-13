@@ -22,10 +22,27 @@ export class ChunkedFileService {
         uploadedBy: string;
         fileGroupId?: string;
         totalChunks?: number;
+        uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
     }): Promise<FileEntity> {
+        //if exsists by originalName, mimeType, size, entityType, totalChunks return it
+
+
         const fileId = uuidv4();
         const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}-${params.originalName}`;
 
+        // Validate and sanitize uploadPath to avoid path traversal
+        let sanitizedUploadPath: string | undefined = undefined;
+        if (params.uploadPath) {
+            const raw = params.uploadPath;
+            // Reject suspicious paths
+            if (raw.includes('..') || raw.includes('\\')) {
+                throw new Error('Invalid uploadPath');
+            }
+            sanitizedUploadPath = raw.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+            if (sanitizedUploadPath.length === 0) sanitizedUploadPath = undefined;
+        }
+
+        // Передаём uploadPath (директория) в сервис хранения файлов
         await this.fileStorageService.createFile({
             fileId,
             filename,
@@ -36,7 +53,11 @@ export class ChunkedFileService {
             entityId: params.entityId,
             uploadedBy: params.uploadedBy,
             totalChunks: params.totalChunks,
+            uploadPath: sanitizedUploadPath,
         });
+
+        // Формируем поле uploadPath в сущности как относительный путь включая имя файла
+        const fullUploadPath = sanitizedUploadPath ? `${sanitizedUploadPath}/${filename}` : filename;
 
         const fileEntity = FileEntity.create({
             id: fileId,
@@ -44,7 +65,7 @@ export class ChunkedFileService {
             originalName: params.originalName,
             mimeType: params.mimeType,
             size: params.size,
-            uploadPath: filename,
+            uploadPath: fullUploadPath,
             entityType: params.entityType,
             entityId: params.entityId,
             uploadedBy: params.uploadedBy,
@@ -65,24 +86,59 @@ export class ChunkedFileService {
             throw new Error('File upload is already complete');
         }
 
-        const actualChunkIndex = chunkIndex !== undefined ? chunkIndex : fileEntity.chunks;
+        // Determine actual chunk index and reserve it to avoid parallel races
+        let actualChunkIndex = chunkIndex !== undefined ? chunkIndex : fileEntity.chunks;
 
+        // If chunkIndex provided - try to reserve once; if fails, return current state (idempotent)
         if (chunkIndex !== undefined) {
-            const isAlreadyUploaded = await this.fileRepository.isChunkUploaded(fileId, chunkIndex);
-            if (isAlreadyUploaded) {
-                throw new Error(`Chunk ${chunkIndex} is already uploaded`);
+            const reserved = await this.fileRepository.tryReserveChunk(fileId, chunkIndex);
+            if (!reserved) {
+                // Already uploaded or reserved by another worker — return current state
+                const current = await this.fileRepository.findById(fileId);
+                if (!current) throw new Error('File not found');
+                return current;
+            }
+        } else {
+            // For sequential uploads, try to reserve the next available index with a few retries
+            let attempts = 0;
+            let reserved = false;
+            while (attempts < 5 && !reserved) {
+                actualChunkIndex = (await this.fileRepository.findById(fileId))!.chunks;
+                reserved = await this.fileRepository.tryReserveChunk(fileId, actualChunkIndex);
+                if (!reserved) {
+                    // another parallel worker took it — retry
+                    attempts++;
+                }
+            }
+
+            if (!reserved) {
+                // couldn't reserve after retries, return current state
+                const current = await this.fileRepository.findById(fileId);
+                if (!current) throw new Error('File not found');
+                return current;
             }
         }
 
-        await this.fileStorageService.uploadChunk(fileId, chunkData, actualChunkIndex);
+        // At this point reservation acquired for actualChunkIndex
+        try {
+            await this.fileStorageService.uploadChunk(fileId, chunkData, actualChunkIndex);
 
-        const updatedFile = await this.fileRepository.markChunkUploaded(fileId, actualChunkIndex);
+            const updatedFile = await this.fileRepository.markChunkUploaded(fileId, actualChunkIndex);
 
-        if (updatedFile.totalChunks && updatedFile.chunks >= updatedFile.totalChunks) {
-            return await this.assembleFile(fileId);
+            if (updatedFile.totalChunks && updatedFile.chunks >= updatedFile.totalChunks) {
+                return await this.assembleFile(fileId);
+            }
+
+            return updatedFile;
+        } catch (error) {
+            // On error, release reservation and rethrow
+            try {
+                await this.fileRepository.releaseReservedChunk(fileId, actualChunkIndex);
+            } catch (e) {
+                // ignore
+            }
+            throw error;
         }
-
-        return updatedFile;
     }
 
     private async assembleFile(fileId: string): Promise<FileEntity> {
@@ -96,10 +152,11 @@ export class ChunkedFileService {
         }
 
         try {
+            // Передаём полный относительный путь (uploadPath включая имя файла) в сервис сборки
             await this.fileStorageService.assembleChunks(
                 fileId,
                 fileEntity.totalChunks,
-                fileEntity.filename
+                fileEntity.uploadPath // теперь это относительный путь + имя файла
             );
 
             return await this.fileRepository.markComplete(fileId);
@@ -139,8 +196,8 @@ export class ChunkedFileService {
             throw new Error('File not found');
         }
 
-        // Удаляем файл из хранилища
-        await this.fileStorageService.deleteFile(fileId, fileEntity.filename);
+        // Удаляем файл из хранилища — передаём полный относительный путь (uploadPath), если есть
+        await this.fileStorageService.deleteFile(fileId, fileEntity.uploadPath || fileEntity.filename);
 
         // Удаляем запись из репозитория
         await this.fileRepository.delete(fileId);

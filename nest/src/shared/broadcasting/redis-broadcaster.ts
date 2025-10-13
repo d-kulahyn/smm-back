@@ -40,7 +40,7 @@ export class RedisBroadcaster extends BaseBroadcaster {
     options?: Record<string, any>
   ): Promise<void> {
     try {
-      const payload = event.getPayload();
+      const payload = await event.getPayload();
 
       const streamData: Record<string, string> = {
         event: event.getEventName(),

@@ -6,13 +6,14 @@ import { URL } from 'url';
 
 // Конфигурация
 const CONFIG = {
-    url: 'http://127.0.0.1:80/v1/projects/17/chats/1/messages',
+    url: 'http://192.168.1.67/v1/projects/3e76e87d-ffab-44e8-84c1-c0f9191c139d/chats/425ef49c-d26b-4643-a1b9-11b9e5a4b36f/messages',
     method: 'POST',
-    token: '851|Py98vOanhbkUwStNd9vZ8g8DZHD7iFU8pAuuj1JNd780da3f',
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzk1Zjc5Ny1mYjhhLTQxN2QtYmYzZi04MGExNjdkMGFjMTUiLCJlbWFpbCI6ImJvYkBnbWFpbC5jb20iLCJyb2xlIjoiY2xpZW50IiwicGVybWlzc2lvbnMiOlsidmlld19vd25fcHJvamVjdHMiLCJjcmVhdGVfcHJvamVjdHMiLCJ1cGRhdGVfb3duX3Byb2plY3RzIiwidmlld19hc3NpZ25lZF9wcm9qZWN0cyIsImRlbGV0ZV9vd25fcHJvamVjdHMiLCJtYW5hZ2VfcHJvamVjdF90YXNrcyIsImNyZWF0ZV90YXNrcyIsInVwZGF0ZV90YXNrX3N0YXR1cyIsInZpZXdfYXNzaWduZWRfdGFza3MiLCJ2aWV3X3Byb2plY3RfY2hhdHMiLCJjcmVhdGVfY2hhdHMiLCJ1cGRhdGVfY2hhdHMiLCJzZW5kX21lc3NhZ2VzIl0sImlhdCI6MTc2MDI3NjIwNiwiZXhwIjoxNzYwMzYyNjA2fQ.1N4eCUBz86gQuDxS_68FEJZ71R77d9ff4IpNB7fg6xM',
     payload: {
-        message: "some chat"
+        content: "some chat",
+        type: 'text',
     },
-    totalRequests: 5000,
+    totalRequests: 25,
     timeout: 30000 // 30 секунд таймаут
 };
 

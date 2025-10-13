@@ -16,4 +16,9 @@ export interface FileRepository {
   getUploadedChunks(id: string): Promise<number[]>;
   getMissingChunks(id: string): Promise<number[]>;
   isChunkUploaded(id: string, chunkIndex: number): Promise<boolean>;
+
+  // Reserve chunk index atomically (e.g., via Redis set). Returns true if reserved (was not present), false if already reserved/uploaded.
+  tryReserveChunk(fileId: string, chunkIndex: number): Promise<boolean>;
+  // Release reservation (used on error to rollback reservation)
+  releaseReservedChunk(fileId: string, chunkIndex: number): Promise<void>;
 }

@@ -22,7 +22,7 @@ export class WebSocketBroadcaster extends BaseBroadcaster {
   ): Promise<void> {
     const message = {
       event: event.getEventName(),
-      data: event.getPayload(),
+      data: await event.getPayload(),
       channels,
       timestamp: event.timestamp,
       eventId: event.eventId

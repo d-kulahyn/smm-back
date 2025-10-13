@@ -8,7 +8,7 @@ export abstract class BaseEvent {
   }
 
   abstract getEventName(): string;
-  abstract getPayload(): Record<string, any>;
+  abstract getPayload(): Promise<Record<string, any>>;
 
   // Определяем на какие каналы/транспорты должно отправляться событие
   abstract getBroadcastChannels(): string[];

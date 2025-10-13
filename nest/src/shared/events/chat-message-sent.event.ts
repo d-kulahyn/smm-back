@@ -1,5 +1,8 @@
 import { BaseEvent, BroadcastTransport } from './base-event';
 import { Message } from '../../domain/entities/message.entity';
+import { MessageResource } from "../../infrastructure/api/resources/message-resource.dto";
+import { MessageRepository } from '../../domain/repositories/message.repository';
+import { UserRepository } from '../../domain/repositories/user.repository';
 
 export class ChatMessageSentEvent extends BaseEvent {
   constructor(
@@ -7,7 +10,9 @@ export class ChatMessageSentEvent extends BaseEvent {
     private readonly chatId: string,
     private readonly senderId: string,
     private readonly projectId: string,
-    private readonly chatMembers: string[] // Добавляю массив UUID участников чата (кроме отправителя)
+    private readonly chatMembers: string[],
+    private readonly messageRepository: MessageRepository,
+    private readonly userRepository: UserRepository
   ) {
     super();
   }
@@ -16,26 +21,10 @@ export class ChatMessageSentEvent extends BaseEvent {
     return 'chat.message.sent';
   }
 
-  getPayload(): Record<string, any> {
-    return {
-      message: {
-        id: this.message.id,
-        chatId: this.message.chatId,
-        senderId: this.message.senderId,
-        content: this.message.content,
-        type: this.message.type,
-        fileUrl: this.message.fileUrl,
-        createdAt: this.message.createdAt,
-        isEdited: this.message.isEdited,
-        readBy: this.message.readBy
-      },
-      chatId: this.chatId,
-      senderId: this.senderId,
-      projectId: this.projectId,
-      chatMembers: this.chatMembers, // Добавляю участников в payload
-      timestamp: this.timestamp,
-      eventId: this.eventId
-    };
+  async getPayload(): Promise<Record<string, any>> {
+    return MessageResource.fromEntity((await this.messageRepository.findById(this.message.id)))
+        .withReadStatus(this.senderId)
+        .withSender(await this.userRepository.findById(this.senderId));
   }
 
   getBroadcastChannels(): string[] {

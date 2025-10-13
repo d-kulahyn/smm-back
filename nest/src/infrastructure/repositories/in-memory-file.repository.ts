@@ -7,11 +7,14 @@ export class InMemoryFileRepository implements FileRepository {
   private files: Map<string, FileEntity> = new Map();
   // Отслеживаем загруженные чанки для каждого файла
   private uploadedChunks: Map<string, Set<number>> = new Map();
+  // Резервируем индексы чанков перед загрузкой (чтобы поддержать параллельную загрузку)
+  private reservedChunks: Map<string, Set<number>> = new Map();
 
   async create(file: FileEntity): Promise<FileEntity> {
     this.files.set(file.id, file);
     // Инициализируем пустой набор чанков для файла
     this.uploadedChunks.set(file.id, new Set());
+    this.reservedChunks.set(file.id, new Set());
     return file;
   }
 
@@ -69,6 +72,26 @@ export class InMemoryFileRepository implements FileRepository {
   async delete(id: string): Promise<void> {
     this.files.delete(id);
     this.uploadedChunks.delete(id);
+    this.reservedChunks.delete(id);
+  }
+
+  async tryReserveChunk(fileId: string, chunkIndex: number): Promise<boolean> {
+    const reserved = this.reservedChunks.get(fileId) || new Set<number>();
+    // Если уже загружен, нельзя резервировать
+    const uploaded = this.uploadedChunks.get(fileId) || new Set<number>();
+    if (uploaded.has(chunkIndex)) return false;
+
+    if (reserved.has(chunkIndex)) return false;
+    reserved.add(chunkIndex);
+    this.reservedChunks.set(fileId, reserved);
+    return true;
+  }
+
+  async releaseReservedChunk(fileId: string, chunkIndex: number): Promise<void> {
+    const reserved = this.reservedChunks.get(fileId);
+    if (!reserved) return;
+    reserved.delete(chunkIndex);
+    this.reservedChunks.set(fileId, reserved);
   }
 
   async markChunkUploaded(id: string, chunkIndex?: number): Promise<FileEntity> {
@@ -77,14 +100,20 @@ export class InMemoryFileRepository implements FileRepository {
       throw new Error('File not found');
     }
 
-    const fileChunks = this.uploadedChunks.get(id) || new Set();
+    const index = chunkIndex !== undefined ? chunkIndex : file.chunks;
 
-    // Если индекс указан, добавляем его в набор
-    if (chunkIndex !== undefined) {
-      fileChunks.add(chunkIndex);
-    }
+    const fileChunks = this.uploadedChunks.get(id) || new Set<number>();
 
+    // Если уже есть — не добавляем, но пересчитаем
+    fileChunks.add(index);
     this.uploadedChunks.set(id, fileChunks);
+
+    // Удаляем резерв, если был
+    const reserved = this.reservedChunks.get(id);
+    if (reserved && reserved.has(index)) {
+      reserved.delete(index);
+      this.reservedChunks.set(id, reserved);
+    }
 
     // Обновляем количество загруженных чанков
     const chunksCount = fileChunks.size;

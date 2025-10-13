@@ -312,11 +312,10 @@ model File {
   chunks       Int       @default(0)
   totalChunks  Int?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  updatedAt    DateTime @updatedAt
 
   // Relations
   fileGroup    FileGroup? @relation(fields: [fileGroupId], references: [id], onDelete: SetNull)
-
   @@index([entityType, entityId])
   @@index([fileGroupId])
   @@index([uploadedBy])

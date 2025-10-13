@@ -9,10 +9,4 @@ export class ChunkUploadResponseDto {
 
     @ApiProperty({ example: false })
     isComplete: boolean;
-
-    @ApiProperty({ example: 'Chunk uploaded successfully' })
-    message: string;
-
-    @ApiProperty({ example: 0 })
-    chunkIndex: number;
 }

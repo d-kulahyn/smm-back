@@ -7,6 +7,7 @@ import {BusinessException, AccessDeniedException} from '../../shared/exceptions'
 import {EventBroadcastService} from '../../shared/events';
 import {ChatMessageSentEvent} from '../../shared/events';
 import {v4 as uuidv4} from 'uuid';
+import {UserRepository} from "../../domain/repositories/user.repository";
 
 export interface SendMessageDto {
     chatId: string;
@@ -15,7 +16,7 @@ export interface SendMessageDto {
     type: MessageType;
     attachments?: string[];
     fileUrl?: string;
-    projectId?: string; // Добавляем projectId для события
+    projectId?: string;
 }
 
 @Injectable()
@@ -26,6 +27,8 @@ export class SendMessageUseCase {
         @Inject('CHAT_MEMBER_REPOSITORY')
         private readonly chatMemberRepository: ChatMemberRepository,
         private readonly eventBroadcastService: EventBroadcastService,
+        @Inject('USER_REPOSITORY')
+        private readonly userRepository: UserRepository,
     ) {
     }
 
@@ -65,7 +68,9 @@ export class SendMessageUseCase {
                 dto.chatId,
                 dto.senderId,
                 dto.projectId,
-                chatMembers
+                chatMembers,
+                this.messageRepository,
+                this.userRepository
             );
 
             this.eventBroadcastService.broadcast(event).catch(error => {

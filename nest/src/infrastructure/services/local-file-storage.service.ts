@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { FileStorageService } from '../../domain/services/file-storage.service';
 
 @Injectable()
@@ -25,6 +25,7 @@ export class LocalFileStorageService implements FileStorageService {
     }
   }
 
+  // Создаёт необходимые директории и пустой финальный файл
   async createFile(params: {
     fileId: string;
     filename: string;
@@ -35,13 +36,23 @@ export class LocalFileStorageService implements FileStorageService {
     entityId: string;
     uploadedBy: string;
     totalChunks?: number;
+    uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
   }): Promise<void> {
-    const uploadPath = join(this.chunkedPath, params.filename);
+    // Если указан uploadPath, создаём соответствующую директорию в chunkedPath
+    let finalPathRelative = params.filename;
+    if (params.uploadPath) {
+      const cleaned = params.uploadPath.replace(/^\/+|\/+$/g, '');
+      finalPathRelative = `${cleaned}/${params.filename}`;
+      const targetDir = join(this.chunkedPath, cleaned);
+      await fs.mkdir(targetDir, { recursive: true });
+    }
 
-    // Создаем пустой финальный файл
+    const uploadPath = join(this.chunkedPath, finalPathRelative);
+
+    // Создаём пустой финальный файл
     await fs.writeFile(uploadPath, Buffer.alloc(0));
 
-    // Создаем директорию для временных чанков этого файла
+    // Создаём директорию для временных чанков этого файла
     const tempChunkDir = join(this.tempChunksPath, params.fileId);
     await fs.mkdir(tempChunkDir, { recursive: true });
   }
@@ -53,9 +64,9 @@ export class LocalFileStorageService implements FileStorageService {
     await fs.writeFile(chunkFilePath, chunkData);
   }
 
-  async assembleChunks(fileId: string, totalChunks: number, finalFilename: string): Promise<void> {
+  async assembleChunks(fileId: string, totalChunks: number, finalRelativePath: string): Promise<void> {
     const tempChunkDir = join(this.tempChunksPath, fileId);
-    const finalFilePath = join(this.chunkedPath, finalFilename);
+    const finalFilePath = join(this.chunkedPath, finalRelativePath);
 
     try {
       // Получаем все файлы чанков и сортируем их по индексу
@@ -73,17 +84,21 @@ export class LocalFileStorageService implements FileStorageService {
         throw new Error(`Missing chunks. Expected: ${totalChunks}, Found: ${sortedChunkFiles.length}`);
       }
 
+      // Создаём директорию для финального файла если нужно
+      const finalDir = dirname(finalFilePath);
+      await fs.mkdir(finalDir, { recursive: true });
+
       // Создаем поток записи для финального файла
-      const writeStream = await fs.open(finalFilePath, 'w');
+      const writeHandle = await fs.open(finalFilePath, 'w');
 
       // Последовательно записываем чанки в правильном порядке
       for (const chunkFile of sortedChunkFiles) {
         const chunkPath = join(tempChunkDir, chunkFile);
         const chunkData = await fs.readFile(chunkPath);
-        await writeStream.write(chunkData);
+        await writeHandle.write(chunkData);
       }
 
-      await writeStream.close();
+      await writeHandle.close();
 
       // Удаляем временные чанки
       await this.cleanup(fileId);
@@ -117,6 +132,8 @@ export class LocalFileStorageService implements FileStorageService {
   }
 
   getFileUrl(filename: string): string {
-    return `/storage/chunked/${filename}`;
+    // filename может быть относительным путём (projects/123/filename)
+    const cleaned = filename.replace(/^\/+/, '');
+    return `/storage/chunked/${cleaned}`;
   }
 }

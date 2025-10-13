@@ -33,4 +33,9 @@ export class CreateFileDto {
     @IsOptional()
     @IsUUID()
     fileGroupId?: string;
+
+    @ApiPropertyOptional({ description: "Relative upload path inside 'uploads' (e.g. 'projects/123')", example: 'projects/123' })
+    @IsOptional()
+    @IsString()
+    uploadPath?: string;
 }

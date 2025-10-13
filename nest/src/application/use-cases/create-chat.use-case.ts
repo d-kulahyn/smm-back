@@ -5,7 +5,6 @@ import { ChatRepository } from '../../domain/repositories/chat.repository';
 import { ChatMemberRepository } from '../../domain/repositories/chat-member.repository';
 import { BusinessException } from '../../shared/exceptions';
 import { EventBroadcastService } from '../../shared/events';
-import { ChatCreatedEvent } from '../../shared/events';
 import * as uuid from 'uuid';
 
 export interface CreateChatDto {
@@ -83,17 +82,17 @@ export class CreateChatUseCase {
       }
     }
 
-    // Отправляем событие создания чата
-    const event = new ChatCreatedEvent(
-      createdChat,
-      dto.createdBy,
-      dto.projectId
-    );
-
-    // Асинхронно отправляем событие
-    this.eventBroadcastService.broadcast(event).catch(error => {
-      console.error('Failed to broadcast ChatCreated event:', error);
-    });
+    // // Отправляем событие создания чата
+    // const event = new ChatCreatedEvent(
+    //   createdChat,
+    //   dto.createdBy,
+    //   dto.projectId
+    // );
+    //
+    // // Асинхронно отправляем событие
+    // this.eventBroadcastService.broadcast(event).catch(error => {
+    //   console.error('Failed to broadcast ChatCreated event:', error);
+    // });
 
     return createdChat;
   }

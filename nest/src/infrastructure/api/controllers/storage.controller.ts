@@ -14,7 +14,7 @@ import {
     BadRequestException
 } from '@nestjs/common';
 import {Response} from 'express';
-import {join} from 'path';
+import {join, resolve} from 'path';
 import {existsSync} from 'fs';
 import {ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiConsumes} from '@nestjs/swagger';
 import {FileInterceptor} from '@nestjs/platform-express';
@@ -25,7 +25,6 @@ import {ChunkedFileService} from '../../../application/services/chunked-file.ser
 // Request DTOs
 import {
     CreateFileDto,
-    ChunkUploadDto
 } from '../requests';
 
 // Response DTOs
@@ -37,6 +36,38 @@ import {
     EntityFilesResponseDto,
     ErrorResponseDto
 } from '../responses';
+
+// Mime types enum and extension map
+export enum MimeTypeEnum {
+    IMAGE_JPEG = 'image/jpeg',
+    IMAGE_PNG = 'image/png',
+    IMAGE_GIF = 'image/gif',
+    IMAGE_WEBP = 'image/webp',
+    APPLICATION_PDF = 'application/pdf',
+    APPLICATION_MSWORD = 'application/msword',
+    APPLICATION_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    APPLICATION_XLS = 'application/vnd.ms-excel',
+    APPLICATION_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    TEXT_PLAIN = 'text/plain',
+    APPLICATION_ZIP = 'application/zip',
+    APPLICATION_RAR = 'application/x-rar-compressed',
+}
+
+const EXTENSION_MIME_MAP: { [key: string]: string } = {
+    jpg: MimeTypeEnum.IMAGE_JPEG,
+    jpeg: MimeTypeEnum.IMAGE_JPEG,
+    png: MimeTypeEnum.IMAGE_PNG,
+    gif: MimeTypeEnum.IMAGE_GIF,
+    webp: MimeTypeEnum.IMAGE_WEBP,
+    pdf: MimeTypeEnum.APPLICATION_PDF,
+    doc: MimeTypeEnum.APPLICATION_MSWORD,
+    docx: MimeTypeEnum.APPLICATION_DOCX,
+    xls: MimeTypeEnum.APPLICATION_XLS,
+    xlsx: MimeTypeEnum.APPLICATION_XLSX,
+    txt: MimeTypeEnum.TEXT_PLAIN,
+    zip: MimeTypeEnum.APPLICATION_ZIP,
+    rar: MimeTypeEnum.APPLICATION_RAR,
+};
 
 @ApiTags('Storage')
 @Controller('storage')
@@ -79,12 +110,14 @@ export class StorageController {
                 entityId: createFileDto.entityId,
                 uploadedBy: userId,
                 totalChunks: createFileDto.totalChunks,
+                fileGroupId: createFileDto.fileGroupId,
+                uploadPath: createFileDto.uploadPath,
             });
 
             return {
                 fileId: fileEntity.id,
                 filename: fileEntity.filename,
-                uploadUrl: `/storage/chunked/${fileEntity.id}`,
+                uploadUrl: `/storage/chunked/${fileEntity.uploadPath}`,
                 isComplete: fileEntity.isComplete,
                 chunksUploaded: fileEntity.chunks,
             };
@@ -144,8 +177,6 @@ export class StorageController {
                 fileId: updatedFile.id,
                 chunksUploaded: updatedFile.chunks,
                 isComplete: updatedFile.isComplete,
-                message: 'Chunk uploaded successfully',
-                chunkIndex: 0, // Указываем индекс чанка
             };
         } catch (error) {
             if (error.message === 'File not found') {
@@ -185,13 +216,12 @@ export class StorageController {
         @Res() res: Response
     ) {
         try {
-            // Используем raw request для получения любого поля файла
             const multer = require('multer');
             const upload = multer({
                 limits: {
                     fileSize: 50 * 1024 * 1024, // 50MB chunk limit
                 },
-                fileFilter: (req, file, callback) => {
+                fileFilter: (req: any, file: any, callback: (arg0: null, arg1: boolean) => void) => {
                     callback(null, true);
                 }
             }).any();
@@ -207,7 +237,7 @@ export class StorageController {
                     }
 
                     try {
-                        const file = req.files[0]; // Берем первый файл
+                        const file = req.files[0];
                         const updatedFile = await this.chunkedFileService.uploadChunk(
                             fileId,
                             file.buffer
@@ -217,7 +247,6 @@ export class StorageController {
                             fileId: updatedFile.id,
                             chunksUploaded: updatedFile.chunks,
                             isComplete: updatedFile.isComplete,
-                            message: 'Chunk uploaded successfully',
                         };
 
                         res.status(201).json(response);
@@ -269,7 +298,8 @@ export class StorageController {
             return {
                 fileId: completedFile.id,
                 isComplete: completedFile.isComplete,
-                downloadUrl: `/storage/chunked/${completedFile.filename}`,
+                // use uploadPath (relative path including filename) for download URL
+                downloadUrl: `/storage/chunked/${encodeURI(completedFile.uploadPath || completedFile.filename)}`,
                 message: 'File upload completed successfully',
             };
         } catch (error) {
@@ -280,14 +310,14 @@ export class StorageController {
         }
     }
 
-    @Get('chunked/:filename')
+    @Get('chunked/*')
     @ApiOperation({
         summary: 'Get chunked file',
         description: 'Serve chunked uploaded files'
     })
     @ApiParam({
         name: 'filename',
-        description: 'Chunked file name',
+        description: 'Chunked file name or relative path',
         example: '1696420398754-abc123-document.pdf'
     })
     @ApiResponse({
@@ -303,9 +333,25 @@ export class StorageController {
         status: 404,
         description: 'File not found'
     })
-    async getChunkedFile(@Param('filename') filename: string, @Res() res: Response) {
+    async getChunkedFile(@Request() req: any, @Res() res: Response) {
         try {
-            const filePath = join(this.uploadPath, 'chunked', filename);
+            // wildcard param is in req.params[0]
+            const raw = req.params && (req.params[0] || req.params.filename);
+            if (!raw) {
+                throw new NotFoundException('File not found');
+            }
+
+            // decode URI components and normalize
+            const filename = decodeURIComponent(raw);
+
+            const chunkedDir = resolve(this.uploadPath, 'chunked');
+            const filePath = resolve(chunkedDir, filename);
+
+            // Prevent path traversal: ensure filePath is inside chunkedDir using relative path
+            const relative = require('path').relative(chunkedDir, filePath);
+            if (relative.startsWith('..') || require('path').isAbsolute(relative)) {
+                throw new NotFoundException('File not found');
+            }
 
             if (!existsSync(filePath)) {
                 throw new NotFoundException('File not found');
@@ -316,8 +362,9 @@ export class StorageController {
             res.setHeader('Content-Type', mimeType);
             res.setHeader('Cache-Control', 'public, max-age=86400');
 
+            const baseName = filename.split('/').pop();
             if (!mimeType.startsWith('image/') && !mimeType.startsWith('audio/') && !mimeType.startsWith('video/')) {
-                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                res.setHeader('Content-Disposition', `attachment; filename="${baseName}"`);
             }
 
             return res.sendFile(filePath);
@@ -367,7 +414,8 @@ export class StorageController {
             const fileResponses: FileCreateResponseDto[] = files.map(file => ({
                 fileId: file.id,
                 filename: file.filename,
-                uploadUrl: `/storage/chunked/${file.filename}`,
+                // use uploadPath to support nested paths
+                uploadUrl: `/storage/chunked/${encodeURI(file.uploadPath || file.filename)}`,
                 isComplete: file.isComplete,
                 chunksUploaded: file.chunks,
             }));
@@ -444,8 +492,6 @@ export class StorageController {
                 fileId: updatedFile.id,
                 chunksUploaded: updatedFile.chunks,
                 isComplete: updatedFile.isComplete,
-                message: 'Chunk uploaded successfully',
-                chunkIndex: chunkIndex,
             };
         } catch (error) {
             if (error.message === 'File not found') {
@@ -653,22 +699,6 @@ export class StorageController {
     private getMimeType(filename: string): string {
         const extension = filename.split('.').pop()?.toLowerCase();
 
-        const mimeTypes: { [key: string]: string } = {
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'png': 'image/png',
-            'gif': 'image/gif',
-            'webp': 'image/webp',
-            'pdf': 'application/pdf',
-            'doc': 'application/msword',
-            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xls': 'application/vnd.ms-excel',
-            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'txt': 'text/plain',
-            'zip': 'application/zip',
-            'rar': 'application/x-rar-compressed',
-        };
-
-        return mimeTypes[extension || ''] || 'application/octet-stream';
+        return EXTENSION_MIME_MAP[extension || ''] || 'application/octet-stream';
     }
 }
