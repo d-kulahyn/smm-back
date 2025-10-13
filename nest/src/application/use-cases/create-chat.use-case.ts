@@ -28,7 +28,6 @@ export class CreateChatUseCase {
   ) {}
 
   async execute(dto: CreateChatDto): Promise<Chat> {
-    // Валидация входных данных (не связанная с безопасностью)
     if (!dto.name || dto.name.trim().length === 0) {
       throw new BusinessException('Chat name is required', 'CHAT_NAME_REQUIRED');
     }
