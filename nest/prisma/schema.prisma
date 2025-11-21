@@ -201,6 +201,8 @@ model Task {
   status      TaskStatus @default(pending)
   priority    TaskPriority @default(medium)
   dueDate     DateTime?
+  completedAt DateTime?
+  reminderBeforeHours Int?
   projectId   String
   creatorId   String
   createdAt   DateTime @default(now())
@@ -311,6 +313,7 @@ model File {
   isComplete   Boolean   @default(false)
   chunks       Int       @default(0)
   totalChunks  Int?
+  deviceId     String?   // ID устройства, инициировавшего загрузку
   createdAt    DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -319,5 +322,6 @@ model File {
   @@index([entityType, entityId])
   @@index([fileGroupId])
   @@index([uploadedBy])
+  @@index([deviceId])
   @@map("files")
 }

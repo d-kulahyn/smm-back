@@ -61,6 +61,7 @@ export class InMemoryFileRepository implements FileRepository {
       updates.isComplete ?? file.isComplete,
       updates.chunks ?? file.chunks,
       file.totalChunks,
+      file.deviceId,
       file.createdAt,
       new Date()
     );
@@ -131,10 +132,11 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityType,
       file.entityId,
       file.uploadedBy,
-      file.fileGroupId, // добавляем fileGroupId
+      file.fileGroupId,
       isComplete,
       chunksCount,
       file.totalChunks,
+      file.deviceId,
       file.createdAt,
       new Date()
     );
@@ -159,10 +161,11 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityType,
       file.entityId,
       file.uploadedBy,
-      file.fileGroupId, // добавляем fileGroupId
+      file.fileGroupId,
       true, // isComplete
       file.chunks,
       file.totalChunks,
+      file.deviceId,
       file.createdAt,
       new Date()
     );

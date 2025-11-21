@@ -12,6 +12,7 @@ export class Task {
     public readonly assignedTo?: string,
     public readonly completedAt?: Date,
     public readonly dueDate?: Date,
+    public readonly reminderBeforeHours?: number,
     public readonly createdAt: Date = new Date(),
     public readonly updatedAt: Date = new Date(),
   ) {}
@@ -28,6 +29,7 @@ export class Task {
       this.assignedTo,
       new Date(),
       this.dueDate,
+      this.reminderBeforeHours,
       this.createdAt,
       new Date(),
     );
@@ -45,6 +47,7 @@ export class Task {
       this.assignedTo,
       this.completedAt,
       this.dueDate,
+      this.reminderBeforeHours,
       this.createdAt,
       new Date(),
     );

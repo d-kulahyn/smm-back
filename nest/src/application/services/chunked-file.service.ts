@@ -23,6 +23,7 @@ export class ChunkedFileService {
         fileGroupId?: string;
         totalChunks?: number;
         uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
+        deviceId?: string;
     }): Promise<FileEntity> {
         //if exsists by originalName, mimeType, size, entityType, totalChunks return it
 
@@ -54,6 +55,7 @@ export class ChunkedFileService {
             uploadedBy: params.uploadedBy,
             totalChunks: params.totalChunks,
             uploadPath: sanitizedUploadPath,
+            deviceId: params.deviceId,
         });
 
         // Формируем поле uploadPath в сущности как относительный путь включая имя файла
@@ -71,6 +73,7 @@ export class ChunkedFileService {
             uploadedBy: params.uploadedBy,
             fileGroupId: params.fileGroupId,
             totalChunks: params.totalChunks,
+            deviceId: params.deviceId,
         });
 
         return await this.fileRepository.create(fileEntity);

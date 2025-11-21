@@ -10,6 +10,7 @@ export interface FileStorageService {
     uploadedBy: string;
     totalChunks?: number;
     uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
+    deviceId?: string;
   }): Promise<void>;
 
   uploadChunk(fileId: string, chunkData: Buffer, chunkIndex: number): Promise<void>;

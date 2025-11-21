@@ -178,6 +178,7 @@ export class ChatController {
             name: createChatDto.name,
             createdBy: req.user.userId,
             description: createChatDto.description,
+            members: createChatDto.members,
         });
 
         return {
@@ -612,3 +613,4 @@ export class ChatController {
         };
     }
 }
+

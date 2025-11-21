@@ -112,6 +112,7 @@ export class StorageController {
                 totalChunks: createFileDto.totalChunks,
                 fileGroupId: createFileDto.fileGroupId,
                 uploadPath: createFileDto.uploadPath,
+                deviceId: createFileDto.deviceId,
             });
 
             return {

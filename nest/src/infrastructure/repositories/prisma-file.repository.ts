@@ -26,6 +26,7 @@ export class PrismaFileRepository implements FileRepository {
             doc.isComplete,
             doc.chunks ?? 0,
             doc.totalChunks ?? undefined,
+            doc.deviceId ?? undefined,
             doc.createdAt,
             doc.updatedAt,
         );
@@ -47,6 +48,7 @@ export class PrismaFileRepository implements FileRepository {
                 isComplete: file.isComplete ?? false,
                 chunks: file.chunks ?? 0,
                 totalChunks: file.totalChunks ?? undefined,
+                deviceId: file.deviceId ?? null,
             }
         });
 

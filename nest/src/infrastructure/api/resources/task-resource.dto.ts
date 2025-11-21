@@ -15,6 +15,7 @@ export class TaskResource {
   notes?: string;
   is_completed: boolean;
   is_overdue: boolean;
+  reminder_before_hours?: number;
   metadata?: any;
   created_at: FormattedDate;
   updated_at: FormattedDate;
@@ -39,6 +40,7 @@ export class TaskResource {
     this.notes = task.notes;
     this.is_completed = task.isCompleted || this.status === 'on_hold';
     this.is_overdue = task.isOverdue || (task.dueDate && new Date(task.dueDate) < new Date() && !this.is_completed);
+    this.reminder_before_hours = task.reminderBeforeHours;
     this.metadata = task.metadata;
     this.created_at = DateFormatter.formatCreatedAt(task.createdAt);
     this.updated_at = DateFormatter.formatUpdatedAt(task.updatedAt);

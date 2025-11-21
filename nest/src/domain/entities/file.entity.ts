@@ -13,6 +13,7 @@ export class FileEntity {
     public readonly isComplete: boolean = false,
     public readonly chunks: number = 0,
     public readonly totalChunks?: number,
+    public readonly deviceId?: string,
     public readonly createdAt: Date = new Date(),
     public readonly updatedAt: Date = new Date()
   ) {}
@@ -29,6 +30,7 @@ export class FileEntity {
     uploadedBy: string;
     fileGroupId?: string;
     totalChunks?: number;
+    deviceId?: string;
   }): FileEntity {
     return new FileEntity(
       params.id,
@@ -44,6 +46,7 @@ export class FileEntity {
       false, // isComplete
       0, // chunks
       params.totalChunks,
+      params.deviceId,
       new Date(),
       new Date()
     );
@@ -64,6 +67,7 @@ export class FileEntity {
       this.totalChunks ? (this.chunks + 1) >= this.totalChunks : false,
       this.chunks + 1,
       this.totalChunks,
+      this.deviceId,
       this.createdAt,
       new Date()
     );
@@ -84,6 +88,7 @@ export class FileEntity {
       true,
       this.chunks,
       this.totalChunks,
+      this.deviceId,
       this.createdAt,
       new Date()
     );
@@ -100,11 +105,13 @@ export class FileEntity {
       entityType: this.entityType,
       entityId: this.entityId,
       uploadedBy: this.uploadedBy,
+      fileGroupId: this.fileGroupId,
       isComplete: this.isComplete,
       chunks: this.chunks,
       totalChunks: this.totalChunks,
+      deviceId: this.deviceId,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -127,6 +134,7 @@ export class FileEntity {
       this.isComplete,
       this.chunks,
       this.totalChunks,
+      this.deviceId,
       this.createdAt,
       new Date()
     );
@@ -147,6 +155,7 @@ export class FileEntity {
       this.isComplete,
       this.chunks,
       this.totalChunks,
+      this.deviceId,
       this.createdAt,
       new Date()
     );

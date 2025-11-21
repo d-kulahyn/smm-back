@@ -37,6 +37,7 @@ export class LocalFileStorageService implements FileStorageService {
     uploadedBy: string;
     totalChunks?: number;
     uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
+    deviceId?: string;
   }): Promise<void> {
     // Если указан uploadPath, создаём соответствующую директорию в chunkedPath
     let finalPathRelative = params.filename;

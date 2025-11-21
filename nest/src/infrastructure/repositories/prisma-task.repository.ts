@@ -222,26 +222,29 @@ export class PrismaTaskRepository implements TaskRepository {
   }
 
   async create(task: Task): Promise<Task> {
-    const taskData = {
+    const taskData: any = {
       id: task.id,
       title: task.title,
-      description: task.description,
       projectId: task.projectId,
       creatorId: task.creatorId,
       status: task.status,
       priority: task.priority,
-      dueDate: task.dueDate,
-      completedAt: task.completedAt,
     };
 
-    if (taskData.description !== undefined) {
-      taskData.description = taskData.description;
+    if (task.description !== undefined) {
+      taskData.description = task.description;
     }
-    if (taskData.dueDate !== undefined) {
-      taskData.dueDate = taskData.dueDate;
+    if (task.dueDate !== undefined) {
+      taskData.dueDate = task.dueDate;
     }
-    if (taskData.completedAt !== undefined) {
-      taskData.completedAt = taskData.completedAt;
+    if (task.completedAt !== undefined) {
+      taskData.completedAt = task.completedAt;
+    }
+    if (task.assignedTo !== undefined) {
+      taskData.assignedTo = task.assignedTo;
+    }
+    if (task.reminderBeforeHours !== undefined) {
+      taskData.reminderBeforeHours = task.reminderBeforeHours;
     }
 
     const created = await this.prisma.task.create({
@@ -261,15 +264,36 @@ export class PrismaTaskRepository implements TaskRepository {
   }
 
   async update(id: string, taskData: Partial<Task>): Promise<Task> {
+    const updateData: any = {};
+
+    if (taskData.title !== undefined) {
+      updateData.title = taskData.title;
+    }
+    if (taskData.description !== undefined) {
+      updateData.description = taskData.description;
+    }
+    if (taskData.status !== undefined) {
+      updateData.status = taskData.status;
+    }
+    if (taskData.priority !== undefined) {
+      updateData.priority = taskData.priority;
+    }
+    if (taskData.dueDate !== undefined) {
+      updateData.dueDate = taskData.dueDate;
+    }
+    if (taskData.completedAt !== undefined) {
+      updateData.completedAt = taskData.completedAt;
+    }
+    if (taskData.assignedTo !== undefined) {
+      updateData.assignedTo = taskData.assignedTo;
+    }
+    if (taskData.reminderBeforeHours !== undefined) {
+      updateData.reminderBeforeHours = taskData.reminderBeforeHours;
+    }
+
     const updated = await this.prisma.task.update({
       where: { id },
-      data: {
-        title: taskData.title,
-        description: taskData.description,
-        status: taskData.status as any,
-        priority: taskData.priority as any,
-        dueDate: taskData.dueDate,
-      },
+      data: updateData,
       include: {
         assignments: true
       }
@@ -302,7 +326,7 @@ export class PrismaTaskRepository implements TaskRepository {
   private toDomain(task: any): Task {
     const assignedTo = task.assignments && task.assignments.length > 0
       ? task.assignments[0].userId
-      : undefined;
+      : task.assignedTo;
 
     return new Task(
       task.id,
@@ -315,6 +339,7 @@ export class PrismaTaskRepository implements TaskRepository {
       assignedTo,
       task.completedAt,
       task.dueDate,
+      task.reminderBeforeHours,
       task.createdAt,
       task.updatedAt,
     );

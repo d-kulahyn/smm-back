@@ -38,4 +38,9 @@ export class CreateFileDto {
     @IsOptional()
     @IsString()
     uploadPath?: string;
+
+    @ApiPropertyOptional({ description: 'Device ID that initiated the upload', example: 'device-abc-123' })
+    @IsOptional()
+    @IsString()
+    deviceId?: string;
 }
