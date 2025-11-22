@@ -10,6 +10,7 @@ export class FileEntity {
     public readonly entityId: string,
     public readonly uploadedBy: string,
     public readonly fileGroupId?: string, // Добавляем поддержку группы файлов
+    public readonly thumbnailId?: string, // ID миниатюры файла
     public readonly isComplete: boolean = false,
     public readonly chunks: number = 0,
     public readonly totalChunks?: number,
@@ -29,6 +30,7 @@ export class FileEntity {
     entityId: string;
     uploadedBy: string;
     fileGroupId?: string;
+    thumbnailId?: string;
     totalChunks?: number;
     deviceId?: string;
   }): FileEntity {
@@ -43,6 +45,7 @@ export class FileEntity {
       params.entityId,
       params.uploadedBy,
       params.fileGroupId,
+      params.thumbnailId,
       false, // isComplete
       0, // chunks
       params.totalChunks,
@@ -64,6 +67,7 @@ export class FileEntity {
       this.entityId,
       this.uploadedBy,
       this.fileGroupId,
+      this.thumbnailId,
       this.totalChunks ? (this.chunks + 1) >= this.totalChunks : false,
       this.chunks + 1,
       this.totalChunks,
@@ -84,7 +88,8 @@ export class FileEntity {
       this.entityType,
       this.entityId,
       this.uploadedBy,
-      this.fileGroupId, // добавляем fileGroupId
+      this.fileGroupId,
+      this.thumbnailId,
       true,
       this.chunks,
       this.totalChunks,
@@ -106,6 +111,7 @@ export class FileEntity {
       entityId: this.entityId,
       uploadedBy: this.uploadedBy,
       fileGroupId: this.fileGroupId,
+      thumbnailId: this.thumbnailId,
       isComplete: this.isComplete,
       chunks: this.chunks,
       totalChunks: this.totalChunks,
@@ -117,6 +123,10 @@ export class FileEntity {
 
   belongsToGroup(): boolean {
     return !!this.fileGroupId;
+  }
+
+  hasThumbnail(): boolean {
+    return !!this.thumbnailId;
   }
 
   assignToGroup(fileGroupId: string): FileEntity {
@@ -131,6 +141,7 @@ export class FileEntity {
       this.entityId,
       this.uploadedBy,
       fileGroupId,
+      this.thumbnailId,
       this.isComplete,
       this.chunks,
       this.totalChunks,
@@ -152,6 +163,7 @@ export class FileEntity {
       this.entityId,
       this.uploadedBy,
       undefined,
+      this.thumbnailId,
       this.isComplete,
       this.chunks,
       this.totalChunks,
@@ -159,5 +171,35 @@ export class FileEntity {
       this.createdAt,
       new Date()
     );
+  }
+
+  setThumbnail(thumbnailId: string): FileEntity {
+    return new FileEntity(
+      this.id,
+      this.filename,
+      this.originalName,
+      this.mimeType,
+      this.size,
+      this.uploadPath,
+      this.entityType,
+      this.entityId,
+      this.uploadedBy,
+      this.fileGroupId,
+      thumbnailId,
+      this.isComplete,
+      this.chunks,
+      this.totalChunks,
+      this.deviceId,
+      this.createdAt,
+      new Date()
+    );
+  }
+
+  isImage(): boolean {
+    return this.mimeType.startsWith('image/');
+  }
+
+  isVideo(): boolean {
+    return this.mimeType.startsWith('video/');
   }
 }

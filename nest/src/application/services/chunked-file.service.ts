@@ -21,6 +21,7 @@ export class ChunkedFileService {
         entityId: string;
         uploadedBy: string;
         fileGroupId?: string;
+        thumbnailId?: string;
         totalChunks?: number;
         uploadPath?: string; // относительный путь внутри uploads, например 'projects/123'
         deviceId?: string;
@@ -43,7 +44,10 @@ export class ChunkedFileService {
             if (sanitizedUploadPath.length === 0) sanitizedUploadPath = undefined;
         }
 
-        // Передаём uploadPath (директория) в сервис хранения файлов
+        // Формируем поле uploadPath в сущности как относительный путь включая имя файла
+        const fullUploadPath = sanitizedUploadPath ? `${sanitizedUploadPath}/${filename}` : filename;
+
+        // Передаём uploadPath (директория) в сервис хранения файлов для основного файла
         await this.fileStorageService.createFile({
             fileId,
             filename,
@@ -55,11 +59,9 @@ export class ChunkedFileService {
             uploadedBy: params.uploadedBy,
             totalChunks: params.totalChunks,
             uploadPath: sanitizedUploadPath,
+            thumbnailId: params.thumbnailId,
             deviceId: params.deviceId,
         });
-
-        // Формируем поле uploadPath в сущности как относительный путь включая имя файла
-        const fullUploadPath = sanitizedUploadPath ? `${sanitizedUploadPath}/${filename}` : filename;
 
         const fileEntity = FileEntity.create({
             id: fileId,
@@ -71,6 +73,7 @@ export class ChunkedFileService {
             entityType: params.entityType,
             entityId: params.entityId,
             uploadedBy: params.uploadedBy,
+            thumbnailId: params.thumbnailId,
             fileGroupId: params.fileGroupId,
             totalChunks: params.totalChunks,
             deviceId: params.deviceId,
@@ -208,6 +211,19 @@ export class ChunkedFileService {
 
     async getFilesByEntity(entityType: string, entityId: string): Promise<FileEntity[]> {
         return await this.fileRepository.findByEntityId(entityType, entityId);
+    }
+
+    async loadThumbnailsForFiles(files: FileEntity[]): Promise<Map<string, FileEntity>> {
+        const thumbnailIds = files
+            .map(file => file.thumbnailId)
+            .filter((id): id is string => !!id);
+
+        if (thumbnailIds.length === 0) {
+            return new Map();
+        }
+
+        const thumbnails = await this.fileRepository.findByIds(thumbnailIds);
+        return new Map(thumbnails.map(thumb => [thumb.id, thumb]));
     }
 
     getFileUrl(filename: string): string {

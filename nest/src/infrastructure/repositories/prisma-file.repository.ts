@@ -23,6 +23,7 @@ export class PrismaFileRepository implements FileRepository {
             doc.entityId,
             doc.uploadedBy,
             doc.fileGroupId ?? undefined,
+            doc.thumbnailId ?? undefined,
             doc.isComplete,
             doc.chunks ?? 0,
             doc.totalChunks ?? undefined,
@@ -45,6 +46,7 @@ export class PrismaFileRepository implements FileRepository {
                 entityId: file.entityId,
                 uploadedBy: file.uploadedBy,
                 fileGroupId: file.fileGroupId ?? null,
+                thumbnailId: file.thumbnailId ?? null,
                 isComplete: file.isComplete ?? false,
                 chunks: file.chunks ?? 0,
                 totalChunks: file.totalChunks ?? undefined,
@@ -58,6 +60,16 @@ export class PrismaFileRepository implements FileRepository {
     async findById(id: string): Promise<FileEntity | null> {
         const doc = await this.prisma.file.findUnique({where: {id}});
         return doc ? this.toDomain(doc) : null;
+    }
+
+    async findByIds(ids: string[]): Promise<FileEntity[]> {
+        if (!ids || ids.length === 0) {
+            return [];
+        }
+        const docs = await this.prisma.file.findMany({
+            where: {id: {in: ids}}
+        });
+        return docs.map(d => this.toDomain(d));
     }
 
     async findByEntityId(entityType: string, entityId: string): Promise<FileEntity[]> {
@@ -94,6 +106,7 @@ export class PrismaFileRepository implements FileRepository {
         if (updates.entityId !== undefined) data.entityId = updates.entityId;
         if (updates.uploadedBy !== undefined) data.uploadedBy = updates.uploadedBy;
         if (updates.fileGroupId !== undefined) data.fileGroupId = updates.fileGroupId;
+        if (updates.thumbnailId !== undefined) data.thumbnailId = updates.thumbnailId;
         if (updates.isComplete !== undefined) data.isComplete = updates.isComplete;
         if (updates.chunks !== undefined) data.chunks = Math.floor(updates.chunks as number);
         if (updates.totalChunks !== undefined) data.totalChunks = updates.totalChunks;

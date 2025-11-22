@@ -23,6 +23,13 @@ export class InMemoryFileRepository implements FileRepository {
     return this.files.get(id) || null;
   }
 
+  async findByIds(ids: string[]): Promise<FileEntity[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+    return Array.from(this.files.values()).filter(file => ids.includes(file.id));
+  }
+
   async findByEntityId(entityType: string, entityId: string): Promise<FileEntity[]> {
     return Array.from(this.files.values()).filter(
       file => file.entityType === entityType && file.entityId === entityId
@@ -58,6 +65,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityId,
       file.uploadedBy,
       updates.fileGroupId ?? file.fileGroupId,
+      updates.thumbnailId ?? file.thumbnailId,
       updates.isComplete ?? file.isComplete,
       updates.chunks ?? file.chunks,
       file.totalChunks,
@@ -133,6 +141,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityId,
       file.uploadedBy,
       file.fileGroupId,
+      file.thumbnailId,
       isComplete,
       chunksCount,
       file.totalChunks,
@@ -162,6 +171,7 @@ export class InMemoryFileRepository implements FileRepository {
       file.entityId,
       file.uploadedBy,
       file.fileGroupId,
+      file.thumbnailId,
       true, // isComplete
       file.chunks,
       file.totalChunks,

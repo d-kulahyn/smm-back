@@ -21,6 +21,26 @@ export class FileCreateResponseDto {
     totalChunks?: number;
 
     @ApiPropertyOptional({
+        example: 'clm1thumb123456',
+        description: 'ID of thumbnail file (for images)'
+    })
+    thumbnailId?: string;
+
+    @ApiPropertyOptional({
+        description: 'Thumbnail file information (for images)',
+        type: () => FileCreateResponseDto,
+        example: {
+            fileId: 'clm1thumb123456',
+            filename: 'thumb_image.jpg',
+            uploadUrl: '/storage/chunked/thumb_image.jpg',
+            isComplete: true,
+            chunksUploaded: 1,
+            totalChunks: 1
+        }
+    })
+    thumbnail?: FileCreateResponseDto;
+
+    @ApiPropertyOptional({
         description: 'File group information if file belongs to a group',
         type: FileGroupResponseDto
     })

@@ -310,6 +310,7 @@ model File {
   entityId     String
   uploadedBy   String
   fileGroupId  String?   // Опциональная связь с группой файлов
+  thumbnailId  String?   // ID миниатюры файла (для изображений и видео)
   isComplete   Boolean   @default(false)
   chunks       Int       @default(0)
   totalChunks  Int?
@@ -319,9 +320,13 @@ model File {
 
   // Relations
   fileGroup    FileGroup? @relation(fields: [fileGroupId], references: [id], onDelete: SetNull)
+  thumbnail    File?      @relation("FileThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+  parentFiles  File[]     @relation("FileThumbnail")
+
   @@index([entityType, entityId])
   @@index([fileGroupId])
   @@index([uploadedBy])
   @@index([deviceId])
+  @@index([thumbnailId])
   @@map("files")
 }

@@ -6,6 +6,7 @@ export interface FileRepository {
   findByEntityId(entityType: string, entityId: string): Promise<FileEntity[]>;
   findByFileGroupId(fileGroupId: string): Promise<FileEntity[]>;
   findByEntityIdWithGroups(entityType: string, entityId: string): Promise<FileEntity[]>;
+  findByIds(ids: string[]): Promise<FileEntity[]>;
   update(id: string, updates: Partial<FileEntity>): Promise<FileEntity>;
   delete(id: string): Promise<void>;
   markChunkUploaded(id: string, chunkIndex?: number): Promise<FileEntity>;
